@@ -9,6 +9,7 @@ exports.profileAdded = functions.firestore.document("profiles/{uid}").onCreate(a
   const profile = Object.assign({id: snap.id}, snap.data() as Profile);
   console.log(profile);
 
+  // Save
   await snap.ref.update({
     creationDate: FieldValue.serverTimestamp(),
   });
