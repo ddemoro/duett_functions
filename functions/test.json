@@ -1,0 +1,149 @@
+{
+  "phoneNumber": "+15552348765",
+  "creationDate": {
+    "_seconds": 1692638646,
+    "_nanoseconds": 405000000
+  },
+  "configured": true,
+  "fullName": "Elena Vega",
+  "emailAddress": "elena.vega@example.com",
+  "receiveMarketingMaterial": true,
+  "living": {
+    "city": "Miami",
+    "latitude": 25.7617,
+    "state": "FL",
+    "longitude": -80.1918
+  },
+  "gender": "Woman",
+  "datingType": "Man",
+  "height": 168,
+  "ethnicity": "Latina",
+  "children": "No children",
+  "hometown": {
+    "hometown": "Barcelona, Spain",
+    "visible": true
+  },
+  "jobTitle": {
+    "visible": true,
+    "data": "Creative Director"
+  },
+  "school": {
+    "visible": true,
+    "data": "New York University"
+  },
+  "work": {
+    "visible": true,
+    "data": "Adobe Creative Cloud"
+  },
+  "education": {
+    "visible": true,
+    "data": "Master of Fine Arts"
+  },
+  "religion": {
+    "visible": true,
+    "data": "Agnostic"
+  },
+  "politics": {
+    "visible": true,
+    "data": "Progressive"
+  },
+  "drinks": {
+    "visible": true,
+    "data": "Socially"
+  },
+  "smoke": {
+    "visible": true,
+    "data": "No"
+  },
+  "weed": {
+    "visible": true,
+    "data": "No"
+  },
+  "drugs": {
+    "visible": true,
+    "data": "No"
+  },
+  "privacyAccepted": true,
+  "media": [
+    {
+      "image": true,
+      "url": "https://images.unsplash.com/photo-1593351799227-75df2026356b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1895&q=80"
+    },
+    {
+      "image": true,
+      "url": "https://images.unsplash.com/photo-1517805686688-47dd930554b2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1827&q=80"
+    },
+    {
+      "image": true,
+      "url": "https://images.unsplash.com/photo-1462804993656-fac4ff489837?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80"
+    },
+    {
+      "image": true,
+      "url": "https://images.unsplash.com/photo-1544717304-a2db4a7b16ee?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1888&q=80"
+    }
+  ],
+  "about": "Passionate about visual storytelling",
+  "qualities": "Imaginative and adventurous",
+  "birthday": {
+    "_seconds": 724992000,
+    "_nanoseconds": 0
+  },
+  "memorableMoments": "Exhibiting art at a gallery opening",
+  "friends": [
+    {
+      "uid": null,
+      "address": null,
+      "phoneNumber": "555-123-4567",
+      "avatarURL": "https://images.unsplash.com/photo-1616840420121-7ad8ed885f11?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1760&q=80",
+      "websiteURL": null,
+      "contactName": "Sophia Brown",
+      "businessName": "",
+      "shippingAddress": null,
+      "id": null,
+      "email": "sophia@example.com"
+    },
+    {
+      "uid": null,
+      "address": null,
+      "phoneNumber": "555-234-5678",
+      "avatarURL": "https://images.unsplash.com/photo-1607699032287-f58742a2693d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80",
+      "websiteURL": null,
+      "contactName": "Olivia Johnson",
+      "businessName": "",
+      "shippingAddress": null,
+      "id": null,
+      "email": "olivia@example.com"
+    }
+  ],
+  "benchedFriends": [
+    {
+      "uid": null,
+      "address": null,
+      "phoneNumber": "555-345-6789",
+      "avatarURL": "https://images.unsplash.com/photo-1609132718484-cc90df3417f8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80",
+      "websiteURL": null,
+      "contactName": "Isabella Diaz",
+      "businessName": "",
+      "shippingAddress": null,
+      "id": null,
+      "email": "isabella@example.com"
+    },
+    {
+      "uid": null,
+      "address": null,
+      "phoneNumber": "555-456-7890",
+      "avatarURL": "https://images.unsplash.com/photo-1544717304-a2db4a7b16ee?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1888&q=80",
+      "websiteURL": null,
+      "contactName": "Carolina Martinez",
+      "businessName": "",
+      "shippingAddress": null,
+      "id": null,
+      "email": "carolina@example.com"
+    }
+  ],
+  "location": {
+    "latitude": 25.7617,
+    "longitude": -80.1918
+  },
+  "avatarURL": "https://images.unsplash.com/photo-1601288496920-b6154fe3626a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1826&q=80"
+}
