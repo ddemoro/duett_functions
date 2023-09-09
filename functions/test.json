@@ -1,55 +1,60 @@
 {
-  "phoneNumber": "+15552348765",
+  "id": "vikki123",
+  "uid": "user_12345",
+  "phoneNumber": "+15559871234",
   "creationDate": {
     "_seconds": 1692638646,
     "_nanoseconds": 405000000
   },
   "configured": true,
-  "fullName": "Elena Vega",
-  "emailAddress": "elena.vega@example.com",
+  "fullName": "Vikki Razul",
+  "emailAddress": "vikki.razul@example.com",
   "receiveMarketingMaterial": true,
   "living": {
-    "city": "Miami",
-    "latitude": 25.7617,
-    "state": "FL",
-    "longitude": -80.1918
+    "city": "Brooklyn",
+    "latitude": 40.6782,
+    "state": "NY",
+    "longitude": -73.9442,
+    "address": "123 Fashion St, Brooklyn, NY 11234"
   },
+  "avatarURL": "https://images.unsplash.com/photo-1548637724-cbc39e0c8d3b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1664&q=80",
+  "websiteURL": "https://vikki-fashiondesign.com",
   "gender": "Woman",
   "datingType": "Man",
-  "height": 168,
-  "ethnicity": "Latina",
+  "height": 170,
+  "ethnicity": "Middle Eastern",
   "children": "No children",
   "hometown": {
-    "hometown": "Barcelona, Spain",
+    "hometown": "Queens, NY",
     "visible": true
   },
   "jobTitle": {
     "visible": true,
-    "data": "Creative Director"
+    "data": "Fashion Designer"
   },
   "school": {
     "visible": true,
-    "data": "New York University"
+    "data": "Fashion Institute of Technology"
   },
   "work": {
     "visible": true,
-    "data": "Adobe Creative Cloud"
+    "data": "Vogue Magazine"
   },
   "education": {
     "visible": true,
-    "data": "Master of Fine Arts"
+    "data": "Masters in Fashion Designing"
   },
   "religion": {
     "visible": true,
-    "data": "Agnostic"
+    "data": "Muslim"
   },
   "politics": {
     "visible": true,
-    "data": "Progressive"
+    "data": "Democratic"
   },
   "drinks": {
     "visible": true,
-    "data": "Socially"
+    "data": "Occasionally"
   },
   "smoke": {
     "visible": true,
@@ -67,83 +72,40 @@
   "media": [
     {
       "image": true,
-      "url": "https://images.unsplash.com/photo-1593351799227-75df2026356b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1895&q=80"
-    },
-    {
-      "image": true,
-      "url": "https://images.unsplash.com/photo-1517805686688-47dd930554b2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1827&q=80"
-    },
-    {
-      "image": true,
-      "url": "https://images.unsplash.com/photo-1462804993656-fac4ff489837?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80"
-    },
-    {
-      "image": true,
-      "url": "https://images.unsplash.com/photo-1544717304-a2db4a7b16ee?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1888&q=80"
+      "url": "https://plus.unsplash.com/premium_photo-1664464227912-a24e4259cc60?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80"
     }
   ],
-  "about": "Passionate about visual storytelling",
-  "qualities": "Imaginative and adventurous",
+  "about": "Passionate about sustainable fashion and contemporary art.",
+  "qualities": "Creative and open-minded",
   "birthday": {
-    "_seconds": 724992000,
+    "_seconds": 764112000,
     "_nanoseconds": 0
   },
-  "memorableMoments": "Exhibiting art at a gallery opening",
+  "memorableMoments": "Launching my own sustainable clothing line in NYC",
   "friends": [
     {
-      "uid": null,
-      "address": null,
-      "phoneNumber": "555-123-4567",
-      "avatarURL": "https://images.unsplash.com/photo-1616840420121-7ad8ed885f11?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1760&q=80",
-      "websiteURL": null,
-      "contactName": "Sophia Brown",
-      "businessName": "",
-      "shippingAddress": null,
-      "id": null,
-      "email": "sophia@example.com"
+      "uid": "nina_123",
+      "address": "456 Style Blvd, Queens, NY 11345",
+      "phoneNumber": "555-678-9123",
+      "avatarURL": "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80",
+      "websiteURL": "https://nina-fashionblog.com",
+      "contactName": "Nina Ferro",
+      "businessName": "Nina's Fashion Blog",
+      "shippingAddress": "789 Trendy Ln, Manhattan, NY 10023",
+      "id": "contact_nina_123",
+      "email": "nina@example.com"
     },
     {
-      "uid": null,
-      "address": null,
-      "phoneNumber": "555-234-5678",
-      "avatarURL": "https://images.unsplash.com/photo-1607699032287-f58742a2693d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80",
-      "websiteURL": null,
-      "contactName": "Olivia Johnson",
-      "businessName": "",
-      "shippingAddress": null,
-      "id": null,
-      "email": "olivia@example.com"
+      "uid": "lara_456",
+      "address": "321 Art Ave, Bronx, NY 10458",
+      "phoneNumber": "555-789-0123",
+      "avatarURL": "https://images.unsplash.com/photo-1634055739897-b6a98a80114a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1944&q=80",
+      "websiteURL": "https://lara-artgallery.com",
+      "contactName": "Lara Phelps",
+      "businessName": "Lara's Art Gallery",
+      "shippingAddress": "1011 Creativity St, Staten Island, NY 10310",
+      "id": "contact_lara_456",
+      "email": "lara@example.com"
     }
-  ],
-  "benchedFriends": [
-    {
-      "uid": null,
-      "address": null,
-      "phoneNumber": "555-345-6789",
-      "avatarURL": "https://images.unsplash.com/photo-1609132718484-cc90df3417f8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80",
-      "websiteURL": null,
-      "contactName": "Isabella Diaz",
-      "businessName": "",
-      "shippingAddress": null,
-      "id": null,
-      "email": "isabella@example.com"
-    },
-    {
-      "uid": null,
-      "address": null,
-      "phoneNumber": "555-456-7890",
-      "avatarURL": "https://images.unsplash.com/photo-1544717304-a2db4a7b16ee?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1888&q=80",
-      "websiteURL": null,
-      "contactName": "Carolina Martinez",
-      "businessName": "",
-      "shippingAddress": null,
-      "id": null,
-      "email": "carolina@example.com"
-    }
-  ],
-  "location": {
-    "latitude": 25.7617,
-    "longitude": -80.1918
-  },
-  "avatarURL": "https://images.unsplash.com/photo-1601288496920-b6154fe3626a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1826&q=80"
+  ]
 }

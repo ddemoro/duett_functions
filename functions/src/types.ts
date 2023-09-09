@@ -142,7 +142,7 @@ export interface Address {
 
 export interface InfoItem {
     data: string;
-    visibile: boolean;
+    visible: boolean;
 }
 
 export interface GeoLocation {
