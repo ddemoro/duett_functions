@@ -21,6 +21,32 @@ exports.profileAdded = functions.firestore.document("profiles/{uid}").onCreate(a
   return Promise.resolve();
 });
 
+
+exports.addSuggestions = functions.https.onRequest(async (req, res) => {
+  // eslint-disable-next-line max-len
+  const suggestions = ["6xS0eag96xugl4FHEJ5p", "vBOiXFUkuIwHnPQJnABI", "hlx1y3vcFAEXmlPNCN1I", "k4hEHG5sByAlzgRjv9WP", "jgHPInuBrxhrfyLoAFR7", "BUXqnW0rHGVCOHnJUlPQ", "H3armOl5GWMLGRcA2ReV", "wYJZChrOo83bLVn659Vh"];
+
+  await firestore.collection("suggestions").doc("JjxxN53UP7dm9N8PmhxHy9Fa2IX2").set({profiles: suggestions});
+  res.sendStatus(200);
+});
+
+exports.test = functions.https.onRequest(async (req, res) => {
+  const profile = await firestore.collection("profiles").doc("JjxxN53UP7dm9N8PmhxHy9Fa2IX2").get();
+  const p = Object.assign({id: profile.id}, profile.data() as Profile);
+  const birthdayDate = p.birthday.toDate();
+  const today = new Date();
+  let age = today.getFullYear() - birthdayDate.getFullYear();
+  const monthDiff = today.getMonth() - birthdayDate.getMonth();
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthdayDate.getDate())) {
+    age--;
+  }
+  console.log("Age: "+age);
+
+  res.sendStatus(200);
+});
+
+
 exports.getProfiles = functions.https.onRequest(async (req, res) => {
   const profile = {
     phoneNumber: "+15552348765",
@@ -92,27 +118,27 @@ exports.getProfiles = functions.https.onRequest(async (req, res) => {
       {
         image: true,
         url:
-            "https://images.unsplash.com/photo-1582639590011-f5a8416d1101?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1949&q=80",
+                    "https://images.unsplash.com/photo-1582639590011-f5a8416d1101?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1949&q=80",
       },
       {
         image: true,
         url:
-            "https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1888&q=80",
+                    "https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1888&q=80",
       },
       {
         image: true,
         url:
-            "https://images.unsplash.com/photo-1616840420121-7ad8ed885f11?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1760&q=80",
+                    "https://images.unsplash.com/photo-1616840420121-7ad8ed885f11?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1760&q=80",
       },
       {
         image: true,
         url:
-            "https://images.unsplash.com/photo-1609132718484-cc90df3417f8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80",
+                    "https://images.unsplash.com/photo-1609132718484-cc90df3417f8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80",
       },
       {
         image: true,
         url:
-            "https://images.unsplash.com/flagged/photo-1556151994-b611e5ab3675?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1760&q=80",
+                    "https://images.unsplash.com/flagged/photo-1556151994-b611e5ab3675?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1760&q=80",
       },
     ],
     about: "Adventure-seeking coffee lover with a passion for 80s vinyl, always up for a spontaneous road trip or deep conversation under the stars.",
@@ -128,7 +154,7 @@ exports.getProfiles = functions.https.onRequest(async (req, res) => {
         address: null,
         phoneNumber: "555-345-6789",
         avatarURL:
-            "https://images.unsplash.com/photo-1540875716262-8c2b2c4c00ff?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80",
+                    "https://images.unsplash.com/photo-1540875716262-8c2b2c4c00ff?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80",
         websiteURL: null,
         contactName: "Ava Wilson",
         businessName: "",
@@ -141,7 +167,7 @@ exports.getProfiles = functions.https.onRequest(async (req, res) => {
         address: null,
         phoneNumber: "555-456-7890",
         avatarURL:
-            "https://images.unsplash.com/photo-1521038199265-bc482db0f923?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80",
+                    "https://images.unsplash.com/photo-1521038199265-bc482db0f923?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80",
         websiteURL: null,
         contactName: "Mia Rodriguez",
         businessName: "",
@@ -156,7 +182,7 @@ exports.getProfiles = functions.https.onRequest(async (req, res) => {
         address: null,
         phoneNumber: "555-345-6789",
         avatarURL:
-            "https://images.unsplash.com/photo-1540875716262-8c2b2c4c00ff?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80",
+                    "https://images.unsplash.com/photo-1540875716262-8c2b2c4c00ff?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80",
         websiteURL: null,
         contactName: "Ava Wilson",
         businessName: "",
@@ -169,7 +195,7 @@ exports.getProfiles = functions.https.onRequest(async (req, res) => {
         address: null,
         phoneNumber: "555-456-7890",
         avatarURL:
-            "https://images.unsplash.com/photo-1521038199265-bc482db0f923?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80",
+                    "https://images.unsplash.com/photo-1521038199265-bc482db0f923?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80",
         websiteURL: null,
         contactName: "Mia Rodriguez",
         businessName: "",
@@ -183,7 +209,7 @@ exports.getProfiles = functions.https.onRequest(async (req, res) => {
       longitude: -122.4194,
     },
     avatarURL:
-        "https://images.unsplash.com/photo-1578220438799-c0ba9b9d78a4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1886&q=80",
+            "https://images.unsplash.com/photo-1578220438799-c0ba9b9d78a4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1886&q=80",
   };
 
 

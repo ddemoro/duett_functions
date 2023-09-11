@@ -1,80 +1,23 @@
-export interface Content {
-    id: string;
-    uid: string;
-    team: string[];
-    accountID: string;
-    title: string;
-    description: string;
-    position: number;
-    url: string;
-    parentID: string;
-    type: number; // 0=file, 1=link, 2=folder, 3=product
-    views: number;
-    productID: string;
-    imageURL: string;
+export interface Match {
+    matched: string[];// list of profile IDs (2)
+    profiles: Person[];
     creationDate: any;
-    lastUpdated: any;
-    downloadLink: string;
-    mimeType: string;
-    suffix: string;
-    token: string;
-    public: boolean;
 }
 
-export interface ExternalContent {
-    id: string;
-    uid: string;
-    contentID: string;
-    imageURL: string;
-    title: string;
-}
-
-export interface Zipline {
-    id: string;
-    uid: string;
-    to: string;
-    message: string;
-    title: string;
-    url: string;
-    heroImageURL: string;
-    content: [];
+export interface Like {
+    profileID: string; // who is liking the person
+    likedProfileID: string; // who they are liking
     creationDate: any;
-    profile: Profile;
-    lastAccessedDate: any;
-    isPop: boolean;
-    emailAddress: string;
-    views: number;
-    contentViews: number;
-    team: string[];
 }
 
-export interface Account {
-    id: string;
-    emailAddress: string;
-    logoURL: string;
-    businessName: string;
-    description: string;
-    phoneNumber: string;
-
-    emailDomain: string;
-    slug: string;
-    owners: string[];
-    color: string;
-
-    websiteURL: string;
-    creationDate: any;
-    configured: boolean;
+export interface Person {
+    avatarURL: string;
+    fullName: string;
+    age: number;
+    living:string;
+    profileID: string;
 }
 
-export interface Company {
-    logoURL: string;
-    businessName: string;
-    description: string;
-    websiteURL: string;
-    phoneNumber: string;
-    color: string;
-    slug: string;
-}
 
 export interface Profile {
     id: string;
@@ -88,6 +31,7 @@ export interface Profile {
     fcmToken: string;
     phoneNumber: string;
     receiveMarketingMaterial: boolean;
+    birthday:any;
     living: GeoLocation;
     gender: string;
     datingType: string;
@@ -112,7 +56,6 @@ export interface Profile {
     qualities: string;
     memorableMoments: string;
 }
-
 
 export interface Media {
     url: string;
