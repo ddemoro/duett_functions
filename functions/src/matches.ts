@@ -1,5 +1,6 @@
 import * as functions from "firebase-functions";
-import {Like, Match, Person, Profile} from "./types";
+import {Friend, Like, Match, Person, PossibleMatch, Profile} from "./types";
+import dbUtils from "./utils/db_utils";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const admin = require("firebase-admin");
@@ -50,8 +51,55 @@ exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (
 
   await firestore.collection("matches").add(match);
 
+  // Create Possible Match
+  await createPossibleMatch(match);
+
   return Promise.resolve();
 });
+
+// eslint-disable-next-line valid-jsdoc
+/** Creates a <code>possbileMatch</code> **/
+async function createPossibleMatch(match: Match) {
+  const profiles = match.profiles;
+
+  if (profiles.length !== 2) {
+    throw new Error("Expected exactly 2 profiles");
+  }
+
+  let profileOne;
+  let profileTwo;
+  let teamOneProfiles: Friend[] = [];
+  let teamTwoProfiles: Friend[] = [];
+
+  for (const person of profiles) {
+    const uid = person.profileID;
+
+    try {
+      const profile = await dbUtils.getProfile(uid);
+
+      if (!profileOne) {
+        profileOne = uid;
+        teamOneProfiles = profile.friends;
+      } else {
+        profileTwo = uid;
+        teamTwoProfiles = profile.friends;
+      }
+    } catch (error) {
+      console.error(`Failed to fetch profile for UID: ${uid}`, error);
+      throw error; // Or handle the error in another way that makes sense for your application
+    }
+  }
+
+  const possibleMatches: PossibleMatch = {
+    profileOne: profileOne as string,
+    profileTwo: profileTwo as string,
+    teamOneProfiles: teamOneProfiles,
+    teamTwoProfiles: teamTwoProfiles,
+    creationDate: FieldValue.serverTimestamp(),
+  };
+
+  await firestore.collection("possibleMatches").add(possibleMatches);
+}
 
 // eslint-disable-next-line require-jsdoc
 function calculateAge(birthdayDate: { getFullYear: () => number; getMonth: () => number; getDate: () => number; }) {

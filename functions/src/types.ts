@@ -4,6 +4,14 @@ export interface Match {
     creationDate: any;
 }
 
+export interface PossibleMatch {
+    profileOne:string;
+    profileTwo:string;
+    teamOneProfiles: Friend[];
+    teamTwoProfiles: Friend[];
+    creationDate: any;
+}
+
 export interface Like {
     profileID: string; // who is liking the person
     likedProfileID: string; // who they are liking
@@ -68,8 +76,6 @@ export interface Friend {
     email: string;
     contactName: string;
     phoneNumber: string;
-    websiteURL: string;
-    address: Address;
     avatarURL: string;
 }
 
