@@ -21,9 +21,9 @@ export interface Person {
 
 export interface Profile {
     id: string;
+    avatarURL:string;
     username: string;
     emailAddress: string;
-    avatarURL: string;
     fullName: string;
     description: string;
     creationDate: any;

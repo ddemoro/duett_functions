@@ -26,7 +26,7 @@ exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (
 
 
   const personOne: Person = {
-    avatarURL: p1.avatarURL,
+    avatarURL: p1.media[0].url,
     fullName: p1.fullName,
     living: p1.living.city + "," + p1.living.state,
     age: calculateAge(p1.birthday.toDate()),
