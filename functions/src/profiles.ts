@@ -1,5 +1,6 @@
 import * as functions from "firebase-functions";
 import {Profile} from "./types";
+import pushNotifications from "./push_notifications";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const admin = require("firebase-admin");
@@ -31,7 +32,7 @@ exports.addSuggestions = functions.https.onRequest(async (req, res) => {
 });
 
 exports.test = functions.https.onRequest(async (req, res) => {
-  const profile = await firestore.collection("profiles").doc("JjxxN53UP7dm9N8PmhxHy9Fa2IX2").get();
+  const profile = await firestore.collection("profiles").doc("0chklRlWnWhlSOR6Z1GrsPAIzDA2").get();
   const p = Object.assign({id: profile.id}, profile.data() as Profile);
   const birthdayDate = p.birthday.toDate();
   const today = new Date();
@@ -41,7 +42,9 @@ exports.test = functions.https.onRequest(async (req, res) => {
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthdayDate.getDate())) {
     age--;
   }
-  console.log("Age: "+age);
+  console.log("Age: " + age);
+
+  await pushNotifications.sendPushNotification(profile.id, "Duett Possible Match Alert", "Pete matched with Janice! Check out which one of her friends you may like.");
 
   res.sendStatus(200);
 });
