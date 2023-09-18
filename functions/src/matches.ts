@@ -148,6 +148,7 @@ async function startMatching(match: Match) {
     matchID: match.id,
     creationDate: FieldValue.serverTimestamp(),
     friend: person1,
+    match: person2,
     choices: convertToChoices(profile2.friends),
     targets: target1,
   };
@@ -156,6 +157,7 @@ async function startMatching(match: Match) {
     matchID: match.id,
     creationDate: FieldValue.serverTimestamp(),
     friend: person2,
+    match: person1,
     choices: convertToChoices(profile1.friends),
     targets: target2,
   };

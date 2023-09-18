@@ -8,6 +8,7 @@ export interface Match {
 export interface PossibleMatch {
     matchID: string; // The id of the match this was created by
     friend: Person; // the friend who created this match
+    match: Person; // the person they matched with
     choices: Choice[];
     targets: string[]; // Who to send the match to
     creationDate: any;
