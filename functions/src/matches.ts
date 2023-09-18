@@ -1,5 +1,5 @@
 import * as functions from "firebase-functions";
-import {Like, Match, Person, PossibleMatch, Profile} from "./types";
+import {Choice, Friend, Like, Match, Person, PossibleMatch, Profile} from "./types";
 import dbUtils from "./utils/db_utils";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -73,6 +73,25 @@ exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (
   return Promise.resolve();
 });
 
+
+// eslint-disable-next-line require-jsdoc
+function convertToChoices(friends:Friend[]) {
+  const choices:any[] = [];
+  friends.forEach((friend) => {
+    const choice:Choice = {
+      uid: friend.uid,
+      fullName: friend.contactName,
+      avatarURL: friend.avatarURL,
+      likes: [],
+      rejects: [],
+    };
+    choices.push(choice);
+  });
+
+
+  return choices;
+}
+
 // eslint-disable-next-line valid-jsdoc
 /** Creates a <code>possbileMatch</code> **/
 async function startMatching(match: Match) {
@@ -88,22 +107,31 @@ async function startMatching(match: Match) {
   const person2 = match.profiles[1];
   const profile2 = await dbUtils.getProfile(person2.profileID);
 
+  const target1:string[] = [];
+  profile1.friends.forEach((friend) => {
+    target1.push(friend.uid);
+  });
+
+  const target2:string[] = [];
+  profile2.friends.forEach((friend) => {
+    target2.push(friend.uid);
+  });
+
+
   const possibleMatch1: PossibleMatch = {
     matchID: match.id,
     creationDate: FieldValue.serverTimestamp(),
     friend: person1,
-    likes: [],
-    rejects: [],
-    choices: profile2.friends,
+    choices: convertToChoices(profile2.friends),
+    targets: target1,
   };
 
   const possibleMatch2: PossibleMatch = {
     matchID: match.id,
     creationDate: FieldValue.serverTimestamp(),
     friend: person2,
-    likes: [],
-    rejects: [],
-    choices: profile1.friends,
+    choices: convertToChoices(profile1.friends),
+    targets: target2,
   };
 
   await firestore.collection("possibleMatches").add(possibleMatch1);

@@ -1,5 +1,5 @@
 export interface Match {
-    id:string;
+    id: string;
     matched: string[];// list of profile IDs (2)
     profiles: Person[];
     creationDate: any;
@@ -8,9 +8,8 @@ export interface Match {
 export interface PossibleMatch {
     matchID: string; // The id of the match this was created by
     friend: Person; // the friend who created this match
-    choices: Friend[];
-    likes: string[]; // the ids of the friends he/she likes
-    rejects: string[]; // the ids of the friends he/she does not like
+    choices: Choice[];
+    targets: string[]; // Who to send the match to
     creationDate: any;
 }
 
@@ -79,6 +78,14 @@ export interface Friend {
     contactName: string;
     phoneNumber: string;
     avatarURL: string;
+}
+
+export interface Choice {
+    uid: string;
+    fullName: string;
+    avatarURL: string;
+    likes: string[],
+    rejects: string[]
 }
 
 
