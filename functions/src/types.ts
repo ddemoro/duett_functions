@@ -1,14 +1,16 @@
 export interface Match {
+    id:string;
     matched: string[];// list of profile IDs (2)
     profiles: Person[];
     creationDate: any;
 }
 
 export interface PossibleMatch {
-    profileOne:string;
-    profileTwo:string;
-    teamOneProfiles: Friend[];
-    teamTwoProfiles: Friend[];
+    matchID: string; // The id of the match this was created by
+    friend: Person; // the friend who created this match
+    choices: Friend[];
+    likes: string[]; // the ids of the friends he/she likes
+    rejects: string[]; // the ids of the friends he/she does not like
     creationDate: any;
 }
 
@@ -22,14 +24,14 @@ export interface Person {
     avatarURL: string;
     fullName: string;
     age: number;
-    living:string;
+    living: string;
     profileID: string;
 }
 
 
 export interface Profile {
     id: string;
-    avatarURL:string;
+    avatarURL: string;
     username: string;
     emailAddress: string;
     fullName: string;
@@ -39,7 +41,7 @@ export interface Profile {
     fcmToken: string;
     phoneNumber: string;
     receiveMarketingMaterial: boolean;
-    birthday:any;
+    birthday: any;
     living: GeoLocation;
     gender: string;
     datingType: string;

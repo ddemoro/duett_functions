@@ -1,5 +1,5 @@
 import * as functions from "firebase-functions";
-import {Friend, Like, Match, Person, PossibleMatch, Profile} from "./types";
+import {Like, Match, Person, PossibleMatch, Profile} from "./types";
 import dbUtils from "./utils/db_utils";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -56,62 +56,60 @@ exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (
 
 
   const match: Match = {
+    id: "",
     matched: [like.profileID, like.likedProfileID],
     creationDate: FieldValue.serverTimestamp(),
     profiles: [personOne, personTwo],
   };
 
-  await firestore.collection("matches").add(match);
+  const docRef = await firestore.collection("matches").add(match);
+  const docId = docRef.id;
+  match.id = docId;
+
 
   // Create Possible Match
-  await createPossibleMatch(match);
+  await startMatching(match);
 
   return Promise.resolve();
 });
 
 // eslint-disable-next-line valid-jsdoc
 /** Creates a <code>possbileMatch</code> **/
-async function createPossibleMatch(match: Match) {
+async function startMatching(match: Match) {
   const profiles = match.profiles;
 
   if (profiles.length !== 2) {
     throw new Error("Expected exactly 2 profiles");
   }
 
-  let profileOne;
-  let profileTwo;
-  let teamOneProfiles: Friend[] = [];
-  let teamTwoProfiles: Friend[] = [];
+  const person1 = match.profiles[0];
+  const profile1 = await dbUtils.getProfile(person1.profileID);
 
-  for (const person of profiles) {
-    const uid = person.profileID;
+  const person2 = match.profiles[1];
+  const profile2 = await dbUtils.getProfile(person2.profileID);
 
-    try {
-      const profile = await dbUtils.getProfile(uid);
-
-      if (!profileOne) {
-        profileOne = uid;
-        teamOneProfiles = profile.friends;
-      } else {
-        profileTwo = uid;
-        teamTwoProfiles = profile.friends;
-      }
-    } catch (error) {
-      console.error(`Failed to fetch profile for UID: ${uid}`, error);
-      throw error; // Or handle the error in another way that makes sense for your application
-    }
-  }
-
-  const possibleMatches: PossibleMatch = {
-    profileOne: profileOne as string,
-    profileTwo: profileTwo as string,
-    teamOneProfiles: teamOneProfiles,
-    teamTwoProfiles: teamTwoProfiles,
+  const possibleMatch1: PossibleMatch = {
+    matchID: match.id,
     creationDate: FieldValue.serverTimestamp(),
+    friend: person1,
+    likes: [],
+    rejects: [],
+    choices: profile2.friends,
   };
 
-  await firestore.collection("possibleMatches").add(possibleMatches);
+  const possibleMatch2: PossibleMatch = {
+    matchID: match.id,
+    creationDate: FieldValue.serverTimestamp(),
+    friend: person2,
+    likes: [],
+    rejects: [],
+    choices: profile1.friends,
+  };
+
+  await firestore.collection("possibleMatches").add(possibleMatch1);
+  await firestore.collection("possibleMatches").add(possibleMatch2);
 }
+
 
 // eslint-disable-next-line require-jsdoc
 function calculateAge(birthdayDate: { getFullYear: () => number; getMonth: () => number; getDate: () => number; }) {
