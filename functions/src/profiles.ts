@@ -1,6 +1,7 @@
 import * as functions from "firebase-functions";
 import {Friend, Profile} from "./types";
 import pushNotifications from "./push_notifications";
+import dbUtils from "./utils/db_utils";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const admin = require("firebase-admin");
@@ -344,6 +345,30 @@ exports.createFriends = functions.https.onRequest(async (req, res) => {
     await addFriends(profile);
   }
 
+  res.sendStatus(200);
+});
+
+exports.setFriends = functions.https.onRequest(async (req, res) => {
+  const derekProfile = await dbUtils.getProfile("0chklRlWnWhlSOR6Z1GrsPAIzDA2");
+  const brettProfile = await dbUtils.getProfile("JjxxN53UP7dm9N8PmhxHy9Fa2IX2");
+  const erickProfile = await dbUtils.getProfile("NV4cvofidmO9G9FJfmzIZPnjJqp2");
+  const richardProfile = await dbUtils.getProfile("5OFGObt5cXiWhLlgKsXB");
+
+  const profiles = [derekProfile, brettProfile, erickProfile];
+  const friends: Friend[] = [];
+  profiles.forEach((profile) => {
+    const f: Friend = {
+      "uid": profile.id,
+      "phoneNumber": profile.phoneNumber,
+      "avatarURL": profile.avatarURL,
+      "contactName": profile.fullName,
+      "businessName": "",
+      "email": profile.emailAddress,
+    };
+    friends.push(f);
+  });
+
+  await firestore.collection("profiles").doc(richardProfile.id).update({friends: friends});
   res.sendStatus(200);
 });
 
