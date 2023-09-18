@@ -9,6 +9,18 @@ const firestore = admin.firestore();
 const FieldValue = require("firebase-admin").firestore.FieldValue;
 
 
+exports.testLike = functions.https.onRequest(async (req, res) => {
+  // eslint-disable-next-line max-len
+  const like = {
+    profileID: "0chklRlWnWhlSOR6Z1GrsPAIzDA2",
+    likedProfileID: "hlx1y3vcFAEXmlPNCN1I",
+  };
+
+  await firestore.collection("likes").add(like);
+  res.sendStatus(200);
+});
+
+
 exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (snap, context) => {
   const like = Object.assign({id: snap.id}, snap.data() as Like);
 
