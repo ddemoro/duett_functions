@@ -1,6 +1,8 @@
 import * as functions from "firebase-functions";
 import {Choice, Friend, Like, Match, Person, PossibleMatch, Profile} from "./types";
 import dbUtils from "./utils/db_utils";
+import textUtils from "./utils/text_utils";
+import pushNotifications from "./push_notifications";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const admin = require("firebase-admin");
@@ -20,6 +22,30 @@ exports.testLike = functions.https.onRequest(async (req, res) => {
   res.sendStatus(200);
 });
 
+exports.possibleMatchAdded = functions.firestore.document("possibleMatches/{uid}").onCreate(async (snap, context) => {
+  const pm = Object.assign({id: snap.id}, snap.data() as PossibleMatch);
+  const match = await dbUtils.getMatch(pm.matchID);
+  const targets = pm.targets;
+
+  const yourFriendsName = textUtils.getFirstName(pm.friend.fullName);
+  let theirFriendsName;
+  const people: Person[] = match.profiles;
+  if (people[0].profileID !== pm.friend.profileID) {
+    theirFriendsName = textUtils.getFirstName(people[0].fullName);
+  } else {
+    theirFriendsName = textUtils.getFirstName(people[1].fullName);
+  }
+
+  const title = "Duett Possible Match Alert";
+  const message = yourFriendsName + " matched with " + theirFriendsName + "! Check out which one of her friends you may like.";
+
+
+  for (const targetID of targets) {
+    await pushNotifications.notifyTargets(targetID, title, message, pm.id);
+  }
+
+  return Promise.resolve();
+});
 
 exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (snap, context) => {
   const like = Object.assign({id: snap.id}, snap.data() as Like);
@@ -75,10 +101,10 @@ exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (
 
 
 // eslint-disable-next-line require-jsdoc
-function convertToChoices(friends:Friend[]) {
-  const choices:any[] = [];
+function convertToChoices(friends: Friend[]) {
+  const choices: any[] = [];
   friends.forEach((friend) => {
-    const choice:Choice = {
+    const choice: Choice = {
       uid: friend.uid,
       fullName: friend.contactName,
       avatarURL: friend.avatarURL,
@@ -107,12 +133,12 @@ async function startMatching(match: Match) {
   const person2 = match.profiles[1];
   const profile2 = await dbUtils.getProfile(person2.profileID);
 
-  const target1:string[] = [];
+  const target1: string[] = [];
   profile1.friends.forEach((friend) => {
     target1.push(friend.uid);
   });
 
-  const target2:string[] = [];
+  const target2: string[] = [];
   profile2.friends.forEach((friend) => {
     target2.push(friend.uid);
   });
