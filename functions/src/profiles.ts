@@ -354,13 +354,13 @@ exports.setFriends = functions.https.onRequest(async (req, res) => {
   const erickProfile = await dbUtils.getProfile("NV4cvofidmO9G9FJfmzIZPnjJqp2");
   const richardProfile = await dbUtils.getProfile("5OFGObt5cXiWhLlgKsXB");
 
-  const profiles = [derekProfile, brettProfile, erickProfile];
+  const profiles = [erickProfile, derekProfile, brettProfile];
   const friends: Friend[] = [];
   profiles.forEach((profile) => {
     const f: Friend = {
       "uid": profile.id,
       "phoneNumber": profile.phoneNumber,
-      "avatarURL": profile.avatarURL,
+      "avatarURL": profile.media[0].url,
       "contactName": profile.fullName,
       "businessName": "",
       "email": profile.emailAddress,

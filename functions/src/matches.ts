@@ -14,8 +14,8 @@ const FieldValue = require("firebase-admin").firestore.FieldValue;
 exports.testLike = functions.https.onRequest(async (req, res) => {
   // eslint-disable-next-line max-len
   const like = {
-    profileID: "0chklRlWnWhlSOR6Z1GrsPAIzDA2",
-    likedProfileID: "hlx1y3vcFAEXmlPNCN1I",
+    profileID: "JjxxN53UP7dm9N8PmhxHy9Fa2IX2",
+    likedProfileID: "wYJZChrOo83bLVn659Vh",
   };
 
   await firestore.collection("likes").add(like);
