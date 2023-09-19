@@ -25,7 +25,7 @@ exports.testLike = functions.https.onRequest(async (req, res) => {
 exports.possibleMatchAdded = functions.firestore.document("possibleMatches/{uid}").onCreate(async (snap, context) => {
   const pm = Object.assign({id: snap.id}, snap.data() as PossibleMatch);
   const match = await dbUtils.getMatch(pm.matchID);
-  const targets = pm.targets;
+  const uid = pm.uid;
 
   const yourFriendsName = textUtils.getFirstName(pm.friend.fullName);
   let theirFriendsName;
@@ -40,9 +40,7 @@ exports.possibleMatchAdded = functions.firestore.document("possibleMatches/{uid}
   const message = yourFriendsName + " matched with " + theirFriendsName + "! Check out which one of her friends you may like.";
 
 
-  for (const targetID of targets) {
-    await pushNotifications.notifyTargets(targetID, title, message, pm.id);
-  }
+  await pushNotifications.notifyTargets(uid, title, message, pm.id);
 
   return Promise.resolve();
 });
@@ -108,8 +106,8 @@ function convertToChoices(friends: Friend[]) {
       uid: friend.uid,
       fullName: friend.contactName,
       avatarURL: friend.avatarURL,
-      likes: [],
-      rejects: [],
+      liked: false,
+      rejected: false,
     };
     choices.push(choice);
   });
@@ -133,37 +131,34 @@ async function startMatching(match: Match) {
   const person2 = match.profiles[1];
   const profile2 = await dbUtils.getProfile(person2.profileID);
 
-  const target1: string[] = [];
-  profile1.friends.forEach((friend) => {
-    target1.push(friend.uid);
-  });
 
-  const target2: string[] = [];
-  profile2.friends.forEach((friend) => {
-    target2.push(friend.uid);
-  });
+  for (const friend of profile1.friends) {
+    const possibleMatch: PossibleMatch = {
+      matchID: match.id,
+      creationDate: FieldValue.serverTimestamp(),
+      friend: person1,
+      match: person2,
+      choices: convertToChoices(profile2.friends),
+      uid: friend.uid,
+      completed: false,
+    };
 
+    await firestore.collection("possibleMatches").add(possibleMatch);
+  }
 
-  const possibleMatch1: PossibleMatch = {
-    matchID: match.id,
-    creationDate: FieldValue.serverTimestamp(),
-    friend: person1,
-    match: person2,
-    choices: convertToChoices(profile2.friends),
-    targets: target1,
-  };
+  for (const friend of profile2.friends) {
+    const possibleMatch: PossibleMatch = {
+      matchID: match.id,
+      creationDate: FieldValue.serverTimestamp(),
+      friend: person2,
+      match: person1,
+      choices: convertToChoices(profile1.friends),
+      uid: friend.uid,
+      completed: false,
+    };
 
-  const possibleMatch2: PossibleMatch = {
-    matchID: match.id,
-    creationDate: FieldValue.serverTimestamp(),
-    friend: person2,
-    match: person1,
-    choices: convertToChoices(profile1.friends),
-    targets: target2,
-  };
-
-  await firestore.collection("possibleMatches").add(possibleMatch1);
-  await firestore.collection("possibleMatches").add(possibleMatch2);
+    await firestore.collection("possibleMatches").add(possibleMatch);
+  }
 }
 
 

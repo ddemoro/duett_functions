@@ -10,7 +10,8 @@ export interface PossibleMatch {
     friend: Person; // the friend who created this match
     match: Person; // the person they matched with
     choices: Choice[];
-    targets: string[]; // Who to send the match to
+    uid: string; // Who this should go to
+    completed:boolean; // When the user completes their matching
     creationDate: any;
 }
 
@@ -85,8 +86,8 @@ export interface Choice {
     uid: string;
     fullName: string;
     avatarURL: string;
-    likes: string[],
-    rejects: string[]
+    liked: boolean;
+    rejected: boolean;
 }
 
 
