@@ -354,7 +354,7 @@ exports.setFriends = functions.https.onRequest(async (req, res) => {
   const erickProfile = await dbUtils.getProfile("NV4cvofidmO9G9FJfmzIZPnjJqp2");
   const richardProfile = await dbUtils.getProfile("5OFGObt5cXiWhLlgKsXB");
 
-  const profiles = [erickProfile, derekProfile, brettProfile];
+  const profiles = [erickProfile, derekProfile, richardProfile];
   const friends: Friend[] = [];
   profiles.forEach((profile) => {
     const f: Friend = {
@@ -368,7 +368,7 @@ exports.setFriends = functions.https.onRequest(async (req, res) => {
     friends.push(f);
   });
 
-  await firestore.collection("profiles").doc(richardProfile.id).update({friends: friends});
+  await firestore.collection("profiles").doc(brettProfile.id).update({friends: friends});
   res.sendStatus(200);
 });
 
