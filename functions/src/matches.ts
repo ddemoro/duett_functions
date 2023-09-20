@@ -10,6 +10,45 @@ const firestore = admin.firestore();
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const FieldValue = require("firebase-admin").firestore.FieldValue;
 
+exports.matchAdded = functions.firestore.document("matches/{uid}").onCreate(async (snap, context) => {
+  return Promise.resolve();
+});
+
+exports.matchUpdated = functions.firestore.document("matches/{uid}").onUpdate(async (change, context) => {
+  const newMatch = Object.assign({id: change.after.id}, change.after.data() as Match);
+  console.log("Match updated: " + newMatch.id);
+  return Promise.resolve();
+});
+
+exports.possibleMatchUpdated = functions.firestore.document("possibleMatches/{uid}").onUpdate(async (change, context) => {
+  const newMatch = Object.assign({id: change.after.id}, change.after.data() as PossibleMatch);
+  const oldMatch = Object.assign({id: change.before.id}, change.before.data() as PossibleMatch);
+
+  const newCompleted = newMatch.completed ?? false;
+  const oldCompleted = oldMatch.completed ?? false;
+
+  if (newCompleted && !oldCompleted) {
+    // Go through all the other possible matches to see if they are completed.
+    // If so, set Match completed to true
+
+    let allMatchesCompleted = true;
+    const querySnapshot = await firestore.collection("possibleMatches").where("matchID", "==", newMatch.matchID).get();
+    for (const document of querySnapshot.docs) {
+      const possibleMatch = Object.assign({id: document.id}, document.data() as PossibleMatch);
+      if (!possibleMatch.completed) {
+        allMatchesCompleted = false;
+        break;
+      }
+    }
+
+    if (allMatchesCompleted) {
+      await firestore.collection("matches").doc(newMatch.matchID).update({completed: true});
+    }
+  }
+
+  return Promise.resolve();
+});
+
 
 exports.testLike = functions.https.onRequest(async (req, res) => {
   // eslint-disable-next-line max-len
@@ -80,15 +119,14 @@ exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (
 
 
   const match: Match = {
-    id: "",
     matched: [like.profileID, like.likedProfileID],
     creationDate: FieldValue.serverTimestamp(),
     profiles: [personOne, personTwo],
+    completed: false,
   };
 
   const docRef = await firestore.collection("matches").add(match);
-  const docId = docRef.id;
-  match.id = docId;
+  match.id = docRef.id;
 
 
   // Create Possible Match
@@ -134,7 +172,7 @@ async function startMatching(match: Match) {
 
   for (const friend of profile1.friends) {
     const possibleMatch: PossibleMatch = {
-      matchID: match.id,
+      matchID: match.id!,
       creationDate: FieldValue.serverTimestamp(),
       friend: person1,
       match: person2,
@@ -148,7 +186,7 @@ async function startMatching(match: Match) {
 
   for (const friend of profile2.friends) {
     const possibleMatch: PossibleMatch = {
-      matchID: match.id,
+      matchID: match.id!,
       creationDate: FieldValue.serverTimestamp(),
       friend: person2,
       match: person1,

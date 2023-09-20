@@ -1,7 +1,8 @@
 export interface Match {
-    id: string;
+    id?: string;
     matched: string[];// list of profile IDs (2)
     profiles: Person[];
+    completed:boolean;
     creationDate: any;
 }
 
