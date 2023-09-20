@@ -63,6 +63,17 @@ function getFirstName(fullName: string) {
   return fullName.substring(0, indexOfSpace);
 }
 
+function calculateAge(birthdayDate: { getFullYear: () => number; getMonth: () => number; getDate: () => number; }) {
+  const today = new Date();
+  let age = today.getFullYear() - birthdayDate.getFullYear();
+  const monthDiff = today.getMonth() - birthdayDate.getMonth();
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthdayDate.getDate())) {
+    age--;
+  }
+
+  return age;
+}
 
 const textUtils = {
   slugify,
@@ -71,6 +82,7 @@ const textUtils = {
   generateRandomString,
   removeNonChars,
   generateToken,
+  calculateAge,
 };
 
 export default textUtils;

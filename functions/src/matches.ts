@@ -105,7 +105,7 @@ exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (
     avatarURL: p1.media[0].url,
     fullName: p1.fullName,
     living: p1.living.city + "," + p1.living.state,
-    age: calculateAge(p1.birthday.toDate()),
+    age: textUtils.calculateAge(p1.birthday.toDate()),
     profileID: p1.id,
   };
 
@@ -113,7 +113,7 @@ exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (
     avatarURL: p2.avatarURL,
     fullName: p2.fullName,
     living: p2.living.city + "," + p2.living.state,
-    age: calculateAge(p2.birthday.toDate()),
+    age: textUtils.calculateAge(p2.birthday.toDate()),
     profileID: p2.id,
   };
 
@@ -197,18 +197,4 @@ async function startMatching(match: Match) {
 
     await firestore.collection("possibleMatches").add(possibleMatch);
   }
-}
-
-
-// eslint-disable-next-line require-jsdoc
-function calculateAge(birthdayDate: { getFullYear: () => number; getMonth: () => number; getDate: () => number; }) {
-  const today = new Date();
-  let age = today.getFullYear() - birthdayDate.getFullYear();
-  const monthDiff = today.getMonth() - birthdayDate.getMonth();
-
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthdayDate.getDate())) {
-    age--;
-  }
-
-  return age;
 }
