@@ -2,7 +2,7 @@ export interface Match {
     id?: string;
     matched: string[];// list of profile IDs (2)
     profiles: Person[];
-    completed:boolean;
+    completed: boolean;
     creationDate: any;
 }
 
@@ -12,7 +12,7 @@ export interface PossibleMatch {
     match: Person; // the person they matched with
     choices: Choice[];
     uid: string; // Who this should go to
-    completed:boolean; // When the user completes their matching
+    completed: boolean; // When the user completes their matching
     creationDate: any;
 }
 
@@ -111,5 +111,22 @@ export interface GeoLocation {
     state: string;
     latitude: number;
     longitude: number;
+}
+
+export interface Pair {
+    matchID: string;
+    buddies: Buddy[];
+    approved: string[];
+    rejected: string[];
+    creationDate: any;
+}
+
+export interface Buddy {
+    fullName: string;
+    avatarURL: string;
+    profileID: string;
+    parentFullName: string;
+    parentProfileID: string;
+    parentAvatarURL: string;
 }
 

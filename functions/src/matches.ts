@@ -1,5 +1,6 @@
+/* eslint-disable require-jsdoc */
 import * as functions from "firebase-functions";
-import {Choice, Friend, Like, Match, Person, PossibleMatch, Profile} from "./types";
+import {Buddy, Choice, Friend, Like, Match, Pair, Person, PossibleMatch, Profile} from "./types";
 import dbUtils from "./utils/db_utils";
 import textUtils from "./utils/text_utils";
 import pushNotifications from "./push_notifications";
@@ -21,39 +22,87 @@ exports.matchUpdated = functions.firestore.document("matches/{uid}").onUpdate(as
 });
 
 exports.possibleMatchUpdated = functions.firestore.document("possibleMatches/{uid}").onUpdate(async (change, context) => {
-  const newMatch = Object.assign({id: change.after.id}, change.after.data() as PossibleMatch);
-  const oldMatch = Object.assign({id: change.before.id}, change.before.data() as PossibleMatch);
+  const newPM = Object.assign({id: change.after.id}, change.after.data() as PossibleMatch);
+  const oldPM = Object.assign({id: change.before.id}, change.before.data() as PossibleMatch);
 
-  const newCompleted = newMatch.completed ?? false;
-  const oldCompleted = oldMatch.completed ?? false;
+  const newCompleted = newPM.completed ?? false;
+  const oldCompleted = oldPM.completed ?? false;
 
   if (newCompleted && !oldCompleted) {
+    const pms: PossibleMatch[] = [];
     // Go through all the other possible matches to see if they are completed.
     // If so, set Match completed to true
 
     let allMatchesCompleted = true;
-    const querySnapshot = await firestore.collection("possibleMatches").where("matchID", "==", newMatch.matchID).get();
+    const querySnapshot = await firestore.collection("possibleMatches").where("matchID", "==", newPM.matchID).get();
     for (const document of querySnapshot.docs) {
       const possibleMatch = Object.assign({id: document.id}, document.data() as PossibleMatch);
       if (!possibleMatch.completed) {
         allMatchesCompleted = false;
-        break;
       }
+
+      pms.push(possibleMatch);
     }
 
     if (allMatchesCompleted) {
-      await firestore.collection("matches").doc(newMatch.matchID).update({completed: true});
+      await firestore.collection("matches").doc(newPM.matchID).update({completed: true});
+    }
+
+    for (const pm of pms) {
+      await checkForPair(pm, pms);
     }
   }
 
   return Promise.resolve();
 });
 
+async function checkForPair(possibleMatch: PossibleMatch, pms: PossibleMatch[]) {
+  for (const choice of possibleMatch.choices) {
+    if (choice.liked) {
+      // iterate through all possible matches
+      for (const pm of pms) {
+        for (const otherChoice of pm.choices) {
+          if (otherChoice.uid == possibleMatch.uid && otherChoice.liked) {
+            const buddyOne:Buddy = {
+              avatarURL: otherChoice.avatarURL,
+              fullName: otherChoice.fullName,
+              profileID: otherChoice.uid,
+              parentAvatarURL: possibleMatch.friend.avatarURL,
+              parentFullName: possibleMatch.friend.fullName,
+              parentProfileID: possibleMatch.friend.profileID,
+            };
+
+            const buddyTwo:Buddy = {
+              avatarURL: choice.avatarURL,
+              fullName: choice.fullName,
+              profileID: choice.uid,
+              parentAvatarURL: pm.friend.avatarURL,
+              parentFullName: pm.friend.fullName,
+              parentProfileID: pm.friend.profileID,
+            };
+
+            const pair:Pair = {
+              matchID: possibleMatch.matchID,
+              creationDate: FieldValue.serverTimestamp(),
+              approved: [],
+              rejected: [],
+              buddies: [buddyOne, buddyTwo],
+            };
+
+            // WE HAVE A PAIR
+            await firestore.collection("pairs").add(pair);
+          }
+        }
+      }
+    }
+  }
+}
+
 
 exports.testLike = functions.https.onRequest(async (req, res) => {
   // eslint-disable-next-line max-len
   const like = {
-    profileID: "0chklRlWnWhlSOR6Z1GrsPAIzDA2",
+    profileID: "JjxxN53UP7dm9N8PmhxHy9Fa2IX2",
     likedProfileID: "wYJZChrOo83bLVn659Vh",
   };
 
