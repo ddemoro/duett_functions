@@ -1,6 +1,6 @@
 /* eslint-disable require-jsdoc */
 import * as functions from "firebase-functions";
-import {Buddy, Choice, Friend, Like, Match, Pair, Person, PossibleMatch, Profile} from "./types";
+import {Choice, Friend, Like, Match, Pair, Person, PossibleMatch, Profile, Team} from "./types";
 import dbUtils from "./utils/db_utils";
 import textUtils from "./utils/text_utils";
 import pushNotifications from "./push_notifications";
@@ -75,22 +75,22 @@ async function checkForPair(possibleMatch: PossibleMatch, possibleMatches: Possi
       const doTheyLikeMe = await likeMe(possibleMatch.uid, choice.uid, possibleMatches);
       if (doTheyLikeMe) {
         const profile = await dbUtils.getProfile(possibleMatch.uid);
-        const buddyOne: Buddy = {
+        const teamOne: Team = {
           avatarURL: profile.avatarURL,
           fullName: profile.fullName,
           profileID: profile.id,
-          parentAvatarURL: possibleMatch.friend.avatarURL,
-          parentFullName: possibleMatch.friend.fullName,
-          parentProfileID: possibleMatch.friend.profileID,
+          teamLeaderAvatarURL: possibleMatch.friend.avatarURL,
+          teamLeaderName: possibleMatch.friend.fullName,
+          teamLeaderID: possibleMatch.friend.profileID,
         };
 
-        const buddyTwo: Buddy = {
+        const teamTwo: Team = {
           avatarURL: choice.avatarURL,
           fullName: choice.fullName,
           profileID: choice.uid,
-          parentAvatarURL: possibleMatch.match.avatarURL,
-          parentFullName: possibleMatch.match.fullName,
-          parentProfileID: possibleMatch.match.profileID,
+          teamLeaderAvatarURL: possibleMatch.match.avatarURL,
+          teamLeaderName: possibleMatch.match.fullName,
+          teamLeaderID: possibleMatch.match.profileID,
         };
 
         const pair: Pair = {
@@ -98,8 +98,8 @@ async function checkForPair(possibleMatch: PossibleMatch, possibleMatches: Possi
           creationDate: Date(),
           approved: [],
           rejected: [],
-          buddies: [buddyOne, buddyTwo],
-          buddieIDs: [buddyOne.profileID, buddyTwo.profileID],
+          teams: [teamOne, teamTwo],
+          teamIds: [teamOne.profileID, teamTwo.profileID],
         };
 
         // Let's make sure it's not a duplicate. I don't need to be perfect here.
@@ -107,10 +107,10 @@ async function checkForPair(possibleMatch: PossibleMatch, possibleMatches: Possi
         let exists = false;
         for (const document of querySnapshot.docs) {
           const p = Object.assign({id: document.id}, document.data() as Pair);
-          const buddies = p.buddies;
-          const profile1 = buddies[0].profileID;
-          const profile2 = buddies[1].profileID;
-          if (pair.buddieIDs.includes(profile1) && pair.buddieIDs.includes(profile2)) {
+          const teams = p.teams;
+          const profile1 = teams[0].profileID;
+          const profile2 = teams[1].profileID;
+          if (pair.teamIds.includes(profile1) && pair.teamIds.includes(profile2)) {
             exists = true;
           }
         }

@@ -115,19 +115,19 @@ export interface GeoLocation {
 
 export interface Pair {
     matchID: string;
-    buddies: Buddy[];
-    buddieIDs: string[];
+    teams: Team[];
+    teamIds: string[];
     approved: string[];
     rejected: string[];
     creationDate: any;
 }
 
-export interface Buddy {
+export interface Team {
     fullName: string;
     avatarURL: string;
     profileID: string;
-    parentFullName: string;
-    parentProfileID: string;
-    parentAvatarURL: string;
+    teamLeaderName: string;
+    teamLeaderID: string;
+    teamLeaderAvatarURL: string;
 }
 
