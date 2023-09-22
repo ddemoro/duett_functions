@@ -55,59 +55,69 @@ exports.possibleMatchUpdated = functions.firestore.document("possibleMatches/{ui
   return Promise.resolve();
 });
 
-async function checkForPair(possibleMatch: PossibleMatch, pms: PossibleMatch[]) {
+async function likeMe(myProfileID: string, theirProfileID: string, possibleMatches: PossibleMatch[]) {
+  for (const possibleMatch of possibleMatches) {
+    if (possibleMatch.uid === theirProfileID) {
+      for (const choice of possibleMatch.choices) {
+        if (choice.uid === myProfileID) {
+          return choice.liked;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+async function checkForPair(possibleMatch: PossibleMatch, possibleMatches: PossibleMatch[]) {
   for (const choice of possibleMatch.choices) {
     if (choice.liked) {
-      // iterate through all possible matches
-      for (const pm of pms) {
-        for (const otherChoice of pm.choices) {
-          if (otherChoice.uid == possibleMatch.uid && otherChoice.liked) {
-            const buddyOne: Buddy = {
-              avatarURL: otherChoice.avatarURL,
-              fullName: otherChoice.fullName,
-              profileID: otherChoice.uid,
-              parentAvatarURL: possibleMatch.friend.avatarURL,
-              parentFullName: possibleMatch.friend.fullName,
-              parentProfileID: possibleMatch.friend.profileID,
-            };
+      const doTheyLikeMe = await likeMe(possibleMatch.uid, choice.uid, possibleMatches);
+      if (doTheyLikeMe) {
+        const profile = await dbUtils.getProfile(possibleMatch.uid);
+        const buddyOne: Buddy = {
+          avatarURL: profile.avatarURL,
+          fullName: profile.fullName,
+          profileID: profile.id,
+          parentAvatarURL: possibleMatch.friend.avatarURL,
+          parentFullName: possibleMatch.friend.fullName,
+          parentProfileID: possibleMatch.friend.profileID,
+        };
 
-            const buddyTwo: Buddy = {
-              avatarURL: choice.avatarURL,
-              fullName: choice.fullName,
-              profileID: choice.uid,
-              parentAvatarURL: pm.friend.avatarURL,
-              parentFullName: pm.friend.fullName,
-              parentProfileID: pm.friend.profileID,
-            };
+        const buddyTwo: Buddy = {
+          avatarURL: choice.avatarURL,
+          fullName: choice.fullName,
+          profileID: choice.uid,
+          parentAvatarURL: possibleMatch.match.avatarURL,
+          parentFullName: possibleMatch.match.fullName,
+          parentProfileID: possibleMatch.match.profileID,
+        };
 
-            const pair: Pair = {
-              matchID: possibleMatch.matchID,
-              creationDate: FieldValue.serverTimestamp(),
-              approved: [],
-              rejected: [],
-              buddies: [buddyOne, buddyTwo],
-              buddieIDs: [buddyOne.profileID, buddyTwo.profileID],
-            };
+        const pair: Pair = {
+          matchID: possibleMatch.matchID,
+          creationDate: Date(),
+          approved: [],
+          rejected: [],
+          buddies: [buddyOne, buddyTwo],
+          buddieIDs: [buddyOne.profileID, buddyTwo.profileID],
+        };
 
-            // Let's make sure it's not a duplicate. I don't need to be perfect here.
-            const querySnapshot = await firestore.collection("pairs").where("matchID", "==", possibleMatch.matchID).get();
-            let exists = false;
-            for (const document of querySnapshot.docs) {
-              const p = Object.assign({id: document.id}, document.data() as Pair);
-              const buddies = p.buddies;
-              const profile1 = buddies[0].profileID;
-              const profile2 = buddies[1].profileID;
-              if (p.buddieIDs.includes(profile1) && p.buddieIDs.includes(profile2)) {
-                exists = true;
-                break;
-              }
-            }
-
-            // WE HAVE A PAIR
-            if (!exists) {
-              await firestore.collection("pairs").add(pair);
-            }
+        // Let's make sure it's not a duplicate. I don't need to be perfect here.
+        const querySnapshot = await firestore.collection("pairs").where("matchID", "==", possibleMatch.matchID).get();
+        let exists = false;
+        for (const document of querySnapshot.docs) {
+          const p = Object.assign({id: document.id}, document.data() as Pair);
+          const buddies = p.buddies;
+          const profile1 = buddies[0].profileID;
+          const profile2 = buddies[1].profileID;
+          if (pair.buddieIDs.includes(profile1) && pair.buddieIDs.includes(profile2)) {
+            exists = true;
           }
+        }
+
+        // WE HAVE A PAIR
+        if (!exists) {
+          await firestore.collection("pairs").add(pair);
         }
       }
     }
@@ -123,6 +133,49 @@ exports.testLike = functions.https.onRequest(async (req, res) => {
   };
 
   await firestore.collection("likes").add(like);
+  res.sendStatus(200);
+});
+
+exports.testPairing = functions.https.onRequest(async (req, res) => {
+  const querySnapshot = await firestore.collection("possibleMatches").get();
+  for (const document of querySnapshot.docs) {
+    const possibleMatch = Object.assign({id: document.id}, document.data() as PossibleMatch);
+    for (const choice of possibleMatch.choices) {
+      choice.liked = true;
+      choice.rejected = false;
+    }
+    possibleMatch.completed = true;
+    // Update the document in Firestore with the modified data
+    await firestore.collection("possibleMatches").doc(document.id).update(possibleMatch);
+  }
+
+
+  res.sendStatus(200);
+});
+
+
+exports.testPairCreation = functions.https.onRequest(async (req, res) => {
+  const matchID = "5lnB4w2sYD2buikuQA4Y";
+  const pms: PossibleMatch[] = [];
+
+  let allMatchesCompleted = true;
+  const querySnapshot = await firestore.collection("possibleMatches").where("matchID", "==", matchID).get();
+  for (const document of querySnapshot.docs) {
+    const possibleMatch = Object.assign({id: document.id}, document.data() as PossibleMatch);
+    if (!possibleMatch.completed) {
+      allMatchesCompleted = false;
+    }
+
+    pms.push(possibleMatch);
+  }
+
+  if (allMatchesCompleted) {
+    for (const pm of pms) {
+      await checkForPair(pm, pms);
+    }
+    await firestore.collection("matches").doc(matchID).update({completed: true});
+  }
+
   res.sendStatus(200);
 });
 
