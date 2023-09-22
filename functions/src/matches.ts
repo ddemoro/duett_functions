@@ -53,7 +53,7 @@ exports.possibleMatchUpdated = functions.firestore.document("possibleMatches/{ui
 exports.testLike = functions.https.onRequest(async (req, res) => {
   // eslint-disable-next-line max-len
   const like = {
-    profileID: "JjxxN53UP7dm9N8PmhxHy9Fa2IX2",
+    profileID: "0chklRlWnWhlSOR6Z1GrsPAIzDA2",
     likedProfileID: "wYJZChrOo83bLVn659Vh",
   };
 
