@@ -1,111 +1,53 @@
 {
-  "id": "vikki123",
-  "uid": "user_12345",
-  "phoneNumber": "+15559871234",
-  "creationDate": {
-    "_seconds": 1692638646,
-    "_nanoseconds": 405000000
+  "pair": {
+    "matchID": "",
+    "creationDate": "",
+    "pairings": [
+      "id of pairings"
+    ],
+    "completed": false
   },
-  "configured": true,
-  "fullName": "Vikki Razul",
-  "emailAddress": "vikki.razul@example.com",
-  "receiveMarketingMaterial": true,
-  "living": {
-    "city": "Brooklyn",
-    "latitude": 40.6782,
-    "state": "NY",
-    "longitude": -73.9442,
-    "address": "123 Fashion St, Brooklyn, NY 11234"
-  },
-  "avatarURL": "https://images.unsplash.com/photo-1548637724-cbc39e0c8d3b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1664&q=80",
-  "websiteURL": "https://vikki-fashiondesign.com",
-  "gender": "Woman",
-  "datingType": "Man",
-  "height": 170,
-  "ethnicity": "Middle Eastern",
-  "children": "No children",
-  "hometown": {
-    "hometown": "Queens, NY",
-    "visible": true
-  },
-  "jobTitle": {
-    "visible": true,
-    "data": "Fashion Designer"
-  },
-  "school": {
-    "visible": true,
-    "data": "Fashion Institute of Technology"
-  },
-  "work": {
-    "visible": true,
-    "data": "Vogue Magazine"
-  },
-  "education": {
-    "visible": true,
-    "data": "Masters in Fashion Designing"
-  },
-  "religion": {
-    "visible": true,
-    "data": "Muslim"
-  },
-  "politics": {
-    "visible": true,
-    "data": "Democratic"
-  },
-  "drinks": {
-    "visible": true,
-    "data": "Occasionally"
-  },
-  "smoke": {
-    "visible": true,
-    "data": "No"
-  },
-  "weed": {
-    "visible": true,
-    "data": "No"
-  },
-  "drugs": {
-    "visible": true,
-    "data": "No"
-  },
-  "privacyAccepted": true,
-  "media": [
-    {
-      "image": true,
-      "url": "https://plus.unsplash.com/premium_photo-1664464227912-a24e4259cc60?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80"
-    }
-  ],
-  "about": "Passionate about sustainable fashion and contemporary art.",
-  "qualities": "Creative and open-minded",
-  "birthday": {
-    "_seconds": 764112000,
-    "_nanoseconds": 0
-  },
-  "memorableMoments": "Launching my own sustainable clothing line in NYC",
-  "friends": [
-    {
-      "uid": "nina_123",
-      "address": "456 Style Blvd, Queens, NY 11345",
-      "phoneNumber": "555-678-9123",
-      "avatarURL": "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80",
-      "websiteURL": "https://nina-fashionblog.com",
-      "contactName": "Nina Ferro",
-      "businessName": "Nina's Fashion Blog",
-      "shippingAddress": "789 Trendy Ln, Manhattan, NY 10023",
-      "id": "contact_nina_123",
-      "email": "nina@example.com"
-    },
-    {
-      "uid": "lara_456",
-      "address": "321 Art Ave, Bronx, NY 10458",
-      "phoneNumber": "555-789-0123",
-      "avatarURL": "https://images.unsplash.com/photo-1634055739897-b6a98a80114a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1944&q=80",
-      "websiteURL": "https://lara-artgallery.com",
-      "contactName": "Lara Phelps",
-      "businessName": "Lara's Art Gallery",
-      "shippingAddress": "1011 Creativity St, Staten Island, NY 10310",
-      "id": "contact_lara_456",
-      "email": "lara@example.com"
-    }
-  ]
+  "pairing": {
+    "matchId": "unique_match_identifier",
+    "creationDate": "match_creation_date",
+    "profiles": [
+      {
+        "profileId": "profile_1_id",
+        "fullName": "Profile 1",
+        "avatarUrl": "avatar_url_1",
+        "friendFullName": "Friend 1's Full Name",
+        "friendId": "friend_1_id",
+        "friendAvatarUrl": "Friend 1's Avatar URL"
+      },
+      {
+        "profileId": "profile_2_id",
+        "fullName": "Profile 2",
+        "avatarUrl": "avatar_url_2",
+        "friendFullName": "Friend 2's Full Name",
+        "friendId": "friend_2_id",
+        "friendAvatarUrl": "Friend 2's Avatar URL"
+      }
+    ],
+    "decisions": [
+      {
+        "profileID": "profile_1_id",
+        "reviewedProfileId": "profile_2_id",
+        "decision": "liked, rejected, n/a"
+      },
+      {
+        "profileID": "profile_2_id",
+        "reviewedProfileId": "profile_1_id",
+        "decision": "liked, rejected, n/a"
+      }
+    ],
+    "completed": false,
+    "mutualMatch": true,
+    "matchApproved": false,
+    "approvals": [],
+    "rejections": [],
+    "profileIds": [
+      "profile_1_id",
+      "profile_2_id"
+    ]
+  }
 }

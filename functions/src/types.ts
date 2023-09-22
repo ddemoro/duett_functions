@@ -116,6 +116,7 @@ export interface GeoLocation {
 export interface Pair {
     matchID: string;
     buddies: Buddy[];
+    buddieIDs: string[];
     approved: string[];
     rejected: string[];
     creationDate: any;

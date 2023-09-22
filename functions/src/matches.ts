@@ -45,11 +45,10 @@ exports.possibleMatchUpdated = functions.firestore.document("possibleMatches/{ui
     }
 
     if (allMatchesCompleted) {
+      for (const pm of pms) {
+        await checkForPair(pm, pms);
+      }
       await firestore.collection("matches").doc(newPM.matchID).update({completed: true});
-    }
-
-    for (const pm of pms) {
-      await checkForPair(pm, pms);
     }
   }
 
@@ -63,7 +62,7 @@ async function checkForPair(possibleMatch: PossibleMatch, pms: PossibleMatch[]) 
       for (const pm of pms) {
         for (const otherChoice of pm.choices) {
           if (otherChoice.uid == possibleMatch.uid && otherChoice.liked) {
-            const buddyOne:Buddy = {
+            const buddyOne: Buddy = {
               avatarURL: otherChoice.avatarURL,
               fullName: otherChoice.fullName,
               profileID: otherChoice.uid,
@@ -72,7 +71,7 @@ async function checkForPair(possibleMatch: PossibleMatch, pms: PossibleMatch[]) 
               parentProfileID: possibleMatch.friend.profileID,
             };
 
-            const buddyTwo:Buddy = {
+            const buddyTwo: Buddy = {
               avatarURL: choice.avatarURL,
               fullName: choice.fullName,
               profileID: choice.uid,
@@ -81,16 +80,33 @@ async function checkForPair(possibleMatch: PossibleMatch, pms: PossibleMatch[]) 
               parentProfileID: pm.friend.profileID,
             };
 
-            const pair:Pair = {
+            const pair: Pair = {
               matchID: possibleMatch.matchID,
               creationDate: FieldValue.serverTimestamp(),
               approved: [],
               rejected: [],
               buddies: [buddyOne, buddyTwo],
+              buddieIDs: [buddyOne.profileID, buddyTwo.profileID],
             };
 
+            // Let's make sure it's not a duplicate. I don't need to be perfect here.
+            const querySnapshot = await firestore.collection("pairs").where("matchID", "==", possibleMatch.matchID).get();
+            let exists = false;
+            for (const document of querySnapshot.docs) {
+              const p = Object.assign({id: document.id}, document.data() as Pair);
+              const buddies = p.buddies;
+              const profile1 = buddies[0].profileID;
+              const profile2 = buddies[1].profileID;
+              if (p.buddieIDs.includes(profile1) && p.buddieIDs.includes(profile2)) {
+                exists = true;
+                break;
+              }
+            }
+
             // WE HAVE A PAIR
-            await firestore.collection("pairs").add(pair);
+            if (!exists) {
+              await firestore.collection("pairs").add(pair);
+            }
           }
         }
       }
