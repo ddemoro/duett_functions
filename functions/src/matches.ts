@@ -75,8 +75,9 @@ async function checkForPair(possibleMatch: PossibleMatch, possibleMatches: Possi
       const doTheyLikeMe = await likeMe(possibleMatch.uid, choice.uid, possibleMatches);
       if (doTheyLikeMe) {
         const profile = await dbUtils.getProfile(possibleMatch.uid);
+        console.log(profile.avatarURL);
         const teamOne: Team = {
-          avatarURL: profile.avatarURL,
+          avatarURL: profile.media[0].url,
           fullName: profile.fullName,
           profileID: profile.id,
           teamLeaderAvatarURL: possibleMatch.friend.avatarURL,
@@ -128,7 +129,7 @@ async function checkForPair(possibleMatch: PossibleMatch, possibleMatches: Possi
 exports.testLike = functions.https.onRequest(async (req, res) => {
   // eslint-disable-next-line max-len
   const like = {
-    profileID: "JjxxN53UP7dm9N8PmhxHy9Fa2IX2",
+    profileID: "0chklRlWnWhlSOR6Z1GrsPAIzDA2",
     likedProfileID: "wYJZChrOo83bLVn659Vh",
   };
 
@@ -155,7 +156,7 @@ exports.testPairing = functions.https.onRequest(async (req, res) => {
 
 
 exports.testPairCreation = functions.https.onRequest(async (req, res) => {
-  const matchID = "5lnB4w2sYD2buikuQA4Y";
+  const matchID = "zuBAN2Xg5SSHThqNvTrd";
   const pms: PossibleMatch[] = [];
 
   let allMatchesCompleted = true;
