@@ -1,6 +1,6 @@
 /* eslint-disable require-jsdoc,@typescript-eslint/no-unused-vars,@typescript-eslint/ban-ts-comment */
 import * as functions from "firebase-functions";
-import {Choice, DuettPair, Friend, Like, Match, Pair, Person, Player, PossibleMatch, Profile, Team} from "./types";
+import {Choice, Friend, Like, Match, Pair, Person, Player, PossibleMatch, Profile} from "./types";
 import dbUtils from "./utils/db_utils";
 import textUtils from "./utils/text_utils";
 import pushNotifications from "./push_notifications";
@@ -73,23 +73,23 @@ async function checkForPair(possibleMatch: PossibleMatch, possibleMatches: Possi
       const doTheyLikeMe = await likeMe(possibleMatch.uid, choice.uid, possibleMatches);
       if (doTheyLikeMe) {
         const profile = await dbUtils.getProfile(possibleMatch.uid);
-        console.log(profile.avatarURL);
-        const teamOne: Team = {
+
+        const playerOne: Player = {
           avatarURL: profile.media[0].url,
           fullName: profile.fullName,
-          profileID: profile.id,
-          teamLeaderAvatarURL: possibleMatch.friend.avatarURL,
-          teamLeaderName: possibleMatch.friend.fullName,
-          teamLeaderID: possibleMatch.friend.profileID,
+          uid: profile.id,
+          matchMakerAvatarURL: possibleMatch.friend.avatarURL,
+          matchMakerName: possibleMatch.friend.fullName,
+          matchMakerID: possibleMatch.friend.profileID,
         };
 
-        const teamTwo: Team = {
+        const playerTwo: Player = {
           avatarURL: choice.avatarURL,
           fullName: choice.fullName,
-          profileID: choice.uid,
-          teamLeaderAvatarURL: possibleMatch.match.avatarURL,
-          teamLeaderName: possibleMatch.match.fullName,
-          teamLeaderID: possibleMatch.match.profileID,
+          uid: choice.uid,
+          matchMakerAvatarURL: possibleMatch.match.avatarURL,
+          matchMakerName: possibleMatch.match.fullName,
+          matchMakerID: possibleMatch.match.profileID,
         };
 
         const pair: Pair = {
@@ -97,8 +97,8 @@ async function checkForPair(possibleMatch: PossibleMatch, possibleMatches: Possi
           creationDate: FieldValue.serverTimestamp(),
           approved: [],
           rejected: [],
-          teams: [teamOne, teamTwo],
-          teamIds: [teamOne.profileID, teamTwo.profileID],
+          players: [playerOne, playerTwo],
+          playerIds: [playerOne.uid, playerTwo.uid],
         };
 
         // Let's make sure it's not a duplicate. I don't need to be perfect here.
@@ -106,10 +106,10 @@ async function checkForPair(possibleMatch: PossibleMatch, possibleMatches: Possi
         let exists = false;
         for (const document of querySnapshot.docs) {
           const p = Object.assign({id: document.id}, document.data() as Pair);
-          const teams = p.teams;
-          const profile1 = teams[0].profileID;
-          const profile2 = teams[1].profileID;
-          if (pair.teamIds.includes(profile1) && pair.teamIds.includes(profile2)) {
+          const players = p.players;
+          const profile1 = players[0].uid;
+          const profile2 = players[1].uid;
+          if (pair.playerIds.includes(profile1) && pair.playerIds.includes(profile2)) {
             exists = true;
           }
         }
@@ -325,56 +325,4 @@ async function startMatching(match: Match) {
 
     await firestore.collection("possibleMatches").add(possibleMatch);
   }
-}
-
-// @ts-ignore
-async function testCreation(match: Match) {
-  const profiles = match.profiles;
-
-  if (profiles.length !== 2) {
-    throw new Error("Expected exactly 2 profiles");
-  }
-
-  const person1 = match.profiles[0];
-  const profile1 = await dbUtils.getProfile(person1.profileID);
-
-  const person2 = match.profiles[1];
-  const profile2 = await dbUtils.getProfile(person2.profileID);
-
-  for (const friend of profile1.friends) {
-    const player1 = await createPlayer(profile1, friend);
-
-    for (const f2 of profile2.friends) {
-      const player2 = await createPlayer(profile2, f2);
-
-      const duettPair: DuettPair = {
-        creationDate: FieldValue.serverTimestamp(),
-        likes: [],
-        rejects: [],
-        matchId: match.id!,
-        mmApproved: [],
-        mmRejected: [],
-        players: [player1, player2],
-      };
-
-      await firestore.collection("duettPair").add(duettPair);
-    }
-  }
-}
-
-async function createPlayer(profile: Profile, friend: Friend) {
-  const friendProfile = await dbUtils.getProfile(friend.uid);
-
-  const player: Player = {
-    avatarURL: friendProfile.media[0].url,
-    fullName: friendProfile.fullName,
-    age: textUtils.calculateAge(friendProfile.birthday.toDate()),
-    uid: friendProfile.id,
-    location: friendProfile.living.city + "," + friendProfile.living.state,
-    mmAvatarURL: profile.media[0].url,
-    mmFullName: profile.fullName,
-    mmUID: profile.id,
-  };
-
-  return player;
 }

@@ -118,39 +118,19 @@ export interface GeoLocation {
 
 export interface Pair {
     matchID: string;
-    teams: Team[];
-    teamIds: string[];
+    players: Player[];
+    playerIds: string[];
     approved: string[];
     rejected: string[];
-    creationDate: any;
-}
-
-export interface Team {
-    fullName: string;
-    avatarURL: string;
-    profileID: string;
-    teamLeaderName: string;
-    teamLeaderID: string;
-    teamLeaderAvatarURL: string;
-}
-
-export interface DuettPair {
-    matchId: string;
-    likes: [];
-    rejects: [];
-    players: Player[];
-    mmApproved: string[];
-    mmRejected: string[];
     creationDate: any;
 }
 
 export interface Player {
     fullName: string;
     avatarURL: string;
-    age: number;
-    location: string;
     uid: string;
-    mmFullName: string;
-    mmUID: string;
-    mmAvatarURL: string;
+    matchMakerName: string;
+    matchMakerID: string;
+    matchMakerAvatarURL: string;
 }
+
