@@ -1,4 +1,4 @@
-/* eslint-disable require-jsdoc */
+/* eslint-disable require-jsdoc,@typescript-eslint/no-unused-vars,@typescript-eslint/ban-ts-comment */
 import * as functions from "firebase-functions";
 import {Choice, DuettPair, Friend, Like, Match, Pair, Person, Player, PossibleMatch, Profile, Team} from "./types";
 import dbUtils from "./utils/db_utils";
@@ -23,34 +23,32 @@ exports.matchUpdated = functions.firestore.document("matches/{uid}").onUpdate(as
 
 exports.possibleMatchUpdated = functions.firestore.document("possibleMatches/{uid}").onUpdate(async (change, context) => {
   const newPM = Object.assign({id: change.after.id}, change.after.data() as PossibleMatch);
-  const oldPM = Object.assign({id: change.before.id}, change.before.data() as PossibleMatch);
+  // const oldPM = Object.assign({id: change.before.id}, change.before.data() as PossibleMatch);
 
-  const newCompleted = newPM.completed ?? false;
-  const oldCompleted = oldPM.completed ?? false;
 
-  if (newCompleted && !oldCompleted) {
-    const pms: PossibleMatch[] = [];
-    // Go through all the other possible matches to see if they are completed.
-    // If so, set Match completed to true
+  const pms: PossibleMatch[] = [];
 
-    let allMatchesCompleted = true;
-    const querySnapshot = await firestore.collection("possibleMatches").where("matchID", "==", newPM.matchID).get();
-    for (const document of querySnapshot.docs) {
-      const possibleMatch = Object.assign({id: document.id}, document.data() as PossibleMatch);
-      if (!possibleMatch.completed) {
-        allMatchesCompleted = false;
-      }
-
-      pms.push(possibleMatch);
+  // Go through all the other possible matches to see if they are completed.
+  // If so, set Match completed to true
+  let allMatchesCompleted = true;
+  const querySnapshot = await firestore.collection("possibleMatches").where("matchID", "==", newPM.matchID).get();
+  for (const document of querySnapshot.docs) {
+    const possibleMatch = Object.assign({id: document.id}, document.data() as PossibleMatch);
+    if (!possibleMatch.completed) {
+      allMatchesCompleted = false;
     }
-
-    if (allMatchesCompleted) {
-      for (const pm of pms) {
-        await checkForPair(pm, pms);
-      }
-      await firestore.collection("matches").doc(newPM.matchID).update({completed: true});
-    }
+    pms.push(possibleMatch);
   }
+
+  if (allMatchesCompleted) {
+    await firestore.collection("matches").doc(newPM.matchID).update({completed: true});
+  }
+
+  // Make pairs when possible
+  for (const pm of pms) {
+    await checkForPair(pm, pms);
+  }
+
 
   return Promise.resolve();
 });
@@ -282,8 +280,6 @@ async function startMatching(match: Match) {
     throw new Error("Expected exactly 2 profiles");
   }
 
-  await testCreation(match);
-
   const person1 = match.profiles[0];
   const profile1 = await dbUtils.getProfile(person1.profileID);
 
@@ -320,7 +316,7 @@ async function startMatching(match: Match) {
   }
 }
 
-// eslint-disable-next-line valid-jsdoc
+// @ts-ignore
 async function testCreation(match: Match) {
   const profiles = match.profiles;
 
