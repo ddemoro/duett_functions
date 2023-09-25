@@ -131,3 +131,23 @@ export interface Team {
     teamLeaderAvatarURL: string;
 }
 
+export interface DuettPair {
+    matchId: string;
+    likes: [];
+    rejects: [];
+    players: Player[];
+    mmApproved: string[];
+    mmRejected: string[];
+    creationDate: any;
+}
+
+export interface Player {
+    fullName: string;
+    avatarURL: string;
+    age: number;
+    location: string;
+    uid: string;
+    mmFullName: string;
+    mmUID: string;
+    mmAvatarURL: string;
+}
