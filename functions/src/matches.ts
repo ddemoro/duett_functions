@@ -94,7 +94,7 @@ async function checkForPair(possibleMatch: PossibleMatch, possibleMatches: Possi
 
         const pair: Pair = {
           matchID: possibleMatch.matchID,
-          creationDate: Date(),
+          creationDate: FieldValue.serverTimestamp(),
           approved: [],
           rejected: [],
           teams: [teamOne, teamTwo],
@@ -116,7 +116,15 @@ async function checkForPair(possibleMatch: PossibleMatch, possibleMatches: Possi
 
         // WE HAVE A PAIR
         if (!exists) {
-          await firestore.collection("pairs").add(pair);
+          const docRef = await firestore.collection("pairs").add(pair);
+          const pairID = docRef.id;
+
+          // Add this to match Array
+          const matchID = pair.matchID;
+          const match = await dbUtils.getMatch(matchID);
+          const pairIds = match.pairIds;
+          pairIds.push(pairID);
+          await firestore.collection("matches").doc(matchID).update({pairIds: pairIds});
         }
       }
     }
@@ -239,6 +247,9 @@ exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (
     matched: [like.profileID, like.likedProfileID],
     creationDate: FieldValue.serverTimestamp(),
     profiles: [personOne, personTwo],
+    pairIds: [],
+    approvedPairs: [],
+    rejectedPairs: [],
     completed: false,
   };
 

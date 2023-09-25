@@ -3,6 +3,9 @@ export interface Match {
     matched: string[];// list of profile IDs (2)
     profiles: Person[];
     completed: boolean;
+    pairIds:string[],
+    approvedPairs:string[],
+    rejectedPairs:string[],
     creationDate: any;
 }
 
