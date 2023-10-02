@@ -99,6 +99,7 @@ async function checkForPair(possibleMatch: PossibleMatch, possibleMatches: Possi
           rejected: [],
           players: [playerOne, playerTwo],
           playerIds: [playerOne.uid, playerTwo.uid],
+          matchMakerIds: [playerOne.matchMakerID, playerTwo.matchMakerID],
         };
 
         // Let's make sure it's not a duplicate. I don't need to be perfect here.

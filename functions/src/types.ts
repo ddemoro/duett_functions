@@ -40,6 +40,8 @@ export interface Profile {
     username: string;
     emailAddress: string;
     fullName: string;
+    firstName:string;
+    lastName:string;
     description: string;
     creationDate: any;
     configured: boolean;
@@ -120,6 +122,7 @@ export interface Pair {
     matchID: string;
     players: Player[];
     playerIds: string[];
+    matchMakerIds:string[];
     approved: string[];
     rejected: string[];
     creationDate: any;
