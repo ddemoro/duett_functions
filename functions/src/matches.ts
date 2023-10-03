@@ -303,18 +303,21 @@ exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (
 
 
 // eslint-disable-next-line require-jsdoc
-function convertToChoices(friends: Friend[]) {
+async function convertToChoices(friends: Friend[]) {
   const choices: any[] = [];
-  friends.forEach((friend) => {
+  for (const friend of friends) {
+    const snapshot = await firestore.collection("profiles").doc(friend.uid).get();
+    const profile = Object.assign({id: snapshot.id}, snapshot.data() as Profile);
+
     const choice: Choice = {
       uid: friend.uid,
-      firstName: textUtils.getFirstName(friend.contactName),
-      avatarURL: friend.avatarURL,
+      firstName: profile.firstName,
+      avatarURL: profile.media[0].url,
       liked: false,
       rejected: false,
     };
     choices.push(choice);
-  });
+  }
 
 
   return choices;
@@ -342,7 +345,7 @@ async function startMatching(match: Match) {
       creationDate: FieldValue.serverTimestamp(),
       friend: person1,
       match: person2,
-      choices: convertToChoices(profile2.friends),
+      choices: await convertToChoices(profile2.friends),
       uid: friend.uid,
       completed: false,
     };
@@ -356,7 +359,7 @@ async function startMatching(match: Match) {
       creationDate: FieldValue.serverTimestamp(),
       friend: person2,
       match: person1,
-      choices: convertToChoices(profile1.friends),
+      choices: await convertToChoices(profile1.friends),
       uid: friend.uid,
       completed: false,
     };
