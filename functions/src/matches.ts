@@ -192,7 +192,7 @@ exports.everyoneLikesEveryone = functions.runWith({
     for (const choice of choices) {
       choice.liked = true;
       await firestore.collection("possibleMatches").doc(possibleMatch.id).update(possibleMatch);
-      await delay(5000);
+      await delay(2000);
     }
   }
 
