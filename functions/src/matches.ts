@@ -76,19 +76,19 @@ async function checkForPair(possibleMatch: PossibleMatch, possibleMatches: Possi
 
         const playerOne: Player = {
           avatarURL: profile.media[0].url,
-          fullName: profile.fullName,
+          firstName: profile.firstName,
           uid: profile.id,
           matchMakerAvatarURL: possibleMatch.friend.avatarURL,
-          matchMakerName: possibleMatch.friend.fullName,
+          matchMakerName: possibleMatch.friend.firstName,
           matchMakerID: possibleMatch.friend.profileID,
         };
 
         const playerTwo: Player = {
           avatarURL: choice.avatarURL,
-          fullName: choice.fullName,
+          firstName: choice.firstName,
           uid: choice.uid,
           matchMakerAvatarURL: possibleMatch.match.avatarURL,
-          matchMakerName: possibleMatch.match.fullName,
+          matchMakerName: possibleMatch.match.firstName,
           matchMakerID: possibleMatch.match.profileID,
         };
 
@@ -162,6 +162,22 @@ exports.testPairing = functions.https.onRequest(async (req, res) => {
 });
 
 
+exports.upgradeProfile = functions.https.onRequest(async (req, res) => {
+  const querySnapshot = await firestore.collection("profiles").get();
+  for (const document of querySnapshot.docs) {
+    const profile = Object.assign({id: document.id}, document.data() as Profile);
+    const fullName = "";
+    const firstName = "";
+    const indexOfSpace = fullName.indexOf(" ");
+    const lastName = fullName.substring(indexOfSpace + 1);
+    await firestore.collection("profiles").doc(profile.id).update({firstName: firstName, lastName: lastName});
+  }
+
+
+  res.sendStatus(200);
+});
+
+
 exports.testPairCreation = functions.https.onRequest(async (req, res) => {
   const matchID = "zuBAN2Xg5SSHThqNvTrd";
   const pms: PossibleMatch[] = [];
@@ -192,13 +208,13 @@ exports.possibleMatchAdded = functions.firestore.document("possibleMatches/{uid}
   const match = await dbUtils.getMatch(pm.matchID);
   const uid = pm.uid;
 
-  const yourFriendsName = textUtils.getFirstName(pm.friend.fullName);
+  const yourFriendsName = pm.friend.firstName;
   let theirFriendsName;
   const people: Person[] = match.profiles;
   if (people[0].profileID !== pm.friend.profileID) {
-    theirFriendsName = textUtils.getFirstName(people[0].fullName);
+    theirFriendsName = people[0].firstName;
   } else {
-    theirFriendsName = textUtils.getFirstName(people[1].fullName);
+    theirFriendsName = people[1].firstName;
   }
 
   const title = "Duett Possible Match Alert";
@@ -229,7 +245,7 @@ exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (
 
   const personOne: Person = {
     avatarURL: p1.media[0].url,
-    fullName: p1.fullName,
+    firstName: p1.firstName,
     living: p1.living.city + "," + p1.living.state,
     age: textUtils.calculateAge(p1.birthday.toDate()),
     profileID: p1.id,
@@ -237,7 +253,7 @@ exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (
 
   const personTwo: Person = {
     avatarURL: p2.avatarURL,
-    fullName: p2.fullName,
+    firstName: p2.firstName,
     living: p2.living.city + "," + p2.living.state,
     age: textUtils.calculateAge(p2.birthday.toDate()),
     profileID: p2.id,
@@ -271,7 +287,7 @@ function convertToChoices(friends: Friend[]) {
   friends.forEach((friend) => {
     const choice: Choice = {
       uid: friend.uid,
-      fullName: friend.contactName,
+      firstName: textUtils.getFirstName(friend.contactName),
       avatarURL: friend.avatarURL,
       liked: false,
       rejected: false,

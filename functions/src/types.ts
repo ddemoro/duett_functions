@@ -27,7 +27,7 @@ export interface Like {
 
 export interface Person {
     avatarURL: string;
-    fullName: string;
+    firstName: string;
     age: number;
     living: string;
     profileID: string;
@@ -39,7 +39,6 @@ export interface Profile {
     avatarURL: string;
     username: string;
     emailAddress: string;
-    fullName: string;
     firstName:string;
     lastName:string;
     description: string;
@@ -90,7 +89,7 @@ export interface Friend {
 
 export interface Choice {
     uid: string;
-    fullName: string;
+    firstName: string;
     avatarURL: string;
     liked: boolean;
     rejected: boolean;
@@ -129,7 +128,7 @@ export interface Pair {
 }
 
 export interface Player {
-    fullName: string;
+    firstName: string;
     avatarURL: string;
     uid: string;
     matchMakerName: string;

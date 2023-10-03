@@ -56,7 +56,7 @@ exports.checkProfiles = functions.https.onRequest(async (req, res) => {
     const profile = Object.assign({id: document.id}, document.data() as Profile);
     // eslint-disable-next-line no-constant-condition
     if (true) {
-      console.log("Empty Friend Set: " + profile.fullName);
+      console.log("Empty Friend Set: " + profile.firstName);
       if (profile.gender == "Man") {
         // Add 3 friends
         const friends = [
@@ -361,7 +361,7 @@ exports.setFriends = functions.https.onRequest(async (req, res) => {
       "uid": profile.id,
       "phoneNumber": profile.phoneNumber,
       "avatarURL": profile.media[0].url,
-      "contactName": profile.fullName,
+      "contactName": profile.firstName+" "+profile.lastName,
       "businessName": "",
       "email": profile.emailAddress,
     };
@@ -392,7 +392,7 @@ async function addFriends(profile: Profile) {
       "uid": friend.id,
       "phoneNumber": "555-321-1234",
       "avatarURL": friend.avatarURL,
-      "contactName": friend.fullName,
+      "contactName": friend.firstName+" "+friend.lastName,
       "businessName": "",
       "email": friend.emailAddress,
     };
@@ -406,7 +406,7 @@ async function addFriends(profile: Profile) {
       "uid": friend.id,
       "phoneNumber": "555-321-1234",
       "avatarURL": friend.avatarURL,
-      "contactName": friend.fullName,
+      "contactName": friend.firstName+" "+friend.lastName,
       "businessName": "",
       "email": friend.emailAddress,
     };
