@@ -123,7 +123,7 @@ async function checkForPair(possibleMatch: PossibleMatch, possibleMatches: Possi
           // Add this to match Array
           const matchID = pair.matchID;
           const match = await dbUtils.getMatch(matchID);
-          const pairIds = match.pairIds;
+          const pairIds = match.pairIds ?? [];
           pairIds.push(pairID);
           await firestore.collection("matches").doc(matchID).update({pairIds: pairIds});
         }
@@ -177,6 +177,27 @@ exports.upgradeProfile = functions.https.onRequest(async (req, res) => {
   res.sendStatus(200);
 });
 
+function delay(ms: number | undefined) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+exports.everyoneLikesEveryone = functions.runWith({
+  memory: "4GB",
+  timeoutSeconds: 540,
+}).https.onRequest(async (req, res) => {
+  const querySnapshot = await firestore.collection("possibleMatches").get();
+  for (const document of querySnapshot.docs) {
+    const possibleMatch = Object.assign({id: document.id}, document.data() as PossibleMatch);
+    const choices = possibleMatch.choices;
+    for (const choice of choices) {
+      choice.liked = true;
+      await firestore.collection("possibleMatches").doc(possibleMatch.id).update(possibleMatch);
+      await delay(5000);
+    }
+  }
+
+  res.sendStatus(200);
+});
 
 exports.testPairCreation = functions.https.onRequest(async (req, res) => {
   const matchID = "zuBAN2Xg5SSHThqNvTrd";
