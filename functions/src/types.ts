@@ -136,3 +136,12 @@ export interface Player {
     matchMakerAvatarURL: string;
 }
 
+export interface DuettChat {
+    id?: string;
+    matchID?: string;
+    members: string[];
+    pairs: Pair[];
+    matchMakers: string[];
+    creationDate?: any;
+}
+

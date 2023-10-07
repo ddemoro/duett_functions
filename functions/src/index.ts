@@ -9,3 +9,4 @@ firestore.settings(settings);
 exports.profiles = require("./profiles");
 exports.matches = require("./matches");
 exports.pairs = require("./pairs");
+exports.duetts = require("./duetts");

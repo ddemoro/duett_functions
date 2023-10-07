@@ -1,4 +1,4 @@
-import {Match, Profile} from "../types";
+import {DuettChat, Match, Profile} from "../types";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const admin = require("firebase-admin");
@@ -27,9 +27,25 @@ async function getMatch(id: string) {
   }
 }
 
+// eslint-disable-next-line require-jsdoc
+async function getDuett(matchID: string) {
+  const querySnapshot = await firestore.collection("duetts").where("matchID", "==", matchID).limit(1).get();
+  if (!querySnapshot.empty) {
+    const document = querySnapshot.docs[0].data();
+    if (!document) {
+      throw new Error("Match not found: " + matchID);
+    } else {
+      return Object.assign({id: document.id}, document as DuettChat);
+    }
+  } else {
+    throw new Error("Duett not found from Match: " + matchID);
+  }
+}
+
 const dbUtils = {
   getProfile,
   getMatch,
+  getDuett,
 };
 
 export default dbUtils;
