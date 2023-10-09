@@ -3,9 +3,9 @@ export interface Match {
     matched: string[];// list of profile IDs (2)
     profiles: Person[];
     completed: boolean;
-    pairIds:string[],
-    approvedPairs:string[],
-    rejectedPairs:string[],
+    pairIds: string[],
+    approvedPairs: string[],
+    rejectedPairs: string[],
     creationDate: any;
 }
 
@@ -39,8 +39,8 @@ export interface Profile {
     avatarURL: string;
     username: string;
     emailAddress: string;
-    firstName:string;
-    lastName:string;
+    firstName: string;
+    lastName: string;
     description: string;
     creationDate: any;
     configured: boolean;
@@ -121,7 +121,7 @@ export interface Pair {
     matchID: string;
     players: Player[];
     playerIds: string[];
-    matchMakerIds:string[];
+    matchMakerIds: string[];
     approved: string[];
     rejected: string[];
     creationDate: any;
@@ -145,3 +145,22 @@ export interface DuettChat {
     creationDate?: any;
 }
 
+export interface ChatMessage {
+    id?: string;
+    text: string;
+    duettID: string;
+    fromID: string;
+    creationDate: any;
+    imageURL: string;
+    read: boolean;
+    avatarURL: string;
+    firstName: string;
+}
+
+export interface Notification {
+    id?:string;
+    text:string;
+    duettID:string;
+    images:string[];
+    creationDate:any;
+}
