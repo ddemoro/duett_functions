@@ -1,5 +1,5 @@
 import * as functions from "firebase-functions";
-import {DuettChat, Pair} from "./types";
+import {DuettChat, Pair, Player} from "./types";
 import pushNotifications from "./push_notifications";
 import dbUtils from "./utils/db_utils";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -38,11 +38,43 @@ exports.pairUpdated = functions.firestore.document("pairs/{uid}").onUpdate(async
     }
 
     if (!duettChat) {
+      // Create Pair for matchmakers
+      const profile1 = await dbUtils.getProfile(newPair.matchMakerIds[0]);
+      const profile2 = await dbUtils.getProfile(newPair.matchMakerIds[1]);
+      const player1: Player = {
+        avatarURL: profile1.media[0].url,
+        uid: profile1.id,
+        firstName: profile1.firstName,
+        matchMakerID: "",
+        matchMakerName: "",
+        matchMakerAvatarURL: "",
+      };
+
+      const player2: Player = {
+        avatarURL: profile2.media[0].url,
+        uid: profile2.id,
+        firstName: profile2.firstName,
+        matchMakerID: "",
+        matchMakerName: "",
+        matchMakerAvatarURL: "",
+      };
+
+      const matchMakers: Pair = {
+        matchID: newPair.matchID,
+        players: [player1, player2],
+        playerIds: [player1.uid, player2.uid],
+        matchMakerIds: [],
+        rejected: [],
+        approved: [],
+        creationDate: Date(),
+      };
+
+
       const duettChat: DuettChat = {
         matchID: newPair.matchID,
         creationDate: FieldValue.serverTimestamp(),
         matchMakers: newPair.matchMakerIds,
-        pairs: [newPair],
+        pairs: [matchMakers, newPair],
         members: [newPair.matchMakerIds[0], newPair.matchMakerIds[1], newPair.players[0].uid, newPair.players[1].uid],
       };
 
