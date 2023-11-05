@@ -71,6 +71,7 @@ export interface Profile {
     about: string;
     qualities: string;
     memorableMoments: string;
+    inviteCode:string;
 }
 
 export interface Media {
@@ -163,4 +164,5 @@ export interface Notification {
     duettID:string;
     images:string[];
     creationDate:any;
+    profiles:string[];
 }

@@ -1,9 +1,12 @@
 import * as functions from "firebase-functions";
-import {ChatMessage, DuettChat} from "./types";
+import {ChatMessage, DuettChat, Notification} from "./types";
 import pushNotifications from "./push_notifications";
 import dbUtils from "./utils/db_utils";
-import {firestore} from "firebase-admin";
-import FieldValue = firestore.FieldValue;
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const admin = require("firebase-admin");
+const firestore = admin.firestore();
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const FieldValue = require("firebase-admin").firestore.FieldValue;
 
 
 exports.duettAdded = functions.firestore.document("duetts/{uid}").onCreate(async (snap, context) => {
@@ -15,14 +18,47 @@ exports.duettAdded = functions.firestore.document("duetts/{uid}").onCreate(async
   await pushNotifications.sendPushNotification(profile1.id, "Duett Created", profile2.firstName + " agreed with your friend match. You've all been placed in a group chat.");
   await pushNotifications.sendPushNotification(profile2.id, "Duett Created", profile1.firstName + " agreed with your friend match. You've all been placed in a group chat.");
 
+  const avatarURLs = [];
+  for (const pair of duett.pairs) {
+    avatarURLs.push(pair.players[0].avatarURL);
+    avatarURLs.push(pair.players[1].avatarURL);
+  }
+
   // Not notify the friends
   for (const profileID of duett.members) {
     // Only notify the pairs
     if (!duett.matchMakers.includes(profileID)) {
       await pushNotifications.sendPushNotification(profile1.id, "Duett Created", "Looks like " + profile1.firstName + " and " + profile2.lastName + " feel you would be perfect for a Duett");
+      // Create Notification
+      const notification: Notification = {
+        creationDate: FieldValue.serverTimestamp(),
+        duettID: duett.id,
+        text: profile1.firstName + " and " + profile2.firstName + " agreed you would be perfect for a Duett. You've all been placed in a group chat.",
+        images: avatarURLs,
+        profiles: [profileID],
+      };
+      await firestore.collection("notifications").add(notification);
     }
   }
 
+  // Create Notification
+  const notificationOne: Notification = {
+    creationDate: FieldValue.serverTimestamp(),
+    duettID: duett.id,
+    text: profile1.firstName + " agreed with your friend match. You've all been placed in a group chat.",
+    images: [profile1.media[0].url],
+    profiles: [profile2.id],
+  };
+
+  const notificationTwo: Notification = {
+    creationDate: FieldValue.serverTimestamp(),
+    duettID: duett.id,
+    text: profile2.firstName + " agreed with your friend match. You've all been placed in a group chat.",
+    images: [profile2.media[0].url],
+    profiles: [profile1.id],
+  };
+  await firestore.collection("notifications").add(notificationOne);
+  await firestore.collection("notifications").add(notificationTwo);
   return Promise.resolve();
 });
 
