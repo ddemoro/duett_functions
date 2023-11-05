@@ -23,26 +23,21 @@ function removeNonChars(text: string) {
     .replace(/\-\-+/g, ""); // Replace multiple - with single -
 }
 
-function generateUniqueCode(shopTitle: string) {
-  let inviteCode = textUtils.slugify(shopTitle).toUpperCase();
+function generateUniqueCode(name: string) {
+  let inviteCode = textUtils.slugify(name).toUpperCase();
   if (inviteCode.length > 6) {
     inviteCode = inviteCode.substring(0, 6);
   }
 
-  if (inviteCode.length < 6) {
-    const diff = 6 - inviteCode.length;
-    for (let i = 0; i < diff; i++) {
-      inviteCode = inviteCode + "9";
-    }
-  }
+  const randomCode = generateRandomString(4);
 
 
-  return inviteCode;
+  return inviteCode + "_" + randomCode;
 }
 
 function generateRandomString(length: number) {
   let result = "";
-  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!$%";
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!";
   const charactersLength = characters.length;
   for (let i = 0; i < length; i++) {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));
