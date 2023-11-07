@@ -28,7 +28,7 @@ exports.duettAdded = functions.firestore.document("duetts/{uid}").onCreate(async
   for (const profileID of duett.members) {
     // Only notify the pairs
     if (!duett.matchMakers.includes(profileID)) {
-      await pushNotifications.sendPushNotification(profile1.id, "Duett Created", "Looks like " + profile1.firstName + " and " + profile2.lastName + " feel you would be perfect for a Duett");
+      await pushNotifications.sendPushNotification(profile1.id, "Duett Created", "Looks like " + profile1.firstName + " and " + profile2.firstName + " feel you would be perfect for a Duett");
       // Create Notification
       const notification: Notification = {
         creationDate: FieldValue.serverTimestamp(),

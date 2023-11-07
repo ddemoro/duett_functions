@@ -25,16 +25,6 @@ exports.profileAdded = functions.firestore.document("profiles/{uid}").onCreate(a
 });
 
 exports.profileUpdated = functions.firestore.document("profiles/{uid}").onUpdate(async (change, context) => {
-  const updateProfile = Object.assign({id: change.after.id}, change.after.data() as Profile);
-  const oldProfile = Object.assign({id: change.before.id}, change.before.data() as Profile);
-
-  // Handle when first name is update
-  if (updateProfile.firstName !== oldProfile.firstName) {
-    // Generate invite code
-    const inviteCode = textUtils.generateUniqueCode(updateProfile.firstName);
-    await firestore.collection("profiles").doc(updateProfile.id).update({inviteCode: inviteCode});
-  }
-
   return Promise.resolve();
 });
 
@@ -79,15 +69,6 @@ exports.getProfiles = functions.https.onRequest(async (req, res) => {
   res.sendStatus(200);
 });
 
-exports.createFriends = functions.https.onRequest(async (req, res) => {
-  const snapshot = await firestore.collection("profiles").get();
-  for (const document of snapshot.docs) {
-    const profile = Object.assign({id: document.id}, document.data() as Profile);
-    await addFriends(profile);
-  }
-
-  res.sendStatus(200);
-});
 
 exports.setFriends = functions.https.onRequest(async (req, res) => {
   const derekProfile = await dbUtils.getProfile("0chklRlWnWhlSOR6Z1GrsPAIzDA2");
@@ -95,64 +76,22 @@ exports.setFriends = functions.https.onRequest(async (req, res) => {
   const erickProfile = await dbUtils.getProfile("NV4cvofidmO9G9FJfmzIZPnjJqp2");
   const richardProfile = await dbUtils.getProfile("5OFGObt5cXiWhLlgKsXB");
 
-  const profiles = [erickProfile, derekProfile, richardProfile];
-  const friends: Friend[] = [];
+  const profiles = [erickProfile, brettProfile, richardProfile];
   profiles.forEach((profile) => {
-    const f: Friend = {
+    const friend: Friend = {
+      "acceptedInvite": true,
+      "creationDate": Date.now(),
+      "friendUID": derekProfile.id,
       "uid": profile.id,
-      "phoneNumber": profile.phoneNumber,
+      "phone": profile.phoneNumber,
       "avatarURL": profile.media[0].url,
-      "contactName": profile.firstName + " " + profile.lastName,
-      "businessName": "",
-      "email": profile.emailAddress,
+      "fullName": profile.firstName,
+      "starter": true,
+      "inviteCode": "123",
     };
-    friends.push(f);
+    firestore.collection("friends").add(friend);
   });
 
-  await firestore.collection("profiles").doc(brettProfile.id).update({friends: friends});
+
   res.sendStatus(200);
 });
-
-// eslint-disable-next-line require-jsdoc
-async function addFriends(profile: Profile) {
-  const profiles = [];
-  const snapshot = await firestore.collection("profiles").get();
-  for (const document of snapshot.docs) {
-    const p = Object.assign({id: document.id}, document.data() as Profile);
-    if (p.id !== profile.id && p.gender == profile.gender) {
-      profiles.push(p);
-    }
-  }
-
-  // Randomly sort profiles
-  profiles.sort(() => 0.5 - Math.random());
-  const friends: Friend[] = [];
-  const friendProfiles: Profile[] = profiles.slice(0, 3);
-  friendProfiles.forEach((friend) => {
-    const f: Friend = {
-      "uid": friend.id,
-      "phoneNumber": "555-321-1234",
-      "avatarURL": friend.avatarURL,
-      "contactName": friend.firstName + " " + friend.lastName,
-      "businessName": "",
-      "email": friend.emailAddress,
-    };
-    friends.push(f);
-  });
-
-  const bench: Friend[] = [];
-  const benchedProfiles = profiles.slice(4, 6);
-  benchedProfiles.forEach((friend) => {
-    const f: Friend = {
-      "uid": friend.id,
-      "phoneNumber": "555-321-1234",
-      "avatarURL": friend.avatarURL,
-      "contactName": friend.firstName + " " + friend.lastName,
-      "businessName": "",
-      "email": friend.emailAddress,
-    };
-    bench.push(f);
-  });
-
-  await firestore.collection("profiles").doc(profile.id).update({friends: friends, benchedFriends: bench});
-}

@@ -338,14 +338,15 @@ async function startMatching(match: Match) {
   const person2 = match.profiles[1];
   const profile2 = await dbUtils.getProfile(person2.profileID);
 
-
-  for (const friend of profile1.friends) {
+  const friends1 = await dbUtils.getFriends(profile1.id, true);
+  const friends2 = await dbUtils.getFriends(profile2.id, true);
+  for (const friend of friends1) {
     const possibleMatch: PossibleMatch = {
       matchID: match.id!,
       creationDate: FieldValue.serverTimestamp(),
       friend: person1,
       match: person2,
-      choices: await convertToChoices(profile2.friends),
+      choices: await convertToChoices(friends2),
       uid: friend.uid,
       completed: false,
     };
@@ -353,13 +354,13 @@ async function startMatching(match: Match) {
     await firestore.collection("possibleMatches").add(possibleMatch);
   }
 
-  for (const friend of profile2.friends) {
+  for (const friend of friends2) {
     const possibleMatch: PossibleMatch = {
       matchID: match.id!,
       creationDate: FieldValue.serverTimestamp(),
       friend: person2,
       match: person1,
-      choices: await convertToChoices(profile1.friends),
+      choices: await convertToChoices(friends1),
       uid: friend.uid,
       completed: false,
     };

@@ -40,7 +40,6 @@ export interface Profile {
     username: string;
     emailAddress: string;
     firstName: string;
-    lastName: string;
     description: string;
     creationDate: any;
     configured: boolean;
@@ -66,12 +65,10 @@ export interface Profile {
     weed: InfoItem;
     drugs: InfoItem;
     media: Media[];
-    friends: Friend[];
-    benchedFriends: Friend[];
     about: string;
     qualities: string;
     memorableMoments: string;
-    inviteCode:string;
+    inviteCode: string;
 }
 
 export interface Media {
@@ -79,13 +76,18 @@ export interface Media {
     image: boolean;
 }
 
+
 export interface Friend {
+    id?: string;
     uid: string;
-    businessName: string;
-    email: string;
-    contactName: string;
-    phoneNumber: string;
-    avatarURL: string;
+    friendUID: string;
+    fullName: string;
+    phone: string;
+    inviteCode: string;
+    acceptedInvite: boolean;
+    avatarURL:string;
+    starter: boolean;
+    creationDate: any;
 }
 
 export interface Choice {
@@ -159,10 +161,10 @@ export interface ChatMessage {
 }
 
 export interface Notification {
-    id?:string;
-    text:string;
-    duettID:string;
-    images:string[];
-    creationDate:any;
-    profiles:string[];
+    id?: string;
+    text: string;
+    duettID: string;
+    images: string[];
+    creationDate: any;
+    profiles: string[];
 }
