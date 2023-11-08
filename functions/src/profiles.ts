@@ -70,28 +70,96 @@ exports.getProfiles = functions.https.onRequest(async (req, res) => {
 });
 
 
-exports.setFriends = functions.https.onRequest(async (req, res) => {
+exports.setGuyFriends = functions.https.onRequest(async (req, res) => {
   const derekProfile = await dbUtils.getProfile("0chklRlWnWhlSOR6Z1GrsPAIzDA2");
   const brettProfile = await dbUtils.getProfile("JjxxN53UP7dm9N8PmhxHy9Fa2IX2");
   const erickProfile = await dbUtils.getProfile("NV4cvofidmO9G9FJfmzIZPnjJqp2");
   const richardProfile = await dbUtils.getProfile("5OFGObt5cXiWhLlgKsXB");
 
-  const profiles = [erickProfile, brettProfile, richardProfile];
+  const profiles = [derekProfile, erickProfile, brettProfile, richardProfile];
   profiles.forEach((profile) => {
-    const friend: Friend = {
-      "acceptedInvite": true,
-      "creationDate": Date.now(),
-      "friendUID": derekProfile.id,
-      "uid": profile.id,
-      "phone": profile.phoneNumber,
-      "avatarURL": profile.media[0].url,
-      "fullName": profile.firstName,
-      "starter": true,
-      "inviteCode": "123",
-    };
-    firestore.collection("friends").add(friend);
+    const profilesToUse = getRandomProfilesWithExclusion(profiles, profile);
+    for (const p of profilesToUse) {
+      const imageURL = p.media.length > 0 ? p.media[0].url : p.avatarURL;
+      const friend: Friend = {
+        "acceptedInvite": true,
+        "creationDate": Date.now(),
+        "friendUID": profile.id,
+        "uid": p.id,
+        "phone": p.phoneNumber,
+        "avatarURL": imageURL,
+        "fullName": p.firstName,
+        "starter": true,
+        "inviteCode": "123",
+      };
+      firestore.collection("friends").add(friend);
+    }
+  });
+
+  res.sendStatus(200);
+});
+
+exports.setGirlFriends = functions.https.onRequest(async (req, res) => {
+  const allisonProfile = await dbUtils.getProfile("4AaGDGFKg7c9KHpzu5pG402nfQz1");
+  const ariaProfile = await dbUtils.getProfile("6xS0eag96xugl4FHEJ5p");
+  const carolineProfile = await dbUtils.getProfile("vBOiXFUkuIwHnPQJnABI");
+  const elenaProfile = await dbUtils.getProfile("hlx1y3vcFAEXmlPNCN1I");
+  const isabellaProfile = await dbUtils.getProfile("k4hEHG5sByAlzgRjv9WP");
+  const jennyProfile = await dbUtils.getProfile("jgHPInuBrxhrfyLoAFR7");
+  const karenProfile = await dbUtils.getProfile("BUXqnW0rHGVCOHnJUlPQ");
+
+  const oliviaProfile = await dbUtils.getProfile("H3armOl5GWMLGRcA2ReV");
+  const rubyProfile = await dbUtils.getProfile("dMl2DWKhjAPAHtj6cgm7RhHfBvu1");
+  const shannonProfile = await dbUtils.getProfile("4AaGDGFKg7c9KHpzu5pG402nfQz1");
+  const tinaProfile = await dbUtils.getProfile("wYJZChrOo83bLVn659Vh");
+
+
+  const profiles = [allisonProfile, ariaProfile, carolineProfile, elenaProfile, isabellaProfile, jennyProfile, karenProfile, oliviaProfile, rubyProfile, shannonProfile, tinaProfile];
+  profiles.forEach((profile) => {
+    const profilesToUse = getRandomProfilesWithExclusion(profiles, profile);
+    for (const p of profilesToUse) {
+      const imageURL = p.media.length > 0 ? p.media[0].url : p.avatarURL;
+      const friend: Friend = {
+        "acceptedInvite": true,
+        "creationDate": Date.now(),
+        "friendUID": profile.id,
+        "uid": p.id,
+        "phone": p.phoneNumber,
+        "avatarURL": imageURL,
+        "fullName": p.firstName,
+        "starter": true,
+        "inviteCode": "123",
+      };
+      firestore.collection("friends").add(friend);
+    }
   });
 
 
   res.sendStatus(200);
 });
+
+// eslint-disable-next-line require-jsdoc
+function getRandomProfilesWithExclusion(arr: Profile[], excludeProfile: Profile): Profile[] {
+  if (arr.length <= 3) {
+    // If the array has 3 or fewer profiles, return the original array.
+    return arr;
+  }
+
+  const randomProfiles: Profile[] = [];
+  const copyArr = [...arr]; // Create a copy of the input array to avoid modifying the original.
+
+  // Find the index of the profile to be excluded
+  const excludeIndex = copyArr.findIndex((profile) => profile === excludeProfile);
+
+  if (excludeIndex !== -1) {
+    copyArr.splice(excludeIndex, 1); // Remove the excluded profile from the copy array.
+  }
+
+  for (let i = 0; i < 3; i++) {
+    const randomIndex = Math.floor(Math.random() * copyArr.length);
+    const randomProfile = copyArr.splice(randomIndex, 1)[0]; // Remove and get the random profile.
+    randomProfiles.push(randomProfile);
+  }
+
+  return randomProfiles;
+}
