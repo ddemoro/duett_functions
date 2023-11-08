@@ -28,6 +28,22 @@ exports.profileUpdated = functions.firestore.document("profiles/{uid}").onUpdate
   return Promise.resolve();
 });
 
+exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(async (change, context) => {
+  const newFriend = Object.assign({id: change.after.id}, change.after.data() as Friend);
+  const oldFriend = Object.assign({id: change.before.id}, change.before.data() as Friend);
+
+  if (newFriend.acceptedInvite && !oldFriend.acceptedInvite) {
+    // They just entered the code and accepted.
+    // Notify the OWNER
+
+    const ownerProfile = await dbUtils.getProfile(newFriend.friendUID);
+    await pushNotifications.sendPushNotification(ownerProfile.id, "New Friend Added", newFriend.fullName+" has joined your team!");
+  }
+
+  return Promise.resolve();
+});
+
+
 exports.addSuggestions = functions.https.onRequest(async (req, res) => {
   // eslint-disable-next-line max-len
   const suggestions = ["6xS0eag96xugl4FHEJ5p", "vBOiXFUkuIwHnPQJnABI", "hlx1y3vcFAEXmlPNCN1I", "k4hEHG5sByAlzgRjv9WP", "jgHPInuBrxhrfyLoAFR7", "BUXqnW0rHGVCOHnJUlPQ", "H3armOl5GWMLGRcA2ReV", "wYJZChrOo83bLVn659Vh"];
