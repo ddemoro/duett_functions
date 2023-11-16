@@ -1,6 +1,16 @@
 /* eslint-disable require-jsdoc,@typescript-eslint/no-unused-vars,@typescript-eslint/ban-ts-comment */
 import * as functions from "firebase-functions";
-import {Choice, Friend, Like, Match, Pair, Person, Player, PossibleMatch, Profile} from "./types";
+import {
+  Choice,
+  Friend,
+  Like,
+  Match,
+  Pair,
+  Person,
+  Player,
+  PossibleMatch,
+  Profile,
+} from "./types";
 import dbUtils from "./utils/db_utils";
 import textUtils from "./utils/text_utils";
 import pushNotifications from "./push_notifications";
@@ -10,6 +20,9 @@ const admin = require("firebase-admin");
 const firestore = admin.firestore();
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const FieldValue = require("firebase-admin").firestore.FieldValue;
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const fs = require("fs");
+
 
 exports.matchAdded = functions.firestore.document("matches/{uid}").onCreate(async (snap, context) => {
   return Promise.resolve();
@@ -19,6 +32,108 @@ exports.matchUpdated = functions.firestore.document("matches/{uid}").onUpdate(as
   const newMatch = Object.assign({id: change.after.id}, change.after.data() as Match);
   console.log("Match updated: " + newMatch.id);
   return Promise.resolve();
+});
+
+interface SmallProfile {
+    id: string;
+    firstName: string;
+    age: any;
+    latitude: number;
+    longitude: number;
+    gender: string;
+    datingType: string;
+    height: number;
+    ethnicity: string;
+    children: string;
+    hometown: string;
+    work: string;
+    jobTitle: string;
+    school: string;
+    education: string;
+    religion: string;
+    politics: string;
+    drinks: string;
+    smoke: string;
+    weed: string;
+    drugs: string;
+    about: string;
+    qualities: string;
+    memorableMoments: string;
+}
+
+exports.createProfileText = functions.https.onRequest(async (req, res) => {
+  // const profile = await dbUtils.getProfile("0chklRlWnWhlSOR6Z1GrsPAIzDA2");
+  // console.log(profile);
+
+  const querySnapshot = await firestore.collection("profiles").where("configured", "==", true).get();
+  const profiles: Profile[] = [];
+  for (const document of querySnapshot.docs) {
+    const profile = Object.assign({id: document.id}, document.data() as Profile);
+    profiles.push(profile);
+  }
+
+
+  const json = [];
+
+
+  // @ts-ignore
+  for (const person of profiles) {
+    try {
+      const profile: SmallProfile = {
+        id: person.id,
+        about: person.about,
+        age: calculateAge(person.birthday),
+        gender: person.gender,
+        children: person.children,
+        latitude: person.living.latitude,
+        longitude: person.living.longitude,
+        datingType: person.datingType,
+        drinks: person.drinks.data,
+        drugs: person.drugs.data,
+        smoke: person.smoke.data,
+        education: person.education.data,
+        firstName: person.firstName,
+        ethnicity: person.ethnicity,
+        height: person.height,
+        hometown: person.hometown.data,
+        jobTitle: person.jobTitle.data,
+        memorableMoments: person.memorableMoments,
+        politics: person.politics.data,
+        qualities: person.qualities,
+        religion: person.religion.data,
+        school: person.school.data,
+        weed: person.weed.data,
+        work: person.work.data,
+
+      };
+      json.push(profile);
+    } catch (e) {/* empty */
+    }
+  }
+
+  function calculateAge(birthDate: any) {
+    const today = new Date();
+    const birth = new Date(birthDate);
+
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+
+    return age;
+  }
+
+  const file = fs.createWriteStream("dating.json");
+  file.write("[");
+  json.forEach((user) => {
+    file.write(JSON.stringify(user) + ",\n");
+  });
+  file.write("]");
+
+  file.end();
+  res.sendStatus(200);
 });
 
 exports.possibleMatchUpdated = functions.firestore.document("possibleMatches/{uid}").onUpdate(async (change, context) => {
@@ -368,3 +483,27 @@ async function startMatching(match: Match) {
     await firestore.collection("possibleMatches").add(possibleMatch);
   }
 }
+
+// @ts-ignore
+exports.generateText = functions.https.onRequest(async (req, res) => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const {Configuration, OpenAIApi} = require("openai");
+  const configuration = new Configuration({
+    apiKey: "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",
+  });
+  const openai = new OpenAIApi(configuration);
+
+
+  try {
+    const response = await openai.createCompletion({
+      model: "text-davinci-003", // Specify the model
+      prompt: "Who are the 49ers?", // Text prompt from the client
+      max_tokens: 150, // Maximum number of tokens to generate
+    });
+
+    return {response: response.data.choices[0].text};
+  } catch (error) {
+    console.error(error);
+    throw new functions.https.HttpsError("internal", "OpenAI request failed");
+  }
+});

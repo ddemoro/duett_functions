@@ -37,7 +37,7 @@ exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(a
     // Notify the OWNER
 
     const ownerProfile = await dbUtils.getProfile(newFriend.friendUID);
-    await pushNotifications.sendPushNotification(ownerProfile.id, "New Friend Added", newFriend.fullName+" has joined your team!");
+    await pushNotifications.sendPushNotification(ownerProfile.id, "New Friend Added", newFriend.fullName + " has joined your team!");
   }
 
   return Promise.resolve();
@@ -46,9 +46,9 @@ exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(a
 
 exports.addSuggestions = functions.https.onRequest(async (req, res) => {
   // eslint-disable-next-line max-len
-  const suggestions = ["6xS0eag96xugl4FHEJ5p", "vBOiXFUkuIwHnPQJnABI", "hlx1y3vcFAEXmlPNCN1I", "k4hEHG5sByAlzgRjv9WP", "jgHPInuBrxhrfyLoAFR7", "BUXqnW0rHGVCOHnJUlPQ", "H3armOl5GWMLGRcA2ReV", "wYJZChrOo83bLVn659Vh"];
+  const suggestions = ["0chklRlWnWhlSOR6Z1GrsPAIzDA2", "CHYFDBgzNyDVRS2UCdsy", "JjxxN53UP7dm9N8PmhxHy9Fa2IX2", "tkxSZsDmbawx33mbKA6O", "eMkeuPFEJipt4z8FtlBE", "2B7ej5ApDkdSFKaEeZl8", "Xl6fFCSwNrNZRqPwL2y9", "5OFGObt5cXiWhLlgKsXB", "y62XZAw2rkKefwmIqjRU"];
 
-  await firestore.collection("suggestions").doc("JjxxN53UP7dm9N8PmhxHy9Fa2IX2").set({profiles: suggestions});
+  await firestore.collection("suggestions").doc("4AaGDGFKg7c9KHpzu5pG402nfQz1").set({profiles: suggestions});
   res.sendStatus(200);
 });
 

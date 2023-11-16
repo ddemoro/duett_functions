@@ -54,11 +54,24 @@ async function getFriends(uid: string, starter: boolean) {
   return friends;
 }
 
+// eslint-disable-next-line require-jsdoc
+async function getProfilesFromGender(gender: string) {
+  const querySnapshot = await firestore.collection("profiles").where("gender", "==", gender).get();
+  const profiles: Profile[] = [];
+  for (const document of querySnapshot.docs) {
+    const profile = Object.assign({id: document.id}, document.data() as Profile);
+    profiles.push(profile);
+  }
+
+  return profiles;
+}
+
 const dbUtils = {
   getProfile,
   getMatch,
   getDuett,
   getFriends,
+  getProfilesFromGender,
 };
 
 export default dbUtils;
