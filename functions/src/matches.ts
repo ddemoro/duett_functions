@@ -485,25 +485,61 @@ async function startMatching(match: Match) {
 }
 
 // @ts-ignore
-exports.generateText = functions.https.onRequest(async (req, res) => {
+exports.matchMeUp = functions.https.onRequest(async (req, res) => {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const {Configuration, OpenAIApi} = require("openai");
-  const configuration = new Configuration({
+  const OpenAI = require("openai");
+  const openai = new OpenAI({
+    organization: "org-NBbRZYbyGkOuvHrABmlrUZYe",
     apiKey: "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",
   });
-  const openai = new OpenAIApi(configuration);
+
+  // Create thread
+  const thread = await openai.beta.threads.create({
+    messages: [
+      {
+        "role": "user",
+        "content": "Match me up with 5 women who match with me and I live in San Francisco and I'm a male.",
+      },
+    ],
+  });
 
 
-  try {
-    const response = await openai.createCompletion({
-      model: "text-davinci-003", // Specify the model
-      prompt: "Who are the 49ers?", // Text prompt from the client
-      max_tokens: 150, // Maximum number of tokens to generate
-    });
+  // Run thread with assistant
+  const run = await openai.beta.threads.runs.create(
+    thread.id,
+    {assistant_id: "asst_WZg4DoXe1CQ0nmhcPlrykmPJ"}
+  );
 
-    return {response: response.data.choices[0].text};
-  } catch (error) {
-    console.error(error);
-    throw new functions.https.HttpsError("internal", "OpenAI request failed");
+  // Retrieve
+  // Run thread with assistant
+  let runStatus = await openai.beta.threads.runs.retrieve(
+    thread.id,
+    run.id
+  );
+
+  // Polling mechanism to see if runStatus is completed
+  // This should be made more robust.
+  while (runStatus.status !== "completed") {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
   }
+
+  // @ts-ignore
+  const messages = await openai.beta.threads.messages.list(thread.id);
+
+
+  // Find the last message for the current run
+  const lastMessageForRun = messages.data
+    .filter(
+      (message: { run_id: any; role: string; }) => message.run_id === run.id && message.role === "assistant"
+    )
+    .pop();
+
+  // If an assistant message is found, console.log() it
+  if (lastMessageForRun) {
+    console.log(`${lastMessageForRun.content[0].text.value} \n`);
+  }
+
+
+  res.sendStatus(200);
 });
