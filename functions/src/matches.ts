@@ -485,7 +485,13 @@ async function startMatching(match: Match) {
 }
 
 // @ts-ignore
-exports.matchMeUp = functions.https.onRequest(async (req, res) => {
+exports.matchMeUp = functions.runWith({
+  timeoutSeconds: 300,
+  memory: "2GB",
+}).https.onRequest(async (req, res) => {
+  const profile = await dbUtils.getProfile("0chklRlWnWhlSOR6Z1GrsPAIzDA2");
+
+
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const OpenAI = require("openai");
   const openai = new OpenAI({
@@ -498,7 +504,8 @@ exports.matchMeUp = functions.https.onRequest(async (req, res) => {
     messages: [
       {
         "role": "user",
-        "content": "Match me up with 5 women who match with me and I live in San Francisco and I'm a male.",
+        // eslint-disable-next-line max-len
+        "content": "Give me a minimum of 5 results of people who match the gender " + profile.datingType + " and who you think match up with my profile which is in JSON structure. The results must include their id and firstName and be in json format. Do not be verbose or include anything other than the JSON in the results. Here is my profile in json: " + JSON.stringify(profile),
       },
     ],
   });
@@ -537,7 +544,19 @@ exports.matchMeUp = functions.https.onRequest(async (req, res) => {
 
   // If an assistant message is found, console.log() it
   if (lastMessageForRun) {
-    console.log(`${lastMessageForRun.content[0].text.value} \n`);
+    const text = lastMessageForRun.content[0].text.value;
+    const completion = await openai.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful assistant designed to output JSON.",
+        },
+        {role: "user", content: "Take the following text and only give me back json: " + text},
+      ],
+      model: "gpt-3.5-turbo-1106",
+      response_format: {type: "json_object"},
+    });
+    console.log(completion.choices[0].message.content);
   }
 
 
