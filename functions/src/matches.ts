@@ -292,6 +292,23 @@ exports.upgradeProfile = functions.https.onRequest(async (req, res) => {
   res.sendStatus(200);
 });
 
+
+// Removes the matches and the likedBy
+exports.clearProfiles = functions.https.onRequest(async (req, res) => {
+  const querySnapshot = await firestore.collection("profiles").get();
+  for (const document of querySnapshot.docs) {
+    await firestore.collection("profiles").doc(document.id).update({likedBy: []});
+  }
+
+  const matchesQuerySnapshot = await firestore.collection("matches").get();
+  for (const document of matchesQuerySnapshot.docs) {
+    await document.ref.delete();
+  }
+
+
+  res.sendStatus(200);
+});
+
 function delay(ms: number | undefined) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -378,8 +395,13 @@ exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (
   const p1 = Object.assign({id: profileOne.id}, profileOne.data() as Profile);
   const p2 = Object.assign({id: profileTwo.id}, profileTwo.data() as Profile);
 
+  if (p2.likedBy.includes(p1.id)) {
+    return Promise.resolve();
+  }
+
   // Add that they were liked by p1
   const likedBy = p2.likedBy ?? [];
+  likedBy.push(p1.id);
   await firestore.collection("profiles").doc(p2.id).update({likedBy: likedBy});
 
 
