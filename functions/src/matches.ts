@@ -378,6 +378,10 @@ exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (
   const p1 = Object.assign({id: profileOne.id}, profileOne.data() as Profile);
   const p2 = Object.assign({id: profileTwo.id}, profileTwo.data() as Profile);
 
+  // Add that they were liked by p1
+  const likedBy = p2.likedBy ?? [];
+  await firestore.collection("profiles").doc(p2.id).update({likedBy: likedBy});
+
 
   const personOne: Person = {
     avatarURL: p1.media[0].url,
