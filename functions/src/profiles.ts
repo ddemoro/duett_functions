@@ -125,12 +125,11 @@ exports.setGirlFriends = functions.https.onRequest(async (req, res) => {
   const karenProfile = await dbUtils.getProfile("BUXqnW0rHGVCOHnJUlPQ");
 
   const oliviaProfile = await dbUtils.getProfile("H3armOl5GWMLGRcA2ReV");
-  const rubyProfile = await dbUtils.getProfile("dMl2DWKhjAPAHtj6cgm7RhHfBvu1");
   const shannonProfile = await dbUtils.getProfile("4AaGDGFKg7c9KHpzu5pG402nfQz1");
   const tinaProfile = await dbUtils.getProfile("wYJZChrOo83bLVn659Vh");
 
 
-  const profiles = [allisonProfile, ariaProfile, carolineProfile, elenaProfile, isabellaProfile, jennyProfile, karenProfile, oliviaProfile, rubyProfile, shannonProfile, tinaProfile];
+  const profiles = [allisonProfile, ariaProfile, carolineProfile, elenaProfile, isabellaProfile, jennyProfile, karenProfile, oliviaProfile, shannonProfile, tinaProfile];
   profiles.forEach((profile) => {
     const profilesToUse = getRandomProfilesWithExclusion(profiles, profile);
     for (const p of profilesToUse) {
