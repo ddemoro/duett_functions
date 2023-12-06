@@ -84,6 +84,17 @@ function getThumbFromVideo(videoURL: string) {
 
 
 // eslint-disable-next-line require-jsdoc
+async function doit(file: any, bucketName: string, destination: string) {
+  await file.makePublic();
+  const url = await file.getDownloadURL();
+  console.log("Try this: "+url);
+
+  const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent("path/to/your/file")}?alt=media`;
+  console.log("Public URL is "+publicUrl);
+  return publicUrl;
+}
+
+// eslint-disable-next-line require-jsdoc
 function addThumbnailToProduct(productID: string, imageURL: string) {
   const storage = admin.storage();
   const randomName = Math.random().toString(36).substring(5);
@@ -103,6 +114,8 @@ function addThumbnailToProduct(productID: string, imageURL: string) {
           return bucket.upload(tempFilePath, {destination}).then(() => {
             console.log("Building Public Facing URL for Content ");
             const myFile = admin.storage().bucket().file(destination);
+
+            doit(myFile, bucket.name, destination);
             return myFile.getSignedUrl({
               action: "read",
               expires: "03-09-2491",
