@@ -389,7 +389,7 @@ exports.possibleMatchAdded = functions.firestore.document("possibleMatches/{uid}
   }
 
   const title = "Duett Possible Match Alert";
-  const message = yourFriendsName + " matched with " + theirFriendsName + "! Check out which one of her friends you may like.";
+  const message = yourFriendsName + " matched with " + theirFriendsName + "! Check out which one of their friends you may like.";
 
 
   await pushNotifications.notifyTargets(uid, title, message, pm.id);
