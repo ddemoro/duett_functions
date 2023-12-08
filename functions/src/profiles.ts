@@ -81,7 +81,45 @@ exports.checkProfiles = functions.https.onRequest(async (req, res) => {
   res.sendStatus(200);
 });
 
-exports.getProfiles = functions.https.onRequest(async (req, res) => {
+exports.clearProfiles = functions.https.onRequest(async (req, res) => {
+  const profiles = ["0chklRlWnWhlSOR6Z1GrsPAIzDA2", "JjxxN53UP7dm9N8PmhxHy9Fa2IX2", "NV4cvofidmO9G9FJfmzIZPnjJqp2", "4AaGDGFKg7c9KHpzu5pG402nfQz1"];
+  for (const profileID of profiles) {
+    await firestore.collection("profiles").doc(profileID).delete();
+  }
+
+  const querySnapshot = await firestore.collection("profiles").get();
+  for (const document of querySnapshot.docs) {
+    await firestore.collection("profiles").doc(document.id).update({
+      likedBy: [],
+    });
+  }
+
+  const matchesQuerySnapshot = await firestore.collection("matches").get();
+  for (const document of matchesQuerySnapshot.docs) {
+    await document.ref.delete();
+  }
+
+  const possibleMatchesSnapshot = await firestore.collection("possibleMatches").get();
+  for (const document of possibleMatchesSnapshot.docs) {
+    await document.ref.delete();
+  }
+
+  const likesSnapshot = await firestore.collection("likes").get();
+  for (const document of likesSnapshot.docs) {
+    await document.ref.delete();
+  }
+
+  const pairsSnapshot = await firestore.collection("pairs").get();
+  for (const document of pairsSnapshot.docs) {
+    await document.ref.delete();
+  }
+
+  const friendsSnapshot = await firestore.collection("friends").get();
+  for (const document of friendsSnapshot.docs) {
+    await document.ref.delete();
+  }
+
+
   res.sendStatus(200);
 });
 
