@@ -85,9 +85,9 @@ export interface Friend {
     fullName: string;
     phone: string;
     inviteCode: string;
-    acceptedInvite: boolean;
+    accepted: boolean;
     avatarURL:string;
-    starter: boolean;
+    isStarter: boolean;
     creationDate: any;
 }
 

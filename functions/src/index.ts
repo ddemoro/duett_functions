@@ -11,3 +11,4 @@ exports.matches = require("./matches");
 exports.pairs = require("./pairs");
 exports.duetts = require("./duetts");
 exports.thumbnails = require("./utils/thumbnails");
+exports.friends = require("./friends");

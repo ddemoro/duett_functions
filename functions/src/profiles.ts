@@ -28,21 +28,6 @@ exports.profileUpdated = functions.firestore.document("profiles/{uid}").onUpdate
   return Promise.resolve();
 });
 
-exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(async (change, context) => {
-  const newFriend = Object.assign({id: change.after.id}, change.after.data() as Friend);
-  const oldFriend = Object.assign({id: change.before.id}, change.before.data() as Friend);
-
-  if (newFriend.acceptedInvite && !oldFriend.acceptedInvite) {
-    // They just entered the code and accepted.
-    // Notify the OWNER
-
-    const ownerProfile = await dbUtils.getProfile(newFriend.friendUID);
-    await pushNotifications.sendPushNotification(ownerProfile.id, "New Friend Added", newFriend.fullName + " has joined your team!");
-  }
-
-  return Promise.resolve();
-});
-
 
 exports.addSuggestions = functions.https.onRequest(async (req, res) => {
   // eslint-disable-next-line max-len
@@ -136,14 +121,14 @@ exports.setGuyFriends = functions.https.onRequest(async (req, res) => {
     for (const p of profilesToUse) {
       const imageURL = p.media.length > 0 ? p.media[0].url : p.avatarURL;
       const friend: Friend = {
-        "acceptedInvite": true,
+        "accepted": true,
         "creationDate": Date.now(),
         "friendUID": profile.id,
         "uid": p.id,
         "phone": p.phoneNumber,
         "avatarURL": imageURL,
         "fullName": p.firstName,
-        "starter": true,
+        "isStarter": true,
         "inviteCode": "123",
       };
       firestore.collection("friends").add(friend);
@@ -173,14 +158,14 @@ exports.setGirlFriends = functions.https.onRequest(async (req, res) => {
     for (const p of profilesToUse) {
       const imageURL = p.media.length > 0 ? p.media[0].url : p.avatarURL;
       const friend: Friend = {
-        "acceptedInvite": true,
+        "accepted": true,
         "creationDate": Date.now(),
         "friendUID": profile.id,
         "uid": p.id,
         "phone": p.phoneNumber,
         "avatarURL": imageURL,
         "fullName": p.firstName,
-        "starter": true,
+        "isStarter": true,
         "inviteCode": "123",
       };
       firestore.collection("friends").add(friend);
