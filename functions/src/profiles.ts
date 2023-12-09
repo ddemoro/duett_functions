@@ -67,11 +67,6 @@ exports.checkProfiles = functions.https.onRequest(async (req, res) => {
 });
 
 exports.clearProfiles = functions.https.onRequest(async (req, res) => {
-  const profiles = ["0chklRlWnWhlSOR6Z1GrsPAIzDA2", "JjxxN53UP7dm9N8PmhxHy9Fa2IX2", "NV4cvofidmO9G9FJfmzIZPnjJqp2", "4AaGDGFKg7c9KHpzu5pG402nfQz1"];
-  for (const profileID of profiles) {
-    await firestore.collection("profiles").doc(profileID).delete();
-  }
-
   const querySnapshot = await firestore.collection("profiles").get();
   for (const document of querySnapshot.docs) {
     await firestore.collection("profiles").doc(document.id).update({

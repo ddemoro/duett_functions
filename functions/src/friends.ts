@@ -20,10 +20,12 @@ exports.friendAdded = functions.firestore.document("friends/{uid}").onCreate(asy
   let avatarURL = friend.avatarURL;
   for (const document of querySnapshot.docs) {
     const profile = Object.assign({id: document.id}, document.data() as Profile);
-    const phone = cleanPhoneNumber(profile.phoneNumber);
-    if (friendPhoneNumber === phone) {
-      friendUID = profile.id;
-      avatarURL = profile.media[0].url;
+    if (profile.phoneNumber) {
+      const phone = cleanPhoneNumber(profile.phoneNumber);
+      if (friendPhoneNumber === phone) {
+        friendUID = profile.id;
+        avatarURL = profile.media[0].url;
+      }
     }
   }
 
@@ -89,6 +91,11 @@ function cleanPhoneNumber(phoneNumber:string) {
   // Remove leading +1
   if (phoneNumber.startsWith("+1")) {
     phoneNumber = phoneNumber.substring(2);
+  }
+
+  // Remove leading +1
+  if (phoneNumber.startsWith("1")) {
+    phoneNumber = phoneNumber.substring(1);
   }
 
   // Check if the phone number is 10 digits long
