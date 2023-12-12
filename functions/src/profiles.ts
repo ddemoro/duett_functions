@@ -105,9 +105,9 @@ exports.clearProfiles = functions.https.onRequest(async (req, res) => {
 
 
 exports.setGuyFriends = functions.https.onRequest(async (req, res) => {
-  const derekProfile = await dbUtils.getProfile("0chklRlWnWhlSOR6Z1GrsPAIzDA2");
-  const brettProfile = await dbUtils.getProfile("JjxxN53UP7dm9N8PmhxHy9Fa2IX2");
-  const erickProfile = await dbUtils.getProfile("NV4cvofidmO9G9FJfmzIZPnjJqp2");
+  const derekProfile = await dbUtils.getProfile("tI6XNS1oLtWt4WjwkdiliJos3f72");
+  const brettProfile = await dbUtils.getProfile("M0PRW3sb1tQljjyH878sFlDmSC63");
+  const erickProfile = await dbUtils.getProfile("bxLjcxVZzlexU040cKCnh5xROLq1");
   const richardProfile = await dbUtils.getProfile("5OFGObt5cXiWhLlgKsXB");
 
   const profiles = [derekProfile, erickProfile, brettProfile, richardProfile];
@@ -118,13 +118,13 @@ exports.setGuyFriends = functions.https.onRequest(async (req, res) => {
       const friend: Friend = {
         "accepted": true,
         "creationDate": Date.now(),
-        "friendUID": profile.id,
-        "uid": p.id,
+        "friendUID": p.id,
+        "uid": profile.id,
         "phone": p.phoneNumber,
         "avatarURL": imageURL,
         "fullName": p.firstName,
         "isStarter": true,
-        "inviteCode": "123",
+        "inviteCode": "AUTO_GENERATED",
       };
       firestore.collection("friends").add(friend);
     }
@@ -134,20 +134,17 @@ exports.setGuyFriends = functions.https.onRequest(async (req, res) => {
 });
 
 exports.setGirlFriends = functions.https.onRequest(async (req, res) => {
-  const allisonProfile = await dbUtils.getProfile("4AaGDGFKg7c9KHpzu5pG402nfQz1");
   const ariaProfile = await dbUtils.getProfile("6xS0eag96xugl4FHEJ5p");
   const carolineProfile = await dbUtils.getProfile("vBOiXFUkuIwHnPQJnABI");
   const elenaProfile = await dbUtils.getProfile("hlx1y3vcFAEXmlPNCN1I");
   const isabellaProfile = await dbUtils.getProfile("k4hEHG5sByAlzgRjv9WP");
   const jennyProfile = await dbUtils.getProfile("jgHPInuBrxhrfyLoAFR7");
   const karenProfile = await dbUtils.getProfile("BUXqnW0rHGVCOHnJUlPQ");
-
   const oliviaProfile = await dbUtils.getProfile("H3armOl5GWMLGRcA2ReV");
-  const shannonProfile = await dbUtils.getProfile("4AaGDGFKg7c9KHpzu5pG402nfQz1");
   const tinaProfile = await dbUtils.getProfile("wYJZChrOo83bLVn659Vh");
 
 
-  const profiles = [allisonProfile, ariaProfile, carolineProfile, elenaProfile, isabellaProfile, jennyProfile, karenProfile, oliviaProfile, shannonProfile, tinaProfile];
+  const profiles = [ariaProfile, carolineProfile, elenaProfile, isabellaProfile, jennyProfile, karenProfile, oliviaProfile, tinaProfile];
   profiles.forEach((profile) => {
     const profilesToUse = getRandomProfilesWithExclusion(profiles, profile);
     for (const p of profilesToUse) {
@@ -155,13 +152,13 @@ exports.setGirlFriends = functions.https.onRequest(async (req, res) => {
       const friend: Friend = {
         "accepted": true,
         "creationDate": Date.now(),
-        "friendUID": profile.id,
-        "uid": p.id,
+        "friendUID": p.id,
+        "uid": profile.id,
         "phone": p.phoneNumber,
         "avatarURL": imageURL,
         "fullName": p.firstName,
         "isStarter": true,
-        "inviteCode": "123",
+        "inviteCode": "AUTO_GENERATED",
       };
       firestore.collection("friends").add(friend);
     }
