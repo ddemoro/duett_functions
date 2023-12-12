@@ -44,7 +44,7 @@ async function getDuett(matchID: string) {
 
 // eslint-disable-next-line require-jsdoc
 async function getFriends(uid: string, starter: boolean) {
-  const querySnapshot = await firestore.collection("friends").where("friendUID", "==", uid).where("starter", "==", starter).get();
+  const querySnapshot = await firestore.collection("friends").where("uid", "==", uid).where("isStarter", "==", starter).get();
   const friends: Friend[] = [];
   for (const document of querySnapshot.docs) {
     const friend = Object.assign({id: document.id}, document.data() as Friend);

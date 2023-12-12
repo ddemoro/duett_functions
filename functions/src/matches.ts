@@ -468,11 +468,11 @@ exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (
 async function convertToChoices(friends: Friend[]) {
   const choices: any[] = [];
   for (const friend of friends) {
-    const snapshot = await firestore.collection("profiles").doc(friend.uid).get();
+    const snapshot = await firestore.collection("profiles").doc(friend.friendUID).get();
     const profile = Object.assign({id: snapshot.id}, snapshot.data() as Profile);
 
     const choice: Choice = {
-      uid: friend.uid,
+      uid: friend.friendUID,
       firstName: profile.firstName,
       avatarURL: profile.media[0].url,
       liked: false,
@@ -509,7 +509,7 @@ async function startMatching(match: Match) {
       friend: person1,
       match: person2,
       choices: await convertToChoices(friends2),
-      uid: friend.uid,
+      uid: friend.friendUID,
       completed: false,
     };
 
@@ -523,7 +523,7 @@ async function startMatching(match: Match) {
       friend: person2,
       match: person1,
       choices: await convertToChoices(friends1),
-      uid: friend.uid,
+      uid: friend.friendUID,
       completed: false,
     };
 
