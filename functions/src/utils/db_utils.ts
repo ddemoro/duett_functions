@@ -1,4 +1,4 @@
-import {DuettChat, Friend, Match, Profile} from "../types";
+import {DuettChat, Friend, Match, PossibleMatch, Profile} from "../types";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const admin = require("firebase-admin");
@@ -55,6 +55,18 @@ async function getFriends(uid: string, starter: boolean) {
 }
 
 // eslint-disable-next-line require-jsdoc
+async function getPossibleMatches(matchID: string) {
+  const querySnapshot = await firestore.collection("possibleMatches").where("matchID", "==", matchID).get();
+  const matches: PossibleMatch[] = [];
+  for (const document of querySnapshot.docs) {
+    const match = Object.assign({id: document.id}, document.data() as PossibleMatch);
+    matches.push(match);
+  }
+
+  return matches;
+}
+
+// eslint-disable-next-line require-jsdoc
 async function getProfilesFromGender(gender: string) {
   const querySnapshot = await firestore.collection("profiles").where("gender", "==", gender).get();
   const profiles: Profile[] = [];
@@ -72,6 +84,7 @@ const dbUtils = {
   getDuett,
   getFriends,
   getProfilesFromGender,
+  getPossibleMatches,
 };
 
 export default dbUtils;

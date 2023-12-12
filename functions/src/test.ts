@@ -1,5 +1,6 @@
 import * as functions from "firebase-functions";
 import {Like} from "./types";
+import dbUtils from "./utils/db_utils";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const admin = require("firebase-admin");
 const firestore = admin.firestore();
@@ -44,3 +45,11 @@ exports.erickLikesGirl = functions.https.onRequest(async (req, res) => {
   res.sendStatus(200);
 });
 
+exports.testMatches = functions.https.onRequest(async (req, res) => {
+  const match = await dbUtils.getMatch("sbBS1MkYwQMExhpFt5he");
+
+  const pms = await dbUtils.getPossibleMatches(match.id);
+  for (const possibleMatch of pms) {
+    console.log(possibleMatch.id);
+  }
+});
