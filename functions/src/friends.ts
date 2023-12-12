@@ -10,6 +10,36 @@ const firestore = admin.firestore();
 const FieldValue = require("firebase-admin").firestore.FieldValue;
 
 
+exports.test = functions.https.onRequest(async (req, res) => {
+  const friendSnapshot = await firestore.collection("friends").doc("1YbgrP8oGBwa2yKzI8ig").get();
+
+  const friend = Object.assign({id: friendSnapshot.id}, friendSnapshot.data() as Friend);
+  const friendPhoneNumber = cleanPhoneNumber(friend.phone);
+
+
+  const querySnapshot = await firestore.collection("profiles").get();
+  let friendUID;
+  let avatarURL = friend.avatarURL;
+  for (const document of querySnapshot.docs) {
+    const profile = await dbUtils.getProfile(document.id);
+    if (profile.phoneNumber) {
+      const phone = cleanPhoneNumber(profile.phoneNumber);
+      if (friendPhoneNumber === phone) {
+        console.log("PHONE: " + friendPhoneNumber + " == " + phone);
+        console.log("ID:"+profile.id);
+        friendUID = profile.id;
+        avatarURL = profile.media[0].url;
+      }
+    }
+  }
+
+  console.log("Friend UID: " + friendUID);
+  console.log("Avatar: " + avatarURL);
+
+  res.sendStatus(200);
+});
+
+
 exports.friendAdded = functions.firestore.document("friends/{uid}").onCreate(async (snap, context) => {
   const friend = Object.assign({id: snap.id}, snap.data() as Friend);
   const friendPhoneNumber = cleanPhoneNumber(friend.phone);
@@ -64,7 +94,7 @@ exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(a
 
     if (friends.length == 0) {
       // Create Friend object and add them to the bench
-      const newFriend:Friend = {
+      const newFriend: Friend = {
         uid: friendUID,
         friendUID: uid,
         avatarURL: ownerProfile.media[0].url,
@@ -84,7 +114,7 @@ exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(a
 });
 
 // eslint-disable-next-line require-jsdoc
-function cleanPhoneNumber(phoneNumber:string) {
+function cleanPhoneNumber(phoneNumber: string) {
   // Remove all non-numeric characters
   phoneNumber = phoneNumber.replace(/[^0-9]/g, "");
 
