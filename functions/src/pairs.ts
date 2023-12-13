@@ -32,7 +32,7 @@ exports.pairUpdated = functions.firestore.document("pairs/{uid}").onUpdate(async
     // First let's see if a Duett already exists
     let duettChat;
     try {
-      duettChat = await dbUtils.getDuett(newPair.id);
+      duettChat = await dbUtils.getDuett(newPair.matchID);
     } catch (e) {
       console.log(e);
     }
@@ -78,11 +78,12 @@ exports.pairUpdated = functions.firestore.document("pairs/{uid}").onUpdate(async
         members: [newPair.matchMakerIds[0], newPair.matchMakerIds[1], newPair.players[0].uid, newPair.players[1].uid],
       };
 
-      await firestore.collection("duetts").add(duettChat);
+      await firestore.collection("duetts").doc(newPair.matchID).set(duettChat);
     } else {
       // Update
       duettChat.members.push(newPair.players[0].uid, newPair.players[1].uid);
-      await firestore.collection("duetts").add(duettChat);
+      duettChat.pairs.push(newPair);
+      await firestore.collection("duetts").doc(newPair.matchID).update(duettChat);
     }
   }
   return Promise.resolve();
