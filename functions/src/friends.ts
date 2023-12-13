@@ -26,7 +26,7 @@ exports.test = functions.https.onRequest(async (req, res) => {
       const phone = cleanPhoneNumber(profile.phoneNumber);
       if (friendPhoneNumber === phone) {
         console.log("PHONE: " + friendPhoneNumber + " == " + phone);
-        console.log("ID:"+profile.id);
+        console.log("ID:" + profile.id);
         friendUID = profile.id;
         avatarURL = profile.media[0].url;
       }
@@ -45,7 +45,7 @@ exports.friendAdded = functions.firestore.document("friends/{uid}").onCreate(asy
   const friendPhoneNumber = cleanPhoneNumber(friend.phone);
 
 
-  const querySnapshot = await firestore.collection("profiles").get();
+  const querySnapshot = await firestore.collection("profiles").where("configured", "==", true).get();
   let friendUID;
   let avatarURL = friend.avatarURL;
   for (const document of querySnapshot.docs) {
@@ -77,26 +77,30 @@ exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(a
 
   if (newFriend.accepted && !oldFriend.accepted) {
     // They just entered the code and accepted.
-    const ownerProfile = await dbUtils.getProfile(newFriend.friendUID);
-    await pushNotifications.sendPushNotification(ownerProfile.id, "New Friend Added", newFriend.fullName + " has joined your team!");
+    const ownerProfile = await dbUtils.getProfile(newFriend.uid);
+    await pushNotifications.sendPushNotification(ownerProfile.id, "New Friend Added", newFriend.fullName + " has accepted your friend request!");
 
-    const uid = newFriend.uid;
-    const friendUID = newFriend.uid;
+
+    // Now let's make sure that the friend you invited as a friend object for you
+    // but you will be on the bench!
+    const friendUID = newFriend.friendUID;
 
     // Check if a friend object already exists by looking looking for a Friend object that
     // has the uid == friendUID and the friendUID == uid and accepted == false
-    const querySnapshot = await firestore.collection("friends").where("friendUID", "==", uid).where("uid", "==", friendUID).get();
+    const querySnapshot = await firestore.collection("friends").where("friendUID", "==", ownerProfile.id).where("uid", "==", friendUID).get();
     const friends: Friend[] = [];
     for (const document of querySnapshot.docs) {
       const friend = Object.assign({id: document.id}, document.data() as Friend);
-      friends.push(friend);
+      if (!friend.accepted) {
+        friends.push(friend);
+      }
     }
 
     if (friends.length == 0) {
       // Create Friend object and add them to the bench
       const newFriend: Friend = {
         uid: friendUID,
-        friendUID: uid,
+        friendUID: ownerProfile.id,
         avatarURL: ownerProfile.media[0].url,
         creationDate: FieldValue.serverTimestamp(),
         isStarter: false,
@@ -107,6 +111,10 @@ exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(a
       };
 
       await firestore.collection("friends").add(newFriend);
+    } else {
+      const f = friends[0];
+      f.accepted = true;
+      await firestore.collection("friends").doc(f.id).update(newFriend);
     }
   }
 
