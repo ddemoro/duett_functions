@@ -94,8 +94,8 @@ exports.clearProfiles = functions.https.onRequest(async (req, res) => {
     await document.ref.delete();
   }
 
-  const friendsSnapshot = await firestore.collection("friends").get();
-  for (const document of friendsSnapshot.docs) {
+  const notificationsSnapshot = await firestore.collection("notifications").get();
+  for (const document of notificationsSnapshot.docs) {
     await document.ref.delete();
   }
 
