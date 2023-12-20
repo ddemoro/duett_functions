@@ -99,6 +99,11 @@ exports.clearProfiles = functions.https.onRequest(async (req, res) => {
     await document.ref.delete();
   }
 
+  const messagesSnapshot = await firestore.collection("messages").get();
+  for (const document of messagesSnapshot.docs) {
+    await document.ref.delete();
+  }
+
 
   res.sendStatus(200);
 });
