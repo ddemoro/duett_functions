@@ -18,6 +18,7 @@ exports.profileAdded = functions.firestore.document("profiles/{uid}").onCreate(a
   // Save Profile
   await snap.ref.update({
     creationDate: FieldValue.serverTimestamp(),
+    configured: false,
   });
 
 
@@ -25,6 +26,14 @@ exports.profileAdded = functions.firestore.document("profiles/{uid}").onCreate(a
 });
 
 exports.profileUpdated = functions.firestore.document("profiles/{uid}").onUpdate(async (change, context) => {
+  const newProfile = Object.assign({id: change.after.id}, change.after.data() as Profile);
+  const oldProfile = Object.assign({id: change.before.id}, change.before.data() as Profile);
+
+  if (newProfile.configured && !oldProfile.configured) {
+    await pushNotifications.sendPushNotification("tI6XNS1oLtWt4WjwkdiliJos3f72", "New User", newProfile.firstName + " has joined");
+  }
+
+
   return Promise.resolve();
 });
 
