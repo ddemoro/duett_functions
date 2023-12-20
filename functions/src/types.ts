@@ -165,8 +165,11 @@ export interface ChatMessage {
 export interface Notification {
     id?: string;
     text: string;
-    duettID: string;
+    duettID?: string;
+    matchID?:string;
+    possibleMatchID?:string;
+    read:boolean;
     images: string[];
     creationDate: any;
-    profiles: string[];
+    uid: string;
 }

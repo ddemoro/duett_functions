@@ -35,7 +35,8 @@ exports.duettAdded = functions.firestore.document("duetts/{uid}").onCreate(async
         duettID: duett.id,
         text: profile1.firstName + " and " + profile2.firstName + " agreed you would be perfect for a Duett. You've all been placed in a group chat.",
         images: avatarURLs,
-        profiles: [profileID],
+        uid: profileID,
+        read: false,
       };
       await firestore.collection("notifications").add(notification);
     }
@@ -47,7 +48,8 @@ exports.duettAdded = functions.firestore.document("duetts/{uid}").onCreate(async
     duettID: duett.id,
     text: profile1.firstName + " agreed with your friend match. You've all been placed in a group chat.",
     images: [profile1.media[0].url],
-    profiles: [profile2.id],
+    uid: profile2.id,
+    read: false,
   };
 
   const notificationTwo: Notification = {
@@ -55,7 +57,8 @@ exports.duettAdded = functions.firestore.document("duetts/{uid}").onCreate(async
     duettID: duett.id,
     text: profile2.firstName + " agreed with your friend match. You've all been placed in a group chat.",
     images: [profile2.media[0].url],
-    profiles: [profile1.id],
+    uid: profile1.id,
+    read: false,
   };
   await firestore.collection("notifications").add(notificationOne);
   await firestore.collection("notifications").add(notificationTwo);

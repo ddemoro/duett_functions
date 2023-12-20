@@ -4,7 +4,7 @@ import {
   Choice,
   Friend,
   Like,
-  Match,
+  Match, Notification,
   Pair,
   Person,
   Player,
@@ -31,6 +31,28 @@ exports.matchAdded = functions.firestore.document("matches/{uid}").onCreate(asyn
 
   await pushNotifications.sendMatchCreatedNotification(uid1, "You have a Match!", "You have matched up with "+match.profiles[1].firstName+". Let's get a Duett going.", match.id);
   await pushNotifications.sendMatchCreatedNotification(uid2, "You have a Match!", "You have matched up with "+match.profiles[0].firstName+". Let's get a Duett going.", match.id);
+
+
+  const notification: Notification = {
+    creationDate: FieldValue.serverTimestamp(),
+    matchID: match.id,
+    text: match.profiles[1].firstName +" and you have been matched up.",
+    images: [match.profiles[0].avatarURL, match.profiles[1].avatarURL],
+    uid: uid1,
+    read: false,
+  };
+
+  const notification2: Notification = {
+    creationDate: FieldValue.serverTimestamp(),
+    matchID: match.id,
+    text: "Matched Alert! You and "+ match.profiles[0].firstName +" have been matched up.",
+    images: [match.profiles[1].avatarURL, match.profiles[0].avatarURL],
+    uid: uid2,
+    read: false,
+  };
+
+  await firestore.collection("notifications").add(notification);
+  await firestore.collection("notifications").add(notification2);
 
   return Promise.resolve();
 });
@@ -509,6 +531,12 @@ async function startMatching(match: Match) {
 
   const friends1 = await dbUtils.getFriends(profile1.id, true);
   const friends2 = await dbUtils.getFriends(profile2.id, true);
+
+  if (friends1.length == 0 || friends2.length == 0) {
+    console.log("No friends to match with");
+    return;
+  }
+
   for (const friend of friends1) {
     const possibleMatch: PossibleMatch = {
       matchID: match.id!,
@@ -520,7 +548,23 @@ async function startMatching(match: Match) {
       completed: false,
     };
 
-    await firestore.collection("possibleMatches").add(possibleMatch);
+    const images = [];
+    for (const choice of possibleMatch.choices) {
+      images.push(choice.avatarURL);
+    }
+
+    const ref = await firestore.collection("possibleMatches").add(possibleMatch);
+
+    const notification: Notification = {
+      creationDate: FieldValue.serverTimestamp(),
+      possibleMatchID: ref.id,
+      text: profile1.firstName+" matched up with "+profile2.firstName+". See if you like any of their friends.",
+      images: images,
+      uid: friend.friendUID,
+      read: false,
+    };
+
+    await firestore.collection("notifications").add(notification);
   }
 
   for (const friend of friends2) {
@@ -534,7 +578,23 @@ async function startMatching(match: Match) {
       completed: false,
     };
 
-    await firestore.collection("possibleMatches").add(possibleMatch);
+    const images = [];
+    for (const choice of possibleMatch.choices) {
+      images.push(choice.avatarURL);
+    }
+
+    const ref = await firestore.collection("possibleMatches").add(possibleMatch);
+
+    const notification: Notification = {
+      creationDate: FieldValue.serverTimestamp(),
+      possibleMatchID: ref.id,
+      text: profile2.firstName+" matched up with "+profile1.firstName+". See if you like any of their friends.",
+      images: images,
+      uid: friend.friendUID,
+      read: false,
+    };
+
+    await firestore.collection("notifications").add(notification);
   }
 }
 
