@@ -25,6 +25,13 @@ const fs = require("fs");
 
 
 exports.matchAdded = functions.firestore.document("matches/{uid}").onCreate(async (snap, context) => {
+  const match = Object.assign({id: snap.id}, snap.data() as Match);
+  const uid1 = match.matched[0];
+  const uid2 = match.matched[1];
+
+  await pushNotifications.sendMatchCreatedNotification(uid1, "You have a Match!", "You have matched up with "+match.profiles[1].firstName+". Let's get a Duett going.", match.id);
+  await pushNotifications.sendMatchCreatedNotification(uid2, "You have a Match!", "You have matched up with "+match.profiles[0].firstName+". Let's get a Duett going.", match.id);
+
   return Promise.resolve();
 });
 

@@ -1,6 +1,7 @@
 import * as functions from "firebase-functions";
 import {Like} from "./types";
 import dbUtils from "./utils/db_utils";
+import pushNotifications from "./push_notifications";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const admin = require("firebase-admin");
 const firestore = admin.firestore();
@@ -52,4 +53,12 @@ exports.testMatches = functions.https.onRequest(async (req, res) => {
   for (const possibleMatch of pms) {
     console.log(possibleMatch.id);
   }
+});
+
+exports.testPushNotifications = functions.https.onRequest(async (req, res) => {
+  const profileID = "tI6XNS1oLtWt4WjwkdiliJos3f72";
+
+  await pushNotifications.sendPushNotification(profileID, "Test", "test");
+
+  res.sendStatus(200);
 });

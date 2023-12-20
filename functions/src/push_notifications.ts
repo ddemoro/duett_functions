@@ -57,6 +57,53 @@ async function sendPushNotificationWithImage(uid: string, title: string, body: s
   return Promise.resolve();
 }
 
+// eslint-disable-next-line require-jsdoc
+async function sendMatchCreatedNotification(uid: string, title: string, body: string, matchID:string) {
+  const profileRef = await firestore.collection("profiles").doc(uid).get();
+  const profile = profileRef.data();
+  if (profile === null || profile === undefined) {
+    return;
+  }
+
+  const profileO = Object.assign({id: uid}, profile as Profile);
+  const pushToken = profileO.fcmToken;
+  if (!pushToken) {
+    console.log("There are no fcm tokens for " + uid);
+    return Promise.resolve();
+  }
+
+
+  const message = {
+    notification: {
+      title: title,
+      body: body,
+    },
+    apns: {
+      payload: {
+        aps: {
+          sound: "default",
+        },
+      },
+    },
+    data: {
+      "click_action": "FLUTTER_NOTIFICATION_CLICK",
+      "uid": uid,
+      "matchID": matchID,
+    },
+    token: pushToken,
+  };
+
+  await admin.messaging().send(message)
+    .then((response: string) => {
+      // Response is a message ID string.
+      console.log("Sent push notification");
+    })
+    .catch((error: any) => {
+      console.log("Error sending message - " + error);
+    });
+  return Promise.resolve();
+}
+
 
 // eslint-disable-next-line require-jsdoc
 async function sendPushNotification(uid: string, title: string, body: string) {
@@ -202,6 +249,7 @@ async function notifyPartner(uid: string, title: string, body: string, pairID:st
 const pushNotifications = {
   sendPushNotification,
   sendPushNotificationWithImage,
+  sendMatchCreatedNotification,
   notifyTargets,
   notifyPartner,
 };
