@@ -103,7 +103,7 @@ exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(a
         friendUID: ownerProfile.id,
         avatarURL: ownerProfile.media[0].url,
         creationDate: FieldValue.serverTimestamp(),
-        isStarter: false,
+        isStarter: true,
         accepted: true,
         fullName: ownerProfile.firstName,
         phone: ownerProfile.phoneNumber,
