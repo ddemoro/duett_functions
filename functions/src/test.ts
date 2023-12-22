@@ -19,7 +19,7 @@ exports.createLike = functions.https.onRequest(async (req, res) => {
 });
 
 exports.matchingOne = functions.https.onRequest(async (req, res) => {
-  const match = await dbUtils.getMatch("rZ2VnamNbk3fh9GYzNGM");
+  const match = await dbUtils.getMatch("NEax0giY1ZX3FPzU1GZG");
 
 
   // Have all the possible matches like each other
@@ -35,7 +35,7 @@ exports.matchingOne = functions.https.onRequest(async (req, res) => {
 });
 
 exports.approveOnePair = functions.https.onRequest(async (req, res) => {
-  const match = await dbUtils.getMatch("rZ2VnamNbk3fh9GYzNGM");
+  const match = await dbUtils.getMatch("NEax0giY1ZX3FPzU1GZG");
 
   // Have all the possible matches like each other
   const pairs = await dbUtils.getPairs(match.id);
