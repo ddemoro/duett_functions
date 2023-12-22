@@ -14,8 +14,8 @@ exports.pairAdded = functions.firestore.document("pairs/{uid}").onCreate(async (
   const uid2 = pair.matchMakerIds[1];
 
   // Notify the couple
-  await pushNotifications.sendMatchCreatedNotification(uid1, "We have a Pair!", pair.players[0].firstName+" and "+pair.players[1]+" seem to like each other. Let's review.", pair.matchID);
-  await pushNotifications.sendMatchCreatedNotification(uid2, "We have a Pair!", pair.players[0].firstName+" and "+pair.players[1]+" seem to like each other. Let's review.", pair.matchID);
+  await pushNotifications.sendMatchCreatedNotification(uid1, "We have a Pair!", pair.players[0].firstName+" and "+pair.players[1].firstName+" seem to like each other. Let's review.", pair.matchID);
+  await pushNotifications.sendMatchCreatedNotification(uid2, "We have a Pair!", pair.players[0].firstName+" and "+pair.players[1].firstName+" seem to like each other. Let's review.", pair.matchID);
 
   return Promise.resolve();
 });
