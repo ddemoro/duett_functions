@@ -352,6 +352,11 @@ exports.clearProfiles = functions.https.onRequest(async (req, res) => {
     await document.ref.delete();
   }
 
+  const notificationsSnapshot = await firestore.collection("notifications").get();
+  for (const document of notificationsSnapshot.docs) {
+    await document.ref.delete();
+  }
+
 
   res.sendStatus(200);
 });

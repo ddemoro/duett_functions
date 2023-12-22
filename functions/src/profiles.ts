@@ -30,6 +30,7 @@ exports.profileUpdated = functions.firestore.document("profiles/{uid}").onUpdate
   const oldProfile = Object.assign({id: change.before.id}, change.before.data() as Profile);
 
   if (newProfile.configured && !oldProfile.configured) {
+    console.log("Sending note to Derek");
     await pushNotifications.sendPushNotification("tI6XNS1oLtWt4WjwkdiliJos3f72", "New User", newProfile.firstName + " has joined");
   }
 

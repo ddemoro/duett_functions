@@ -6,7 +6,7 @@ import pushNotifications from "./push_notifications";
 const admin = require("firebase-admin");
 const firestore = admin.firestore();
 
-exports.erickLikesGirl = functions.https.onRequest(async (req, res) => {
+exports.clear = functions.https.onRequest(async (req, res) => {
   const querySnapshot = await firestore.collection("profiles").get();
   for (const document of querySnapshot.docs) {
     await firestore.collection("profiles").doc(document.id).update({
@@ -46,17 +46,24 @@ exports.erickLikesGirl = functions.https.onRequest(async (req, res) => {
   res.sendStatus(200);
 });
 
-exports.testMatches = functions.https.onRequest(async (req, res) => {
-  const match = await dbUtils.getMatch("sbBS1MkYwQMExhpFt5he");
+exports.matchingOne = functions.https.onRequest(async (req, res) => {
+  const match = await dbUtils.getMatch("gs66DeqLXfoFDtqZ0VZj");
 
+
+  // Have all the possible matches like each other
   const pms = await dbUtils.getPossibleMatches(match.id);
   for (const possibleMatch of pms) {
-    console.log(possibleMatch.id);
+    for (const choice of possibleMatch.choices) {
+      choice.liked = true;
+    }
+    await firestore.collection("possibleMatches").doc(possibleMatch.id).update({choices: possibleMatch.choices});
   }
+
+  res.sendStatus(200);
 });
 
 exports.testPushNotifications = functions.https.onRequest(async (req, res) => {
-  const profileID = "tI6XNS1oLtWt4WjwkdiliJos3f72";
+  const profileID = "q8Dbzvfs1XWd8Hxz0dHs";
 
   await pushNotifications.sendPushNotification(profileID, "Test", "test");
 
