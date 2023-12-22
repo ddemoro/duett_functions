@@ -74,5 +74,16 @@ exports.messageCreated = functions.firestore.document("messages/{uid}").onCreate
     creationDate: FieldValue.serverTimestamp(),
   });
 
+  const from = message.fromID;
+  const duettID = message.duettID;
+
+  const duett = await dbUtils.getDuett(duettID);
+  for (const uid of duett.members) {
+    if (uid != from) {
+      await pushNotifications.sendDuettMessageNotification(uid, message.firstName, message.text, duettID);
+    }
+  }
+
+
   return Promise.resolve();
 });
