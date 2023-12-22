@@ -269,11 +269,30 @@ async function checkForPair(possibleMatch: PossibleMatch, possibleMatches: Possi
           const match = await dbUtils.getMatch(matchID);
           const pairIds = match.pairIds ?? [];
           pairIds.push(pairID);
+
+          exists = await pairExists(possibleMatch.matchID, pair);
           await firestore.collection("matches").doc(matchID).update({pairIds: pairIds});
         }
       }
     }
   }
+}
+
+async function pairExists(matchID:string, pair:Pair) {
+  // Let's make sure it's not a duplicate. I don't need to be perfect here.
+  const querySnapshot = await firestore.collection("pairs").where("matchID", "==", matchID).get();
+  let exists = false;
+  for (const document of querySnapshot.docs) {
+    const p = Object.assign({id: document.id}, document.data() as Pair);
+    const players = p.players;
+    const profile1 = players[0].uid;
+    const profile2 = players[1].uid;
+    if (pair.playerIds.includes(profile1) && pair.playerIds.includes(profile2)) {
+      exists = true;
+    }
+  }
+
+  return exists;
 }
 
 

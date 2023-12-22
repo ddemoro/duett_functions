@@ -123,6 +123,7 @@ export interface GeoLocation {
 }
 
 export interface Pair {
+    id?:string;
     matchID: string;
     players: Player[];
     playerIds: string[];
