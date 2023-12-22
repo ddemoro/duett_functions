@@ -28,6 +28,17 @@ async function getMatch(id: string) {
 }
 
 // eslint-disable-next-line require-jsdoc
+async function getPair(pairID: string) {
+  const snapshot = await firestore.collection("pairs").doc(pairID).get();
+  const document = snapshot.data();
+  if (!document) {
+    throw new Error("Pair not found: " + pairID);
+  } else {
+    return Object.assign({id: pairID}, document as Pair);
+  }
+}
+
+// eslint-disable-next-line require-jsdoc
 async function getDuett(matchID: string) {
   const querySnapshot = await firestore.collection("duetts").where("matchID", "==", matchID).limit(1).get();
   if (!querySnapshot.empty) {
@@ -102,6 +113,7 @@ const dbUtils = {
   getProfilesFromGender,
   getPossibleMatches,
   getPairs,
+  getPair,
 };
 
 export default dbUtils;

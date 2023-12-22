@@ -250,15 +250,19 @@ async function checkForPair(possibleMatch: PossibleMatch, possibleMatches: Possi
         const pairID = pair.matchID + "-" + ids[0] + "-" + ids[1];
 
 
-        await firestore.collection("pairs").doc(pairID).set(pair);
+        try {
+          await dbUtils.getPair(pairID);
+        } catch (e) {
+          await firestore.collection("pairs").doc(pairID).set(pair);
 
-        // Add this to match Array
-        const matchID = pair.matchID;
-        const match = await dbUtils.getMatch(matchID);
-        const pairIds = match.pairIds ?? [];
-        if (!pairIds.includes(pairID)) {
-          pairIds.push(pairID);
-          await firestore.collection("matches").doc(matchID).update({pairIds: pairIds});
+          // Add this to match Array
+          const matchID = pair.matchID;
+          const match = await dbUtils.getMatch(matchID);
+          const pairIds = match.pairIds ?? [];
+          if (!pairIds.includes(pairID)) {
+            pairIds.push(pairID);
+            await firestore.collection("matches").doc(matchID).update({pairIds: pairIds});
+          }
         }
       }
     }
