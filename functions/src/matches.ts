@@ -29,14 +29,14 @@ exports.matchAdded = functions.firestore.document("matches/{uid}").onCreate(asyn
   const uid1 = match.matched[0];
   const uid2 = match.matched[1];
 
-  await pushNotifications.sendMatchCreatedNotification(uid1, "You have a Match!", "You have matched up with "+match.profiles[1].firstName+". Let's get a Duett going.", match.id);
-  await pushNotifications.sendMatchCreatedNotification(uid2, "You have a Match!", "You have matched up with "+match.profiles[0].firstName+". Let's get a Duett going.", match.id);
+  await pushNotifications.sendMatchCreatedNotification(uid1, "You have a Match!", "You have matched up with " + match.profiles[1].firstName + ". Let's get a Duett going.", match.id);
+  await pushNotifications.sendMatchCreatedNotification(uid2, "You have a Match!", "You have matched up with " + match.profiles[0].firstName + ". Let's get a Duett going.", match.id);
 
 
   const notification: Notification = {
     creationDate: FieldValue.serverTimestamp(),
     matchID: match.id,
-    text: match.profiles[1].firstName +" and you have been matched up.",
+    text: match.profiles[1].firstName + " and you have been matched up.",
     images: [match.profiles[0].avatarURL, match.profiles[1].avatarURL],
     uid: uid1,
     read: false,
@@ -45,7 +45,7 @@ exports.matchAdded = functions.firestore.document("matches/{uid}").onCreate(asyn
   const notification2: Notification = {
     creationDate: FieldValue.serverTimestamp(),
     matchID: match.id,
-    text: "Matched Alert! You and "+ match.profiles[0].firstName +" have been matched up.",
+    text: "Matched Alert! You and " + match.profiles[0].firstName + " have been matched up.",
     images: [match.profiles[1].avatarURL, match.profiles[0].avatarURL],
     uid: uid2,
     read: false,
@@ -261,43 +261,22 @@ async function checkForPair(possibleMatch: PossibleMatch, possibleMatches: Possi
 
         // WE HAVE A PAIR
         if (!exists) {
-          exists = await pairExists(possibleMatch.matchID, pair);
-          if (!exists) {
-            const docRef = await firestore.collection("pairs").add(pair);
-            const pairID = docRef.id;
+          const docRef = await firestore.collection("pairs").add(pair);
+          const pairID = docRef.id;
 
-            // Add this to match Array
-            const matchID = pair.matchID;
-            const match = await dbUtils.getMatch(matchID);
-            const pairIds = match.pairIds ?? [];
-            pairIds.push(pairID);
+          // Add this to match Array
+          const matchID = pair.matchID;
+          const match = await dbUtils.getMatch(matchID);
+          const pairIds = match.pairIds ?? [];
+          pairIds.push(pairID);
 
 
-            await firestore.collection("matches").doc(matchID).update({pairIds: pairIds});
-          }
+          await firestore.collection("matches").doc(matchID).update({pairIds: pairIds});
         }
       }
     }
   }
 }
-
-async function pairExists(matchID:string, pair:Pair) {
-  // Let's make sure it's not a duplicate. I don't need to be perfect here.
-  const querySnapshot = await firestore.collection("pairs").where("matchID", "==", matchID).get();
-  let exists = false;
-  for (const document of querySnapshot.docs) {
-    const p = Object.assign({id: document.id}, document.data() as Pair);
-    const players = p.players;
-    const profile1 = players[0].uid;
-    const profile2 = players[1].uid;
-    if (pair.playerIds.includes(profile1) && pair.playerIds.includes(profile2)) {
-      exists = true;
-    }
-  }
-
-  return exists;
-}
-
 
 exports.testLike = functions.https.onRequest(async (req, res) => {
   // eslint-disable-next-line max-len
@@ -585,7 +564,7 @@ async function startMatching(match: Match) {
     const notification: Notification = {
       creationDate: FieldValue.serverTimestamp(),
       possibleMatchID: ref.id,
-      text: profile1.firstName+" matched up with "+profile2.firstName+". See if you like any of their friends.",
+      text: profile1.firstName + " matched up with " + profile2.firstName + ". See if you like any of their friends.",
       images: images,
       uid: friend.friendUID,
       read: false,
@@ -615,7 +594,7 @@ async function startMatching(match: Match) {
     const notification: Notification = {
       creationDate: FieldValue.serverTimestamp(),
       possibleMatchID: ref.id,
-      text: profile2.firstName+" matched up with "+profile1.firstName+". See if you like any of their friends.",
+      text: profile2.firstName + " matched up with " + profile1.firstName + ". See if you like any of their friends.",
       images: images,
       uid: friend.friendUID,
       read: false,

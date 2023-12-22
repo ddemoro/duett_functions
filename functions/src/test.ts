@@ -47,7 +47,7 @@ exports.clear = functions.https.onRequest(async (req, res) => {
 });
 
 exports.matchingOne = functions.https.onRequest(async (req, res) => {
-  const match = await dbUtils.getMatch("gJR0UGR0FouD2pDA1nsr");
+  const match = await dbUtils.getMatch("HOhMnneaYiAnfqYR2swL");
 
 
   // Have all the possible matches like each other
@@ -63,7 +63,7 @@ exports.matchingOne = functions.https.onRequest(async (req, res) => {
 });
 
 exports.approveOnePair = functions.https.onRequest(async (req, res) => {
-  const match = await dbUtils.getMatch("gJR0UGR0FouD2pDA1nsr");
+  const match = await dbUtils.getMatch("HOhMnneaYiAnfqYR2swL");
 
   // Have all the possible matches like each other
   const pairs = await dbUtils.getPairs(match.id);
