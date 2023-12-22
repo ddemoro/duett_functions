@@ -246,35 +246,38 @@ async function checkForPair(possibleMatch: PossibleMatch, possibleMatches: Possi
           matchMakerIds: [playerOne.matchMakerID, playerTwo.matchMakerID],
         };
 
-        // Let's make sure it's not a duplicate. I don't need to be perfect here.
-        const querySnapshot = await firestore.collection("pairs").where("matchID", "==", possibleMatch.matchID).get();
-        let exists = false;
-        for (const document of querySnapshot.docs) {
-          const p = Object.assign({id: document.id}, document.data() as Pair);
-          const players = p.players;
-          const profile1 = players[0].uid;
-          const profile2 = players[1].uid;
-          if (pair.playerIds.includes(profile1) && pair.playerIds.includes(profile2)) {
-            exists = true;
-          }
-        }
+        const ids = await compareAndOrderStrings(pair.playerIds[0], pair.playerIds[1]);
+        const pairID = pair.matchID + "-" + ids[0] + "-" + ids[1];
 
-        // WE HAVE A PAIR
-        if (!exists) {
-          const docRef = await firestore.collection("pairs").add(pair);
-          const pairID = docRef.id;
 
-          // Add this to match Array
-          const matchID = pair.matchID;
-          const match = await dbUtils.getMatch(matchID);
-          const pairIds = match.pairIds ?? [];
+        await firestore.collection("pairs").doc(pairID).set(pair);
+
+        // Add this to match Array
+        const matchID = pair.matchID;
+        const match = await dbUtils.getMatch(matchID);
+        const pairIds = match.pairIds ?? [];
+        if (!pairIds.includes(pairID)) {
           pairIds.push(pairID);
-
-
           await firestore.collection("matches").doc(matchID).update({pairIds: pairIds});
         }
       }
     }
+  }
+}
+
+async function compareAndOrderStrings(str1: string, str2: string) {
+  // Use localeCompare for accurate string comparison across locales
+  const comparisonResult = str1.localeCompare(str2);
+
+  if (comparisonResult < 0) {
+    // str1 is less than str2
+    return [str1, str2];
+  } else if (comparisonResult > 0) {
+    // str1 is greater than str2
+    return [str2, str1];
+  } else {
+    // Strings are equal
+    return [str1, str2]; // Or return [str2, str1], as they are equivalent
   }
 }
 
