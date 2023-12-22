@@ -93,6 +93,11 @@ exports.pairUpdated = functions.firestore.document("pairs/{uid}").onUpdate(async
       duettChat.pairs.push(newPair);
       await firestore.collection("duetts").doc(newPair.matchID).update(duettChat);
     }
+
+    const match = await dbUtils.getMatch(newPair.matchID);
+    const approvedPairs = match.approvedPairs ?? [];
+    approvedPairs.push(newPair.id);
+    await firestore.collection("matches").doc(newPair.matchID).update({approvedPairs: approvedPairs});
   }
   return Promise.resolve();
 });
