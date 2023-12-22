@@ -47,7 +47,7 @@ exports.clear = functions.https.onRequest(async (req, res) => {
 });
 
 exports.matchingOne = functions.https.onRequest(async (req, res) => {
-  const match = await dbUtils.getMatch("7ZAghIlNJ5lypuk201TW");
+  const match = await dbUtils.getMatch("gJR0UGR0FouD2pDA1nsr");
 
 
   // Have all the possible matches like each other
@@ -63,13 +63,18 @@ exports.matchingOne = functions.https.onRequest(async (req, res) => {
 });
 
 exports.approveOnePair = functions.https.onRequest(async (req, res) => {
-  const match = await dbUtils.getMatch("7ZAghIlNJ5lypuk201TW");
+  const match = await dbUtils.getMatch("gJR0UGR0FouD2pDA1nsr");
 
   // Have all the possible matches like each other
   const pairs = await dbUtils.getPairs(match.id);
   for (const pair of pairs) {
     const matchMakers = pair.matchMakerIds;
-    await firestore.collection("pairs").doc(pair.id).update({approved: matchMakers});
+    const app = [];
+    app.push(matchMakers[0]);
+    await firestore.collection("pairs").doc(pair.id).update({approved: app});
+    app.push(matchMakers[1]);
+    await firestore.collection("pairs").doc(pair.id).update({approved: app});
+    break;
   }
 
   // A Duett Should be created at this point
