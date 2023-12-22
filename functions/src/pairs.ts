@@ -9,6 +9,14 @@ const firestore = admin.firestore();
 const FieldValue = require("firebase-admin").firestore.FieldValue;
 
 exports.pairAdded = functions.firestore.document("pairs/{uid}").onCreate(async (snap, context) => {
+  const pair = Object.assign({id: snap.id}, snap.data() as Pair);
+  const uid1 = pair.matchMakerIds[0];
+  const uid2 = pair.matchMakerIds[1];
+
+  // Notify the couple
+  await pushNotifications.sendMatchCreatedNotification(uid1, "We have a Pair!", pair.players[0].firstName+" and "+pair.players[1]+" seem to like each other. Let's review.", pair.matchID);
+  await pushNotifications.sendMatchCreatedNotification(uid2, "We have a Pair!", pair.players[0].firstName+" and "+pair.players[1]+" seem to like each other. Let's review.", pair.matchID);
+
   return Promise.resolve();
 });
 

@@ -15,8 +15,8 @@ exports.duettAdded = functions.firestore.document("duetts/{uid}").onCreate(async
   const profile1 = await dbUtils.getProfile(duett.matchMakers[0]);
   const profile2 = await dbUtils.getProfile(duett.matchMakers[1]);
 
-  await pushNotifications.sendPushNotification(profile1.id, "Duett Created", profile2.firstName + " agreed with your friend match. You've all been placed in a group chat.");
-  await pushNotifications.sendPushNotification(profile2.id, "Duett Created", profile1.firstName + " agreed with your friend match. You've all been placed in a group chat.");
+  await pushNotifications.sendPushNotification(profile1.id, "It's a Duett!", profile2.firstName + " agreed with your friend match. You've all been placed in a group chat.");
+  await pushNotifications.sendPushNotification(profile2.id, "It's a Duett!", profile1.firstName + " agreed with your friend match. You've all been placed in a group chat.");
 
   const avatarURLs = [];
   for (const pair of duett.pairs) {
