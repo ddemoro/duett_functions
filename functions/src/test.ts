@@ -6,38 +6,10 @@ import pushNotifications from "./push_notifications";
 const admin = require("firebase-admin");
 const firestore = admin.firestore();
 
-exports.clear = functions.https.onRequest(async (req, res) => {
-  const querySnapshot = await firestore.collection("profiles").get();
-  for (const document of querySnapshot.docs) {
-    await firestore.collection("profiles").doc(document.id).update({
-      likedBy: [],
-    });
-  }
-
-  const matchesQuerySnapshot = await firestore.collection("matches").get();
-  for (const document of matchesQuerySnapshot.docs) {
-    await document.ref.delete();
-  }
-
-  const possibleMatchesSnapshot = await firestore.collection("possibleMatches").get();
-  for (const document of possibleMatchesSnapshot.docs) {
-    await document.ref.delete();
-  }
-
-  const likesSnapshot = await firestore.collection("likes").get();
-  for (const document of likesSnapshot.docs) {
-    await document.ref.delete();
-  }
-
-  const pairsSnapshot = await firestore.collection("pairs").get();
-  for (const document of pairsSnapshot.docs) {
-    await document.ref.delete();
-  }
-
-
+exports.createLike = functions.https.onRequest(async (req, res) => {
   const like: Like = {
     likedProfileID: "hlx1y3vcFAEXmlPNCN1I",
-    profileID: "bxLjcxVZzlexU040cKCnh5xROLq1",
+    profileID: "M0PRW3sb1tQljjyH878sFlDmSC63",
     creationDate: Date.now(),
   };
 
@@ -47,7 +19,7 @@ exports.clear = functions.https.onRequest(async (req, res) => {
 });
 
 exports.matchingOne = functions.https.onRequest(async (req, res) => {
-  const match = await dbUtils.getMatch("HOhMnneaYiAnfqYR2swL");
+  const match = await dbUtils.getMatch("rZ2VnamNbk3fh9GYzNGM");
 
 
   // Have all the possible matches like each other
@@ -63,7 +35,7 @@ exports.matchingOne = functions.https.onRequest(async (req, res) => {
 });
 
 exports.approveOnePair = functions.https.onRequest(async (req, res) => {
-  const match = await dbUtils.getMatch("HOhMnneaYiAnfqYR2swL");
+  const match = await dbUtils.getMatch("rZ2VnamNbk3fh9GYzNGM");
 
   // Have all the possible matches like each other
   const pairs = await dbUtils.getPairs(match.id);

@@ -48,7 +48,11 @@ async function getFriends(uid: string, starter: boolean) {
   const friends: Friend[] = [];
   for (const document of querySnapshot.docs) {
     const friend = Object.assign({id: document.id}, document.data() as Friend);
-    friends.push(friend);
+
+    // Make sure they are
+    if (friend.friendUID) {
+      friends.push(friend);
+    }
   }
 
   return friends;
