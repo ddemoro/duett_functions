@@ -261,17 +261,20 @@ async function checkForPair(possibleMatch: PossibleMatch, possibleMatches: Possi
 
         // WE HAVE A PAIR
         if (!exists) {
-          const docRef = await firestore.collection("pairs").add(pair);
-          const pairID = docRef.id;
-
-          // Add this to match Array
-          const matchID = pair.matchID;
-          const match = await dbUtils.getMatch(matchID);
-          const pairIds = match.pairIds ?? [];
-          pairIds.push(pairID);
-
           exists = await pairExists(possibleMatch.matchID, pair);
-          await firestore.collection("matches").doc(matchID).update({pairIds: pairIds});
+          if (!exists) {
+            const docRef = await firestore.collection("pairs").add(pair);
+            const pairID = docRef.id;
+
+            // Add this to match Array
+            const matchID = pair.matchID;
+            const match = await dbUtils.getMatch(matchID);
+            const pairIds = match.pairIds ?? [];
+            pairIds.push(pairID);
+
+
+            await firestore.collection("matches").doc(matchID).update({pairIds: pairIds});
+          }
         }
       }
     }
