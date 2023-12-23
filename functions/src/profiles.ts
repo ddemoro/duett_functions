@@ -19,6 +19,7 @@ exports.profileAdded = functions.firestore.document("profiles/{uid}").onCreate(a
   await snap.ref.update({
     creationDate: FieldValue.serverTimestamp(),
     configured: false,
+    friends: false,
   });
 
 
