@@ -13,17 +13,15 @@ exports.checkFriends = functions.https.onRequest(async (req, res) => {
     const id = document.id;
     const querySnapshot = await firestore.collection("friends").where("uid", "==", id).get();
 
-    let counter = 0;
+    let hasFriends = false;
     for (const document of querySnapshot.docs) {
       const friend = Object.assign({id: document.id}, document.data() as Friend);
-      if (!friend.accepted) {
-        counter++;
+      if (friend.accepted) {
+        hasFriends = true;
+        break;
       }
     }
-
-    if (counter > 0) {
-      console.log("Profile: "+profile.firstName+" has "+counter+" friends not accepted");
-    }
+    await firestore.collection("profiles").doc(profile.id).update({friends: hasFriends});
   }
 
   res.sendStatus(200);
