@@ -80,6 +80,8 @@ exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(a
     const ownerProfile = await dbUtils.getProfile(newFriend.uid);
     await pushNotifications.sendPushNotification(ownerProfile.id, "New Friend Added", newFriend.fullName + " has accepted your friend request!");
 
+    // Update Profile that they have at least one friend
+    await firestore.collection("profiles").doc(newFriend.uid).update({friends: true});
 
     // Now let's make sure that the friend you invited as a friend object for you
     // but you will be on the bench!
@@ -111,10 +113,14 @@ exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(a
       };
 
       await firestore.collection("friends").add(newFriend);
+      // Update Profile that they have at least one friend
+      await firestore.collection("profiles").doc(friendUID).update({friends: true});
     } else {
       const f = friends[0];
       f.accepted = true;
       await firestore.collection("friends").doc(f.id).update(newFriend);
+      // Update Profile that they have at least one friend
+      await firestore.collection("profiles").doc(f.uid).update({friends: true});
     }
   }
 

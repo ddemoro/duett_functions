@@ -44,6 +44,7 @@ export interface Profile {
     description: string;
     creationDate: any;
     configured: boolean;
+    hasFriends:boolean;
     fcmToken: string;
     phoneNumber: string;
     receiveMarketingMaterial: boolean;

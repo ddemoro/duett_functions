@@ -76,48 +76,6 @@ exports.checkProfiles = functions.https.onRequest(async (req, res) => {
   res.sendStatus(200);
 });
 
-exports.clearProfiles = functions.https.onRequest(async (req, res) => {
-  const querySnapshot = await firestore.collection("profiles").get();
-  for (const document of querySnapshot.docs) {
-    await firestore.collection("profiles").doc(document.id).update({
-      likedBy: [],
-    });
-  }
-
-  const matchesQuerySnapshot = await firestore.collection("matches").get();
-  for (const document of matchesQuerySnapshot.docs) {
-    await document.ref.delete();
-  }
-
-  const possibleMatchesSnapshot = await firestore.collection("possibleMatches").get();
-  for (const document of possibleMatchesSnapshot.docs) {
-    await document.ref.delete();
-  }
-
-  const likesSnapshot = await firestore.collection("likes").get();
-  for (const document of likesSnapshot.docs) {
-    await document.ref.delete();
-  }
-
-  const pairsSnapshot = await firestore.collection("pairs").get();
-  for (const document of pairsSnapshot.docs) {
-    await document.ref.delete();
-  }
-
-  const notificationsSnapshot = await firestore.collection("notifications").get();
-  for (const document of notificationsSnapshot.docs) {
-    await document.ref.delete();
-  }
-
-  const messagesSnapshot = await firestore.collection("messages").get();
-  for (const document of messagesSnapshot.docs) {
-    await document.ref.delete();
-  }
-
-
-  res.sendStatus(200);
-});
-
 
 exports.setGuyFriends = functions.https.onRequest(async (req, res) => {
   const derekProfile = await dbUtils.getProfile("tI6XNS1oLtWt4WjwkdiliJos3f72");

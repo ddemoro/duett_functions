@@ -1,10 +1,81 @@
 import * as functions from "firebase-functions";
-import {Like} from "./types";
+import {Friend, Like, Profile} from "./types";
 import dbUtils from "./utils/db_utils";
 import pushNotifications from "./push_notifications";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const admin = require("firebase-admin");
 const firestore = admin.firestore();
+
+exports.checkFriends = functions.https.onRequest(async (req, res) => {
+  const querySnapshot = await firestore.collection("profiles").get();
+  for (const document of querySnapshot.docs) {
+    const profile = Object.assign({id: document.id}, document.data() as Profile);
+    const id = document.id;
+    const querySnapshot = await firestore.collection("friends").where("uid", "==", id).get();
+
+    let counter = 0;
+    for (const document of querySnapshot.docs) {
+      const friend = Object.assign({id: document.id}, document.data() as Friend);
+      if (!friend.accepted) {
+        counter++;
+      }
+    }
+
+    if (counter > 0) {
+      console.log("Profile: "+profile.firstName+" has "+counter+" friends not accepted");
+    }
+  }
+
+  res.sendStatus(200);
+});
+
+exports.clearProfiles = functions.https.onRequest(async (req, res) => {
+  const querySnapshot = await firestore.collection("profiles").get();
+  for (const document of querySnapshot.docs) {
+    await firestore.collection("profiles").doc(document.id).update({
+      likedBy: [],
+    });
+  }
+
+  const matchesQuerySnapshot = await firestore.collection("matches").get();
+  for (const document of matchesQuerySnapshot.docs) {
+    await document.ref.delete();
+  }
+
+  const possibleMatchesSnapshot = await firestore.collection("possibleMatches").get();
+  for (const document of possibleMatchesSnapshot.docs) {
+    await document.ref.delete();
+  }
+
+  const likesSnapshot = await firestore.collection("likes").get();
+  for (const document of likesSnapshot.docs) {
+    await document.ref.delete();
+  }
+
+  const pairsSnapshot = await firestore.collection("pairs").get();
+  for (const document of pairsSnapshot.docs) {
+    await document.ref.delete();
+  }
+
+  const notificationsSnapshot = await firestore.collection("notifications").get();
+  for (const document of notificationsSnapshot.docs) {
+    await document.ref.delete();
+  }
+
+  const messagesSnapshot = await firestore.collection("messages").get();
+  for (const document of messagesSnapshot.docs) {
+    await document.ref.delete();
+  }
+
+  const duettsSnapshot = await firestore.collection("duetts").get();
+  for (const document of duettsSnapshot.docs) {
+    await document.ref.delete();
+  }
+
+
+  res.sendStatus(200);
+});
+
 
 exports.createLike = functions.https.onRequest(async (req, res) => {
   const like: Like = {
@@ -19,7 +90,7 @@ exports.createLike = functions.https.onRequest(async (req, res) => {
 });
 
 exports.matchingOne = functions.https.onRequest(async (req, res) => {
-  const match = await dbUtils.getMatch("eMghXoCbQgK6JlKg4LzL");
+  const match = await dbUtils.getMatch("E9DqI6UjezgT7MQ3u9CY");
 
 
   // Have all the possible matches like each other
@@ -35,7 +106,7 @@ exports.matchingOne = functions.https.onRequest(async (req, res) => {
 });
 
 exports.approveOnePair = functions.https.onRequest(async (req, res) => {
-  const match = await dbUtils.getMatch("eMghXoCbQgK6JlKg4LzL");
+  const match = await dbUtils.getMatch("E9DqI6UjezgT7MQ3u9CY");
 
   // Have all the possible matches like each other
   const pairs = await dbUtils.getPairs(match.id);
