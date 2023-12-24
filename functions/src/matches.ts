@@ -449,58 +449,58 @@ exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (
 
   // We are going have the logic to see if we should make a match here but for now.
   // Let's just make a match
-  const profileOne = await firestore.collection("profiles").doc(like.profileID).get();
-  const profileTwo = await firestore.collection("profiles").doc(like.likedProfileID).get();
 
-  const p1 = Object.assign({id: profileOne.id}, profileOne.data() as Profile);
-  const p2 = Object.assign({id: profileTwo.id}, profileTwo.data() as Profile);
+  const profileOne = await dbUtils.getProfile(like.profileID);
+  const profileTwo = await dbUtils.getProfile(like.likedProfileID);
 
-  if (p2.likedBy.includes(p1.id)) {
+
+  if (profileTwo.likedBy.includes(profileOne.id)) {
     return Promise.resolve();
   }
 
   // Add that they were liked by p1
-  const likedBy = p2.likedBy ?? [];
-  likedBy.push(p1.id);
-  await firestore.collection("profiles").doc(p2.id).update({likedBy: likedBy});
+  const likedBy = profileTwo.likedBy ?? [];
+  likedBy.push(profileOne.id);
+  await firestore.collection("profiles").doc(profileTwo.id).update({likedBy: likedBy});
 
-  const likedBy2 = p1.likedBy ?? [];
-  likedBy2.push(p2.id);
-  await firestore.collection("profiles").doc(p1.id).update({likedBy: likedBy2});
+  // Check if they now both like each other
+  if (profileOne.likedBy.includes(profileTwo.id) && profileTwo.likedBy.includes(profileOne.id)) {
+    const personOne: Person = {
+      avatarURL: profileOne.media[0].url,
+      firstName: profileOne.firstName,
+      living: profileOne.living.city + "," + profileOne.living.state,
+      age: textUtils.calculateAge(profileOne.birthday.toDate()),
+      profileID: profileOne.id,
+    };
 
-  const personOne: Person = {
-    avatarURL: p1.media[0].url,
-    firstName: p1.firstName,
-    living: p1.living.city + "," + p1.living.state,
-    age: textUtils.calculateAge(p1.birthday.toDate()),
-    profileID: p1.id,
-  };
-
-  const personTwo: Person = {
-    avatarURL: p2.media[0].url,
-    firstName: p2.firstName,
-    living: p2.living.city + "," + p2.living.state,
-    age: textUtils.calculateAge(p2.birthday.toDate()),
-    profileID: p2.id,
-  };
+    const personTwo: Person = {
+      avatarURL: profileTwo.media[0].url,
+      firstName: profileTwo.firstName,
+      living: profileTwo.living.city + "," + profileTwo.living.state,
+      age: textUtils.calculateAge(profileTwo.birthday.toDate()),
+      profileID: profileTwo.id,
+    };
 
 
-  const match: Match = {
-    matched: [like.profileID, like.likedProfileID],
-    creationDate: FieldValue.serverTimestamp(),
-    profiles: [personOne, personTwo],
-    pairIds: [],
-    approvedPairs: [],
-    rejectedPairs: [],
-    completed: false,
-  };
+    const match: Match = {
+      matched: [like.profileID, like.likedProfileID],
+      creationDate: FieldValue.serverTimestamp(),
+      profiles: [personOne, personTwo],
+      pairIds: [],
+      approvedPairs: [],
+      rejectedPairs: [],
+      completed: false,
+    };
 
-  const docRef = await firestore.collection("matches").add(match);
-  match.id = docRef.id;
+    const docRef = await firestore.collection("matches").add(match);
+    match.id = docRef.id;
 
+    // Create Possible Match
+    await startMatching(match);
+  } else {
+    await pushNotifications.sendLikeNotification(profileTwo.id, "Duett", profileOne.firstName + " just liked you! Act fast to see if they're a match.", profileOne.id);
+  }
 
-  // Create Possible Match
-  await startMatching(match);
 
   return Promise.resolve();
 });

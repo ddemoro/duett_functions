@@ -77,8 +77,8 @@ exports.clearProfiles = functions.https.onRequest(async (req, res) => {
 
 exports.createLike = functions.https.onRequest(async (req, res) => {
   const like: Like = {
-    likedProfileID: "hlx1y3vcFAEXmlPNCN1I",
-    profileID: "M0PRW3sb1tQljjyH878sFlDmSC63",
+    likedProfileID: "6xS0eag96xugl4FHEJ5p",
+    profileID: "tI6XNS1oLtWt4WjwkdiliJos3f72",
     creationDate: Date.now(),
   };
 
