@@ -79,6 +79,12 @@ exports.clearProfiles = functions.https.onRequest(async (req, res) => {
   res.sendStatus(200);
 });
 
+exports.testPushNotifications = functions.https.onRequest(async (req, res) => {
+  // const profile = await dbUtils.getProfile("tI6XNS1oLtWt4WjwkdiliJos3f72");
+  await pushNotifications.sendLikeNotification("tI6XNS1oLtWt4WjwkdiliJos3f72", "Duett", "We have a match!", "vBOiXFUkuIwHnPQJnABI");
+
+  res.sendStatus(200);
+});
 
 exports.createLike = functions.https.onRequest(async (req, res) => {
   const like: Like = {

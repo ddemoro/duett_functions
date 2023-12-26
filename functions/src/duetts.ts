@@ -67,12 +67,6 @@ exports.duettAdded = functions.firestore.document("duetts/{uid}").onCreate(async
 
 exports.messageCreated = functions.firestore.document("messages/{uid}").onCreate(async (snap, context) => {
   const message = Object.assign({id: snap.id}, snap.data() as ChatMessage);
-  console.log(message);
-
-  // Update Message
-  await snap.ref.update({
-    creationDate: FieldValue.serverTimestamp(),
-  });
 
   const from = message.fromID;
   const duettID = message.duettID;
