@@ -31,8 +31,20 @@ exports.profileUpdated = functions.firestore.document("profiles/{uid}").onUpdate
   const oldProfile = Object.assign({id: change.before.id}, change.before.data() as Profile);
 
   if (newProfile.configured && !oldProfile.configured) {
-    console.log("Sending note to Derek");
-    await pushNotifications.sendPushNotification("tI6XNS1oLtWt4WjwkdiliJos3f72", "New User", newProfile.firstName + " has joined");
+    const gender = newProfile.gender;
+    if (gender == "Man") {
+      const women = await dbUtils.getProfilesFromGender("Woman");
+      for (const woman of women) {
+        const message = newProfile.firstName + " has just joined Duett. Take a look to see if their is some interest here.";
+        await pushNotifications.sendLikeNotification(woman.id, "New to Duett", message, newProfile.id);
+      }
+    } else if (gender == "Woman") {
+      const men = await dbUtils.getProfilesFromGender("Man");
+      for (const man of men) {
+        const message = newProfile.firstName + " has just joined Duett. Take a look to see if their is some interest here.";
+        await pushNotifications.sendLikeNotification(man.id, "New to Duett", message, newProfile.id);
+      }
+    }
   }
 
 

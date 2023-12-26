@@ -22,6 +22,11 @@ exports.checkFriends = functions.https.onRequest(async (req, res) => {
       }
     }
     await firestore.collection("profiles").doc(profile.id).update({friends: hasFriends});
+
+    if (!hasFriends) {
+      // eslint-disable-next-line max-len
+      await pushNotifications.sendPushNotification(profile.id, "Duett Update", "We are testing the final features of Duett. Now it’s time to test matching and creating a Duett. We noticed your friends have not accepted your invite. Send them a nudge.");
+    }
   }
 
   res.sendStatus(200);
@@ -78,7 +83,7 @@ exports.clearProfiles = functions.https.onRequest(async (req, res) => {
 exports.createLike = functions.https.onRequest(async (req, res) => {
   const like: Like = {
     likedProfileID: "M0PRW3sb1tQljjyH878sFlDmSC63",
-    profileID: "6xS0eag96xugl4FHEJ5p",
+    profileID: "mJwZDU42cwUEKJBfSHzIxGM6UxR2",
     creationDate: Date.now(),
   };
 
