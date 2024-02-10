@@ -689,3 +689,71 @@ exports.matchMeUp = functions.runWith({
 
   res.sendStatus(200);
 });
+
+
+// @ts-ignore
+exports.grammarlyTest = functions.runWith({
+  timeoutSeconds: 300,
+  memory: "2GB",
+}).https.onRequest(async (req, res) => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const OpenAI = require("openai");
+  const openai = new OpenAI({
+    organization: "org-NBbRZYbyGkOuvHrABmlrUZYe",
+    apiKey: "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",
+  });
+
+  // Create thread
+  const thread = await openai.beta.threads.create({
+    messages: [
+      {
+        "role": "user",
+        // eslint-disable-next-line max-len
+        "content": "Give the URL to a POC where we used time savings as a success metric",
+        "file_ids": ["file-fXhNb1fLSun2Owe8fXklsiY2", "file-uCx71ZipRxb4qAhdApTj6fOM"],
+
+      },
+    ],
+  });
+
+
+  // Run thread with assistant
+  const run = await openai.beta.threads.runs.create(
+    thread.id,
+    {assistant_id: "asst_JiWlO0C9iHRM7zzEHrYNNa0G"}
+  );
+
+  // Retrieve
+  // Run thread with assistant
+  let runStatus = await openai.beta.threads.runs.retrieve(
+    thread.id,
+    run.id
+  );
+
+  // Polling mechanism to see if runStatus is completed
+  // This should be made more robust.
+  while (runStatus.status !== "completed") {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+  }
+
+  // @ts-ignore
+  const messages = await openai.beta.threads.messages.list(thread.id);
+
+
+  // Find the last message for the current run
+  const lastMessageForRun = messages.data
+    .filter(
+      (message: { run_id: any; role: string; }) => message.run_id === run.id && message.role === "assistant"
+    )
+    .pop();
+
+  // If an assistant message is found, console.log() it
+  if (lastMessageForRun) {
+    const text = lastMessageForRun.content[0].text.value;
+    console.log(text);
+  }
+
+
+  res.sendStatus(200);
+});

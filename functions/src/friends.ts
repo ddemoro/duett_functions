@@ -11,7 +11,7 @@ const FieldValue = require("firebase-admin").firestore.FieldValue;
 
 
 exports.test = functions.https.onRequest(async (req, res) => {
-  const friendSnapshot = await firestore.collection("friends").doc("1YbgrP8oGBwa2yKzI8ig").get();
+  const friendSnapshot = await firestore.collection("friends").doc("wJ0fhjaUktlHkisAJvTh").get();
 
   const friend = Object.assign({id: friendSnapshot.id}, friendSnapshot.data() as Friend);
   const friendPhoneNumber = cleanPhoneNumber(friend.phone);
@@ -23,6 +23,7 @@ exports.test = functions.https.onRequest(async (req, res) => {
   for (const document of querySnapshot.docs) {
     const profile = await dbUtils.getProfile(document.id);
     if (profile.phoneNumber) {
+      console.log("Have: "+profile.phoneNumber);
       const phone = cleanPhoneNumber(profile.phoneNumber);
       if (friendPhoneNumber === phone) {
         console.log("PHONE: " + friendPhoneNumber + " == " + phone);
@@ -35,7 +36,11 @@ exports.test = functions.https.onRequest(async (req, res) => {
 
   console.log("Friend UID: " + friendUID);
   console.log("Avatar: " + avatarURL);
-
+  // Update Friend with creation Date
+  await friendSnapshot.ref.update({
+    friendUID: friendUID,
+    avatarURL: avatarURL,
+  });
   res.sendStatus(200);
 });
 
@@ -144,7 +149,7 @@ function cleanPhoneNumber(phoneNumber: string) {
 
   // Check if the phone number is 10 digits long
   if (phoneNumber.length !== 10) {
-    throw new Error("Invalid phone number: " + phoneNumber);
+    return phoneNumber;
   }
 
   return phoneNumber;

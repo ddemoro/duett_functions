@@ -51,6 +51,21 @@ exports.profileUpdated = functions.firestore.document("profiles/{uid}").onUpdate
   return Promise.resolve();
 });
 
+exports.sendPushMessage = functions.https.onRequest(async (req, res) => {
+  const snapshot = await firestore.collection("profiles").get();
+  for (const document of snapshot.docs) {
+    const profile = Object.assign({id: document.id}, document.data() as Profile);
+    if (profile.gender == "Woman") {
+      // eslint-disable-next-line max-len
+      await pushNotifications.sendPushNotification(profile.id, "It's all about Friends!", "Don’t forget that the best Duett experience happens with your friends. So grab your girls and make sure that they are signed up! ");
+    } else {
+      // eslint-disable-next-line max-len
+      await pushNotifications.sendPushNotification(profile.id, "It's all about Friends!", "Don’t forget that the best Duett experience happens with your friends. So grab your buddies and make sure that they are signed up! ");
+    }
+  }
+  res.sendStatus(200);
+});
+
 
 exports.addSuggestions = functions.https.onRequest(async (req, res) => {
   // eslint-disable-next-line max-len
