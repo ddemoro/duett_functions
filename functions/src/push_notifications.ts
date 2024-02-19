@@ -1,4 +1,5 @@
 import {Profile} from "./types";
+import dbUtils from "./utils/db_utils";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const admin = require("firebase-admin");
@@ -58,7 +59,7 @@ async function sendPushNotificationWithImage(uid: string, title: string, body: s
 }
 
 // eslint-disable-next-line require-jsdoc
-async function sendMatchCreatedNotification(uid: string, title: string, body: string, matchID:string) {
+async function sendMatchCreatedNotification(uid: string, title: string, body: string, matchID: string) {
   const profileRef = await firestore.collection("profiles").doc(uid).get();
   const profile = profileRef.data();
   if (profile === null || profile === undefined) {
@@ -105,7 +106,7 @@ async function sendMatchCreatedNotification(uid: string, title: string, body: st
 }
 
 // eslint-disable-next-line require-jsdoc
-async function sendLikeNotification(uid: string, title: string, body: string, likedByUID:string) {
+async function sendLikeNotification(uid: string, title: string, body: string, likedByUID: string) {
   const profileRef = await firestore.collection("profiles").doc(uid).get();
   const profile = profileRef.data();
   if (profile === null || profile === undefined) {
@@ -150,6 +151,48 @@ async function sendLikeNotification(uid: string, title: string, body: string, li
     });
   return Promise.resolve();
 }
+
+// eslint-disable-next-line require-jsdoc
+async function sendFriendRequestNotification(uid: string, friendRequestID: string, title: string, body: string) {
+  const profile = await dbUtils.getProfile(uid);
+  const pushToken = profile.fcmToken;
+  if (!pushToken) {
+    console.log("There are no fcm tokens for " + uid);
+    return Promise.resolve();
+  }
+
+
+  const message = {
+    notification: {
+      title: title,
+      body: body,
+    },
+    apns: {
+      payload: {
+        aps: {
+          sound: "default",
+        },
+      },
+    },
+    data: {
+      "click_action": "FLUTTER_NOTIFICATION_CLICK",
+      "uid": uid,
+      "friendRequestID": friendRequestID,
+    },
+    token: pushToken,
+  };
+
+  await admin.messaging().send(message)
+    .then((response: string) => {
+      // Response is a message ID string.
+      console.log("Sent push notification");
+    })
+    .catch((error: any) => {
+      console.log("Error sending message - " + error);
+    });
+  return Promise.resolve();
+}
+
 
 // eslint-disable-next-line require-jsdoc
 async function sendPushNotification(uid: string, title: string, body: string) {
@@ -198,7 +241,7 @@ async function sendPushNotification(uid: string, title: string, body: string) {
 }
 
 // eslint-disable-next-line require-jsdoc
-async function notifyTargets(uid: string, title: string, body: string, possibleMatchID:string) {
+async function notifyTargets(uid: string, title: string, body: string, possibleMatchID: string) {
   const profileRef = await firestore.collection("profiles").doc(uid).get();
   const profile = profileRef.data();
   if (profile === null || profile === undefined) {
@@ -245,7 +288,7 @@ async function notifyTargets(uid: string, title: string, body: string, possibleM
 }
 
 // eslint-disable-next-line require-jsdoc
-async function sendDuettMessageNotification(uid: string, title: string, body: string, duettID:string) {
+async function sendDuettMessageNotification(uid: string, title: string, body: string, duettID: string) {
   const profileRef = await firestore.collection("profiles").doc(uid).get();
   const profile = profileRef.data();
   if (profile === null || profile === undefined) {
@@ -292,7 +335,7 @@ async function sendDuettMessageNotification(uid: string, title: string, body: st
 }
 
 // eslint-disable-next-line require-jsdoc
-async function notifyPartner(uid: string, title: string, body: string, pairID:string) {
+async function notifyPartner(uid: string, title: string, body: string, pairID: string) {
   const profileRef = await firestore.collection("profiles").doc(uid).get();
   const profile = profileRef.data();
   if (profile === null || profile === undefined) {
@@ -347,6 +390,7 @@ const pushNotifications = {
   notifyPartner,
   sendDuettMessageNotification,
   sendLikeNotification,
+  sendFriendRequestNotification,
 };
 
 export default pushNotifications;

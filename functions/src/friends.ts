@@ -1,5 +1,5 @@
 import * as functions from "firebase-functions";
-import {Friend, Profile} from "./types";
+import {Friend, Notification, Profile} from "./types";
 import dbUtils from "./utils/db_utils";
 import pushNotifications from "./push_notifications";
 
@@ -23,7 +23,7 @@ exports.test = functions.https.onRequest(async (req, res) => {
   for (const document of querySnapshot.docs) {
     const profile = await dbUtils.getProfile(document.id);
     if (profile.phoneNumber) {
-      console.log("Have: "+profile.phoneNumber);
+      console.log("Have: " + profile.phoneNumber);
       const phone = cleanPhoneNumber(profile.phoneNumber);
       if (friendPhoneNumber === phone) {
         console.log("PHONE: " + friendPhoneNumber + " == " + phone);
@@ -48,6 +48,7 @@ exports.test = functions.https.onRequest(async (req, res) => {
 exports.friendAdded = functions.firestore.document("friends/{uid}").onCreate(async (snap, context) => {
   const friend = Object.assign({id: snap.id}, snap.data() as Friend);
   const friendPhoneNumber = cleanPhoneNumber(friend.phone);
+  const inviter = await dbUtils.getProfile(friend.uid);
 
 
   const querySnapshot = await firestore.collection("profiles").where("configured", "==", true).get();
@@ -60,6 +61,22 @@ exports.friendAdded = functions.firestore.document("friends/{uid}").onCreate(asy
       if (friendPhoneNumber === phone) {
         friendUID = profile.id;
         avatarURL = profile.media[0].url;
+
+        if (friendUID) {
+          // Notify the Friend
+          await pushNotifications.sendFriendRequestNotification(friendUID, friend.id, "Friend Request", inviter.firstName + " is inviting you to join their dating team.");
+
+          // Add a Notification for the Friend
+          const notification: Notification = {
+            creationDate: FieldValue.serverTimestamp(),
+            friendRequestID: friend.id,
+            text: inviter.firstName + " is inviting you to join their dating team.",
+            images: [inviter.media[0].url],
+            uid: friendUID,
+            read: false,
+          };
+          await firestore.collection("notifications").add(notification);
+        }
       }
     }
   }
