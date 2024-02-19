@@ -499,6 +499,17 @@ exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (
     await startMatching(match);
   } else {
     await pushNotifications.sendLikeNotification(profileTwo.id, "Duett", profileOne.firstName + " just liked you! Act fast to see if they're a match.", profileOne.id);
+
+    // Create notification
+    const notification: Notification = {
+      creationDate: FieldValue.serverTimestamp(),
+      likedByUID: profileOne.id,
+      text: profileOne.firstName + " just liked you! Act fast to see if they're a match.",
+      images: [profileOne.media[0].url],
+      uid: profileTwo.id,
+      read: false,
+    };
+    await firestore.collection("notifications").add(notification);
   }
 
 

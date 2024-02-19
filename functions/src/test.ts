@@ -88,8 +88,8 @@ exports.testPushNotifications = functions.https.onRequest(async (req, res) => {
 
 exports.createLike = functions.https.onRequest(async (req, res) => {
   const like: Like = {
-    likedProfileID: "M0PRW3sb1tQljjyH878sFlDmSC63",
-    profileID: "mJwZDU42cwUEKJBfSHzIxGM6UxR2",
+    likedProfileID: "tI6XNS1oLtWt4WjwkdiliJos3f72",
+    profileID: "wRpwOZ7Ju9aB2KHiQsRX5rQQuFA2",
     creationDate: Date.now(),
   };
 

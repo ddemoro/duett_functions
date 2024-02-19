@@ -170,6 +170,7 @@ export interface Notification {
     duettID?: string;
     matchID?:string;
     possibleMatchID?:string;
+    likedByUID?:string;
     read:boolean;
     images: string[];
     creationDate: any;
