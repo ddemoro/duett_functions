@@ -138,6 +138,22 @@ exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(a
   return Promise.resolve();
 });
 
+exports.friendDeleted = functions.firestore.document("friends/{uid}").onDelete(async (snap, context) => {
+  const friend = Object.assign({id: snap.id}, snap.data() as Friend);
+  const uid = friend.uid;
+  const friendUID = friend.friendUID;
+
+
+  const snapshot = await firestore.collection("friends").where("uid", "==", friendUID).where("friendUID", "==", uid).get();
+
+  for (const document of snapshot.docs) {
+    await document.ref.delete();
+  }
+
+
+  return Promise.resolve();
+});
+
 // eslint-disable-next-line require-jsdoc
 function cleanPhoneNumber(phoneNumber: string) {
   // Remove all non-numeric characters
