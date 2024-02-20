@@ -45,6 +45,28 @@ exports.profileUpdated = functions.firestore.document("profiles/{uid}").onUpdate
         await pushNotifications.sendLikeNotification(man.id, "New to Duett", message, newProfile.id);
       }
     }
+
+    // Take a look if people invited them as friends. If so, do the following:
+    // 1. Map their friendUID to the Friend Object
+    // 2. Send them a Push Notification
+    const phoneNumber = cleanPhoneNumber(newProfile.phoneNumber);
+    const querySnapshot = await firestore.collection("friends").where("accepted", "==", false).get();
+    for (const document of querySnapshot.docs) {
+      const friend = Object.assign({id: document.id}, document.data() as Friend);
+      const friendPhoneNumber = cleanPhoneNumber(friend.phone);
+      if (phoneNumber == friendPhoneNumber) {
+        // Add the friendUID
+        const avatarURL = newProfile.media[0].url;
+
+        await firestore.collection("friends").doc(friend.id).update({
+          friendUID: newProfile.id,
+          avatarURL: avatarURL,
+        });
+
+        // Notify the Friend
+        await pushNotifications.sendFriendRequestNotification(newProfile.id, friend.id, "Friend Request", friend.fullName + " is inviting you to join their dating team.");
+      }
+    }
   }
 
 
@@ -193,4 +215,27 @@ function getRandomProfilesWithExclusion(arr: Profile[], excludeProfile: Profile)
   }
 
   return randomProfiles;
+}
+
+// eslint-disable-next-line require-jsdoc
+function cleanPhoneNumber(phoneNumber: string) {
+  // Remove all non-numeric characters
+  phoneNumber = phoneNumber.replace(/[^0-9]/g, "");
+
+  // Remove leading +1
+  if (phoneNumber.startsWith("+1")) {
+    phoneNumber = phoneNumber.substring(2);
+  }
+
+  // Remove leading +1
+  if (phoneNumber.startsWith("1")) {
+    phoneNumber = phoneNumber.substring(1);
+  }
+
+  // Check if the phone number is 10 digits long
+  if (phoneNumber.length !== 10) {
+    return phoneNumber;
+  }
+
+  return phoneNumber;
 }
