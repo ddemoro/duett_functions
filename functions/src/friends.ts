@@ -1,5 +1,5 @@
 import * as functions from "firebase-functions";
-import {Friend, Notification, Profile} from "./types";
+import {Friend, Profile} from "./types";
 import dbUtils from "./utils/db_utils";
 import pushNotifications from "./push_notifications";
 
@@ -65,17 +65,6 @@ exports.friendAdded = functions.firestore.document("friends/{uid}").onCreate(asy
         if (friendUID) {
           // Notify the Friend
           await pushNotifications.sendFriendRequestNotification(friendUID, friend.id, "Friend Request", inviter.firstName + " is inviting you to join their dating team.");
-
-          // Add a Notification for the Friend
-          const notification: Notification = {
-            creationDate: FieldValue.serverTimestamp(),
-            friendRequestID: friend.id,
-            text: inviter.firstName + " is inviting you to join their dating team.",
-            images: [inviter.media[0].url],
-            uid: friendUID,
-            read: false,
-          };
-          await firestore.collection("notifications").add(notification);
         }
       }
     }

@@ -171,7 +171,6 @@ export interface Notification {
     matchID?:string;
     possibleMatchID?:string;
     likedByUID?:string;
-    friendRequestID?:string;
     read:boolean;
     images: string[];
     creationDate: any;
