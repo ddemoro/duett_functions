@@ -109,6 +109,10 @@ exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(a
       }
     }
 
+    // Check how many starters this person has and enforce 3 if needed
+    const friendsSnapshot = await firestore.collection("friends").where("uid", "==", friendUID).where("isStarter", "==", true).get();
+    const querySize = friendsSnapshot.size;
+
     if (friends.length == 0) {
       // Create Friend object and add them to the bench
       const newFriend: Friend = {
@@ -116,11 +120,10 @@ exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(a
         friendUID: ownerProfile.id,
         avatarURL: ownerProfile.media[0].url,
         creationDate: FieldValue.serverTimestamp(),
-        isStarter: true,
+        isStarter: querySize < 3,
         accepted: true,
         fullName: ownerProfile.firstName,
         phone: ownerProfile.phoneNumber,
-        inviteCode: "AUTO_GENERATED",
       };
 
       await firestore.collection("friends").add(newFriend);
