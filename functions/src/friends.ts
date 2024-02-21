@@ -18,7 +18,7 @@ exports.test = functions.https.onRequest(async (req, res) => {
     for (const document of friendSnapshot.docs) {
       const otherFriend = Object.assign({id: document.id}, document.data() as Friend);
       if (otherFriend) {
-        console.log(friend.id+" and "+otherFriend.id);
+        console.log(friend.id + " and " + otherFriend.id);
       }
     }
   }
@@ -60,7 +60,11 @@ exports.friendAdded = functions.firestore.document("friends/{uid}").onCreate(asy
       accepted = true;
 
       const profileOfFriend = await dbUtils.getProfile(friend.uid);
-      await firestore.collection("friends").doc(otherFriend.id).update({accepted: true, avatarURL: profileOfFriend.media[0].url, friendUID: profileOfFriend.id});
+      await firestore.collection("friends").doc(otherFriend.id).update({
+        accepted: true,
+        avatarURL: profileOfFriend.media[0].url,
+        friendUID: profileOfFriend.id,
+      });
     }
   }
 
@@ -96,13 +100,13 @@ exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(a
 
     // Check if a friend object already exists by looking looking for a Friend object that
     // has the uid == friendUID and the friendUID == uid and accepted == false
+    console.log("Looking for friendUID to be " + ownerProfile.id + " and uid to be " + friendUID);
     const querySnapshot = await firestore.collection("friends").where("friendUID", "==", ownerProfile.id).where("uid", "==", friendUID).get();
+
     const friends: Friend[] = [];
     for (const document of querySnapshot.docs) {
       const friend = Object.assign({id: document.id}, document.data() as Friend);
-      if (!friend.accepted) {
-        friends.push(friend);
-      }
+      friends.push(friend);
     }
 
     // Check how many starters this person has and enforce 3 if needed
@@ -120,6 +124,7 @@ exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(a
         accepted: true,
         fullName: ownerProfile.firstName,
         phone: ownerProfile.phoneNumber,
+        inviteCode: "AUTO_GENERATED",
       };
 
       await firestore.collection("friends").add(newFriend);
