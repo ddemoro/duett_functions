@@ -54,6 +54,17 @@ async function getDuett(matchID: string) {
 }
 
 // eslint-disable-next-line require-jsdoc
+async function getFriend(friendID: string) {
+  const snapshot = await firestore.collection("friends").doc(friendID).get();
+  const document = snapshot.data();
+  if (!document) {
+    throw new Error("Pair not found: " + friendID);
+  } else {
+    return Object.assign({id: friendID}, document as Friend);
+  }
+}
+
+// eslint-disable-next-line require-jsdoc
 async function getFriends(uid: string, starter: boolean) {
   const querySnapshot = await firestore.collection("friends").where("uid", "==", uid).where("isStarter", "==", starter).get();
   const friends: Friend[] = [];
@@ -114,6 +125,7 @@ const dbUtils = {
   getPossibleMatches,
   getPairs,
   getPair,
+  getFriend,
 };
 
 export default dbUtils;

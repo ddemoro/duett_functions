@@ -53,7 +53,7 @@ exports.friendAdded = functions.firestore.document("friends/{uid}").onCreate(asy
 
   // Check to see if their friend invited them. If so, auto-accept
   let accepted = false;
-  const friendSnapshot = await firestore.collection("friends").where("uid", "==", friend.friendUID).where("friendUID", "==", friend.uid).get();
+  const friendSnapshot = await firestore.collection("friends").where("uid", "==", friendUID).where("friendUID", "==", friend.uid).get();
   for (const document of friendSnapshot.docs) {
     const otherFriend = Object.assign({id: document.id}, document.data() as Friend);
     if (otherFriend) {
