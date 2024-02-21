@@ -11,36 +11,17 @@ const FieldValue = require("firebase-admin").firestore.FieldValue;
 
 
 exports.test = functions.https.onRequest(async (req, res) => {
-  const friendSnapshot = await firestore.collection("friends").doc("wJ0fhjaUktlHkisAJvTh").get();
-
-  const friend = Object.assign({id: friendSnapshot.id}, friendSnapshot.data() as Friend);
-  const friendPhoneNumber = cleanPhoneNumber(friend.phone);
-
-
-  const querySnapshot = await firestore.collection("profiles").get();
-  let friendUID;
-  let avatarURL = friend.avatarURL;
-  for (const document of querySnapshot.docs) {
-    const profile = await dbUtils.getProfile(document.id);
-    if (profile.phoneNumber) {
-      console.log("Have: " + profile.phoneNumber);
-      const phone = cleanPhoneNumber(profile.phoneNumber);
-      if (friendPhoneNumber === phone) {
-        console.log("PHONE: " + friendPhoneNumber + " == " + phone);
-        console.log("ID:" + profile.id);
-        friendUID = profile.id;
-        avatarURL = profile.media[0].url;
+  const friendSnapshot = await firestore.collection("friends").where("accepted", "==", false).get();
+  for (const document of friendSnapshot.docs) {
+    const friend = Object.assign({id: document.id}, document.data() as Friend);
+    const friendSnapshot = await firestore.collection("friends").where("uid", "==", friend.friendUID).where("friendUID", "==", friend.uid).get();
+    for (const document of friendSnapshot.docs) {
+      const otherFriend = Object.assign({id: document.id}, document.data() as Friend);
+      if (otherFriend) {
+        console.log(friend.id+" and "+otherFriend.id);
       }
     }
   }
-
-  console.log("Friend UID: " + friendUID);
-  console.log("Avatar: " + avatarURL);
-  // Update Friend with creation Date
-  await friendSnapshot.ref.update({
-    friendUID: friendUID,
-    avatarURL: avatarURL,
-  });
   res.sendStatus(200);
 });
 
