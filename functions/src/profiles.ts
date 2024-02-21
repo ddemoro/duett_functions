@@ -20,6 +20,7 @@ exports.profileAdded = functions.firestore.document("profiles/{uid}").onCreate(a
     creationDate: FieldValue.serverTimestamp(),
     configured: false,
     friends: false,
+    likedBy: [],
   });
 
 
