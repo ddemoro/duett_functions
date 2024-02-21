@@ -36,13 +36,13 @@ exports.profileUpdated = functions.firestore.document("profiles/{uid}").onUpdate
     if (gender == "Man") {
       const women = await dbUtils.getProfilesFromGender("Woman");
       for (const woman of women) {
-        const message = newProfile.firstName + " has just joined Duett. Take a look to see if their is some interest here.";
+        const message = newProfile.firstName + " has just joined Duett. Take a look to see if there is some interest here.";
         await pushNotifications.sendLikeNotification(woman.id, "New to Duett", message, newProfile.id);
       }
     } else if (gender == "Woman") {
       const men = await dbUtils.getProfilesFromGender("Man");
       for (const man of men) {
-        const message = newProfile.firstName + " has just joined Duett. Take a look to see if their is some interest here.";
+        const message = newProfile.firstName + " has just joined Duett. Take a look to see if there is some interest here.";
         await pushNotifications.sendLikeNotification(man.id, "New to Duett", message, newProfile.id);
       }
     }
