@@ -43,7 +43,7 @@ exports.friendAdded = functions.firestore.document("friends/{uid}").onCreate(asy
         friendUID = profile.id;
         avatarURL = profile.media[0].url;
 
-        if (friendUID) {
+        if (friendUID && !friend.type) {
           // Notify the Friend
           await pushNotifications.sendFriendRequestNotification(friendUID, friend.id, "Friend Request", inviter.firstName + " is inviting you to join their dating team.");
         }
@@ -124,7 +124,7 @@ exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(a
         accepted: true,
         fullName: ownerProfile.firstName,
         phone: ownerProfile.phoneNumber,
-        inviteCode: "AUTO_GENERATED",
+        type: "AUTO_GENERATED",
       };
 
       await firestore.collection("friends").add(newFriend);
@@ -153,6 +153,13 @@ exports.friendDeleted = functions.firestore.document("friends/{uid}").onDelete(a
   for (const document of snapshot.docs) {
     await document.ref.delete();
   }
+
+
+  const friendsSnapshot = await firestore.collection("friends").where("uid", "==", uid).get();
+  const querySize = friendsSnapshot.size;
+
+  // Update Profile
+  await firestore.collection("profiles").doc(uid).update({friends: querySize > 0});
 
 
   return Promise.resolve();

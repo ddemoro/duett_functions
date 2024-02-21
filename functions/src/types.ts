@@ -91,6 +91,7 @@ export interface Friend {
     avatarURL:string;
     isStarter: boolean;
     creationDate: any;
+    type?:string;
 }
 
 export interface Choice {
