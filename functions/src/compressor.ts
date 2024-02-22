@@ -42,15 +42,14 @@ exports.compressImage = functions.storage.object().onFinalize(async (object) => 
 
     // Upload compressed image (replace original or upload to new location)
     const newMetadata = {
-      customMetadata: {
-        // Your custom metadata fields
-        "author": "John Doe",
-        "creationDate": new Date().toISOString(),
-        "keywords": ["nature", "landscape"],
-      },
+      "author": "John Doe",
+      "creationDate": new Date().toISOString(),
+      "keywords": ["nature", "landscape"],
+
     };
     await bucket.upload(compressedFilePath, {
-      destination: `compressed/compressed_${fileName}`, // Upload to a 'compressed' subfolder
+      destination: `compressed/compressed_${fileName}`,
+      metadata: newMetadata, // Upload to a 'compressed' subfolder
     });
 
     const file2 = bucket.file(`compressed/compressed_${fileName}`);
@@ -64,17 +63,17 @@ exports.compressImage = functions.storage.object().onFinalize(async (object) => 
     }
 
     /*
-    const newMetadata = {
-      customMetadata: {
-        "compressed": "true",
-      },
-    };
-    await bucket.upload(compressedFilePath, {
-      destination: filePath,
-      metadata: newMetadata,
-    });
+        const newMetadata = {
+          customMetadata: {
+            "compressed": "true",
+          },
+        };
+        await bucket.upload(compressedFilePath, {
+          destination: filePath,
+          metadata: newMetadata,
+        });
 
-     */
+         */
 
     // Delete temp files
     // eslint-disable-next-line @typescript-eslint/no-var-requires
