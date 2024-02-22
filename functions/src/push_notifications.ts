@@ -120,11 +120,14 @@ async function sendLikeNotification(uid: string, title: string, body: string, li
     return Promise.resolve();
   }
 
+  const likedByProfile = await dbUtils.getProfile(likedByUID);
+
 
   const message = {
     notification: {
       title: title,
       body: body,
+      image: likedByProfile.media[0].url,
     },
     apns: {
       payload: {

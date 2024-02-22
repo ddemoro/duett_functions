@@ -13,3 +13,4 @@ exports.duetts = require("./duetts");
 exports.thumbnails = require("./utils/thumbnails");
 exports.friends = require("./friends");
 exports.test = require("./test");
+exports.compressor = require("./compressor");
