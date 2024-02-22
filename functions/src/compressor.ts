@@ -36,21 +36,21 @@ exports.compressImage = functions.storage.object().onFinalize(async (object) => 
 
     // Compress the image (adjust quality as needed)
     await sharp(tmpFilePath)
-      .webp({quality: 50}) // Example: Convert to WebP with 80% quality
+      .webp({quality: 80}) // Example: Convert to WebP with 80% quality
       .toFile(compressedFilePath);
 
     /*
-    await bucket.upload(compressedFilePath, {
-      destination: `compressed/compressed_${fileName}`,
+        await bucket.upload(compressedFilePath, {
+          destination: `compressed/compressed_${fileName}`,
 
-    });
+        });
 
 
-   */
+       */
 
     await firestore.collection("compressed").add({path: filePath});
     await bucket.upload(compressedFilePath, {
-      destination: filePath,
+      destination: filePath, contentType: contentType,
     });
 
 
