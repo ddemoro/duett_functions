@@ -12,13 +12,17 @@ exports.compressImage = functions.storage.object().onFinalize(async (object) => 
   // @ts-ignore
   const fileName = filePath.split("/").pop();
   const contentType = object.contentType;
-
+  const file = bucket.file(filePath);
+  const [metadata] = await file.getMetadata();
+  // Access metadata
+  console.log(metadata);
+  console.log("Custom Metadata:", metadata);
   console.log("Compressing image " + fileName + " " + contentType);
 
   // Exit if not an image
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  if (!contentType.startsWith("image/") || fileName.includes("compressed")) {
+  if (!contentType.startsWith("image/") || fileName.includes("compressed") || metadata.customMetadata) {
     console.log("This is not an image or it's compressed already");
     return null;
   }
@@ -37,9 +41,40 @@ exports.compressImage = functions.storage.object().onFinalize(async (object) => 
       .toFile(compressedFilePath);
 
     // Upload compressed image (replace original or upload to new location)
+    const newMetadata = {
+      customMetadata: {
+        // Your custom metadata fields
+        "author": "John Doe",
+        "creationDate": new Date().toISOString(),
+        "keywords": ["nature", "landscape"],
+      },
+    };
     await bucket.upload(compressedFilePath, {
       destination: `compressed/compressed_${fileName}`, // Upload to a 'compressed' subfolder
     });
+
+    const file2 = bucket.file(`compressed/compressed_${fileName}`);
+    try {
+      await file2.setMetadata(newMetadata);
+      console.log("Metadata added successfully");
+      return null;
+    } catch (error) {
+      console.error("Error adding metadata:", error);
+      return null;
+    }
+
+    /*
+    const newMetadata = {
+      customMetadata: {
+        "compressed": "true",
+      },
+    };
+    await bucket.upload(compressedFilePath, {
+      destination: filePath,
+      metadata: newMetadata,
+    });
+
+     */
 
     // Delete temp files
     // eslint-disable-next-line @typescript-eslint/no-var-requires
