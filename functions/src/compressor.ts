@@ -3,7 +3,7 @@ import * as functions from "firebase-functions";
 const admin = require("firebase-admin");
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const sharp = require("sharp");
-
+const firestore = admin.firestore();
 
 exports.compressImage = functions.storage.object().onFinalize(async (object) => {
   const bucket = admin.storage().bucket(object.bucket);
@@ -12,17 +12,16 @@ exports.compressImage = functions.storage.object().onFinalize(async (object) => 
   // @ts-ignore
   const fileName = filePath.split("/").pop();
   const contentType = object.contentType;
-  const file = bucket.file(filePath);
-  const [metadata] = await file.getMetadata();
-  // Access metadata
-  console.log(metadata);
-  console.log("Custom Metadata:", metadata);
-  console.log("Compressing image " + fileName + " " + contentType);
+  console.log("Compressing image FileName:" + fileName + " FilePath: " + filePath + " ContentType:" + contentType);
+
+  // See if this was already compressed.
+  const querySnapshot = await firestore.collection("compressed").where("path", "==", filePath).get();
+  const documentExists = !querySnapshot.empty;
 
   // Exit if not an image
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  if (!contentType.startsWith("image/") || fileName.includes("compressed") || metadata.customMetadata) {
+  if (!contentType.startsWith("image/") || documentExists) {
     console.log("This is not an image or it's compressed already");
     return null;
   }
@@ -40,40 +39,20 @@ exports.compressImage = functions.storage.object().onFinalize(async (object) => 
       .webp({quality: 50}) // Example: Convert to WebP with 80% quality
       .toFile(compressedFilePath);
 
-    // Upload compressed image (replace original or upload to new location)
-    const newMetadata = {
-      "author": "John Doe",
-      "creationDate": new Date().toISOString(),
-      "keywords": ["nature", "landscape"],
-
-    };
+    /*
     await bucket.upload(compressedFilePath, {
       destination: `compressed/compressed_${fileName}`,
-      metadata: newMetadata, // Upload to a 'compressed' subfolder
+
     });
 
-    const file2 = bucket.file(`compressed/compressed_${fileName}`);
-    try {
-      await file2.setMetadata(newMetadata);
-      console.log("Metadata added successfully");
-      return null;
-    } catch (error) {
-      console.error("Error adding metadata:", error);
-      return null;
-    }
 
-    /*
-        const newMetadata = {
-          customMetadata: {
-            "compressed": "true",
-          },
-        };
-        await bucket.upload(compressedFilePath, {
-          destination: filePath,
-          metadata: newMetadata,
-        });
+   */
 
-         */
+    await firestore.collection("compressed").add({path: filePath});
+    await bucket.upload(compressedFilePath, {
+      destination: filePath,
+    });
+
 
     // Delete temp files
     // eslint-disable-next-line @typescript-eslint/no-var-requires
