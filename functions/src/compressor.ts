@@ -59,7 +59,73 @@ exports.compressImage = functions.storage.object().onFinalize(async (object) => 
   }
 });
 
-exports.testFiles = functions.runWith({
+exports.resizeImages = functions.runWith({
+  memory: "4GB",
+  timeoutSeconds: 540,
+}).https.onRequest(async (req, res) => {
+  const folderPath = "media/"; // Specify the folder
+  const bucket = admin.storage().bucket("duett-a2b3f.appspot.com");
+
+  // Get list of files within the folder
+  const [files] = await bucket.getFiles({prefix: folderPath});
+
+  // Iterate and rename each file
+  await Promise.all(files.map(async (file: File) => {
+    const filePath = file.name;
+    const fileObject = bucket.file(filePath);
+    const [metadata] = await fileObject.getMetadata();
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const contentType = metadata.contentType;
+
+    const fileName = filePath.split("/").pop();
+    if (filePath != "media/") {
+      // Create working directories
+      const tmpFilePath = `/tmp/${fileName}`;
+      const compressedFilePath = `/tmp/compressed_${fileName}`;
+
+      try {
+        // Download the original image
+        await bucket.file(filePath).download({destination: tmpFilePath});
+
+        /*
+        // Compress the image (adjust quality as needed)
+        await sharp(tmpFilePath)
+          .webp({quality: 80}) // Example: Convert to WebP with 80% quality
+          .toFile(compressedFilePath);
+         */
+
+
+        await sharp(tmpFilePath)
+          .resize(800, 800, {
+            fit: sharp.fit.inside,
+            withoutEnlargement: true,
+          })
+          .toFile(compressedFilePath);
+
+        await firestore.collection("compressed").add({path: filePath});
+        await bucket.upload(compressedFilePath, {
+          destination: filePath, contentType: "image/webp",
+        });
+
+        // Delete temp files
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const fs = require("fs");
+        fs.unlinkSync(tmpFilePath);
+        fs.unlinkSync(compressedFilePath);
+
+        console.log("Image compressed successfully");
+      } catch (error) {
+        console.error("Error compressing image:", error);
+      }
+    }
+  }));
+
+  res.status(200).send(`File renaming completed in folder ${folderPath}`);
+});
+
+
+exports.compressImages = functions.runWith({
   memory: "4GB",
   timeoutSeconds: 540,
 }).https.onRequest(async (req, res) => {
