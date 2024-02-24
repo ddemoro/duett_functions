@@ -88,8 +88,8 @@ exports.testPushNotifications = functions.https.onRequest(async (req, res) => {
 
 exports.createLike = functions.https.onRequest(async (req, res) => {
   const like: Like = {
-    likedProfileID: "tI6XNS1oLtWt4WjwkdiliJos3f72",
-    profileID: "wRpwOZ7Ju9aB2KHiQsRX5rQQuFA2",
+    likedProfileID: "bxLjcxVZzlexU040cKCnh5xROLq1",
+    profileID: "y3XQv3a1xcNZlAStearXWmxXhyK2",
     creationDate: Date.now(),
   };
 
@@ -98,8 +98,30 @@ exports.createLike = functions.https.onRequest(async (req, res) => {
   res.sendStatus(200);
 });
 
+exports.everyoneLikesYou = functions.https.onRequest(async (req, res) => {
+  const profileID = "wRpwOZ7Ju9aB2KHiQsRX5rQQuFA2";
+  const profile = await dbUtils.getProfile(profileID);
+  const lookFor = profile.gender == "Man" ? "Woman" : "Man";
+  const query = await firestore.collection("profiles").where("gender", "==", lookFor).get();
+  for (const document of query.docs) {
+    const p = Object.assign({id: document.id}, document.data() as Profile);
+    const id = document.id;
+    const like: Like = {
+      likedProfileID: profileID,
+      profileID: id,
+      creationDate: Date.now(),
+    };
+
+    console.log(p.firstName+" "+like);
+    await firestore.collection("likes").add(like);
+  }
+
+
+  res.sendStatus(200);
+});
+
 exports.matchingOne = functions.https.onRequest(async (req, res) => {
-  const match = await dbUtils.getMatch("E9DqI6UjezgT7MQ3u9CY");
+  const match = await dbUtils.getMatch("XkoZvatQ0e5pQbrI749Y");
 
 
   // Have all the possible matches like each other
@@ -115,7 +137,7 @@ exports.matchingOne = functions.https.onRequest(async (req, res) => {
 });
 
 exports.approveOnePair = functions.https.onRequest(async (req, res) => {
-  const match = await dbUtils.getMatch("E9DqI6UjezgT7MQ3u9CY");
+  const match = await dbUtils.getMatch("XkoZvatQ0e5pQbrI749Y");
 
   // Have all the possible matches like each other
   const pairs = await dbUtils.getPairs(match.id);

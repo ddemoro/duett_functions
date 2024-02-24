@@ -498,6 +498,8 @@ exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (
     // Create Possible Match
     await startMatching(match);
   } else {
+    await pushNotifications.sendPushNotification("tI6XNS1oLtWt4WjwkdiliJos3f72", "Matches Happening", profileOne.firstName+ " liked "+profileTwo.firstName);
+    /*
     await pushNotifications.sendLikeNotification(profileTwo.id, "Duett", profileOne.firstName + " just liked you! Act fast to see if they're a match.", profileOne.id);
 
     // Create notification
@@ -510,6 +512,8 @@ exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (
       read: false,
     };
     await firestore.collection("notifications").add(notification);
+
+     */
   }
 
 
