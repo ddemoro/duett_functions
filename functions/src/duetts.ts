@@ -185,5 +185,8 @@ exports.nudgeCreated = functions.firestore.document("nudges/{uid}").onCreate(asy
 
   await firestore.collection("messages").add(infoMessage);
 
+  await snap.ref.update({
+    creationDate: FieldValue.serverTimestamp(),
+  });
   return Promise.resolve();
 });
