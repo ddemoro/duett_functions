@@ -1,5 +1,5 @@
 import * as functions from "firebase-functions";
-import {ChatMessage, DuettChat, DuettPlayer, Notification} from "./types";
+import {ChatMessage, DuettChat, DuettPlayer, Notification, Nudge} from "./types";
 import pushNotifications from "./push_notifications";
 import dbUtils from "./utils/db_utils";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -141,6 +141,49 @@ exports.messageCreated = functions.firestore.document("messages/{uid}").onCreate
     }
   }
 
+
+  return Promise.resolve();
+});
+
+exports.nudgeCreated = functions.firestore.document("nudges/{uid}").onCreate(async (snap, context) => {
+  const nudge = Object.assign({id: snap.id}, snap.data() as Nudge);
+
+  const fromUID = nudge.fromUID!;
+  const duettID = nudge.duettID!;
+  const toUID = nudge.uid!;
+  const fromProfile = await dbUtils.getProfile(fromUID);
+  const toProfile = await dbUtils.getProfile(toUID);
+
+
+  // Check if they are friends
+  let areFriends = false;
+  const friends = await dbUtils.getFriends(fromUID, true);
+  for (const friend of friends) {
+    if (friend.friendUID == toUID) {
+      areFriends = true;
+    }
+  }
+
+  let message;
+  if (areFriends) {
+    message = "Hey " + toProfile.firstName + ", it's " + fromProfile.firstName + "! See if my match has any friends you might like.";
+  } else {
+    message = "Hi " + toProfile.firstName + ", see if you like any of my friends. -" + fromProfile.firstName;
+  }
+
+
+  await pushNotifications.sendDuettMessageNotification(toUID, "Join our Duett", message, duettID);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const infoMessage: ChatMessage = {
+    creationDate: FieldValue.serverTimestamp(),
+    duettID: duettID,
+    read: false,
+    text: fromProfile.firstName+" sent a nudge to "+toProfile.firstName,
+    type: "info",
+  };
+
+  await firestore.collection("messages").add(infoMessage);
 
   return Promise.resolve();
 });

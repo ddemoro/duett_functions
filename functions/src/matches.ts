@@ -222,6 +222,17 @@ exports.possibleMatchUpdated = functions.firestore.document("possibleMatches/{ui
         for (const player of players) {
           if (player.uid == completedUID) {
             player.completed = true;
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            const infoMessage: ChatMessage = {
+              creationDate: FieldValue.serverTimestamp(),
+              duettID: chatMessage.duettID,
+              read: false,
+              text: player.firstName+" has selected their possible matches.",
+              type: "info",
+            };
+
+            await firestore.collection("messages").add(infoMessage);
           }
         }
       }

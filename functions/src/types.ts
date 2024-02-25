@@ -10,7 +10,7 @@ export interface Match {
 }
 
 export interface PossibleMatch {
-    id?:string;
+    id?: string;
     matchID: string; // The id of the match this was created by
     friend: Person; // the friend who created this match
     match: Person; // the person they matched with
@@ -44,7 +44,7 @@ export interface Profile {
     description: string;
     creationDate: any;
     configured: boolean;
-    friends:boolean;
+    friends: boolean;
     fcmToken: string;
     phoneNumber: string;
     receiveMarketingMaterial: boolean;
@@ -71,7 +71,7 @@ export interface Profile {
     qualities: string;
     memorableMoments: string;
     inviteCode: string;
-    likedBy:string[]
+    likedBy: string[]
 }
 
 export interface Media {
@@ -88,10 +88,10 @@ export interface Friend {
     phone: string;
     inviteCode?: string;
     accepted: boolean;
-    avatarURL:string;
+    avatarURL: string;
     isStarter: boolean;
     creationDate: any;
-    type?:string;
+    type?: string;
 }
 
 export interface Choice {
@@ -125,7 +125,7 @@ export interface GeoLocation {
 }
 
 export interface Pair {
-    id?:string;
+    id?: string;
     matchID: string;
     players: Player[];
     playerIds: string[];
@@ -149,7 +149,7 @@ export interface DuettPlayer {
     avatarURL: string;
     uid: string;
     matchMakerID: string;
-    completed:boolean;
+    completed: boolean;
 }
 
 export interface DuettChat {
@@ -158,6 +158,14 @@ export interface DuettChat {
     members: string[];
     pairs: Pair[];
     matchMakers: string[];
+    creationDate?: any;
+}
+
+export interface Nudge {
+    id?: string;
+    duettID?: string;
+    uid?: string;
+    fromUID?: string;
     creationDate?: any;
 }
 
@@ -171,18 +179,18 @@ export interface ChatMessage {
     read: boolean;
     avatarURL: string;
     firstName: string;
-    type:string;
-    players?:DuettPlayer[]
+    type: string;
+    players?: DuettPlayer[]
 }
 
 export interface Notification {
     id?: string;
     text: string;
     duettID?: string;
-    matchID?:string;
-    possibleMatchID?:string;
-    likedByUID?:string;
-    read:boolean;
+    matchID?: string;
+    possibleMatchID?: string;
+    likedByUID?: string;
+    read: boolean;
     images: string[];
     creationDate: any;
     uid: string;
