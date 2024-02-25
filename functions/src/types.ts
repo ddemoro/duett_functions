@@ -144,6 +144,14 @@ export interface Player {
     matchMakerAvatarURL: string;
 }
 
+export interface DuettPlayer {
+    firstName: string;
+    avatarURL: string;
+    uid: string;
+    matchMakerID: string;
+    completed:boolean;
+}
+
 export interface DuettChat {
     id?: string;
     matchID?: string;
@@ -163,6 +171,8 @@ export interface ChatMessage {
     read: boolean;
     avatarURL: string;
     firstName: string;
+    type:string;
+    players?:DuettPlayer[]
 }
 
 export interface Notification {

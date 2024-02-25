@@ -39,6 +39,17 @@ async function getPair(pairID: string) {
 }
 
 // eslint-disable-next-line require-jsdoc
+async function getPossibleMatch(possibleMatchID: string) {
+  const snapshot = await firestore.collection("possibleMatches").doc(possibleMatchID).get();
+  const document = snapshot.data();
+  if (!document) {
+    throw new Error("Pair not found: " + possibleMatchID);
+  } else {
+    return Object.assign({id: possibleMatchID}, document as PossibleMatch);
+  }
+}
+
+// eslint-disable-next-line require-jsdoc
 async function getDuett(matchID: string) {
   const querySnapshot = await firestore.collection("duetts").where("matchID", "==", matchID).limit(1).get();
   if (!querySnapshot.empty) {
@@ -125,7 +136,7 @@ const dbUtils = {
   getPossibleMatches,
   getPairs,
   getPair,
-  getFriend,
+  getFriend, getPossibleMatch,
 };
 
 export default dbUtils;

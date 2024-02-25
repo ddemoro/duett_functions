@@ -1,7 +1,8 @@
 /* eslint-disable require-jsdoc,@typescript-eslint/no-unused-vars,@typescript-eslint/ban-ts-comment */
 import * as functions from "firebase-functions";
 import {
-  Choice,
+  ChatMessage,
+  Choice, DuettChat,
   Friend,
   Like,
   Match, Notification,
@@ -53,6 +54,46 @@ exports.matchAdded = functions.firestore.document("matches/{uid}").onCreate(asyn
 
   await firestore.collection("notifications").add(notification);
   await firestore.collection("notifications").add(notification2);
+
+  const profile1 = await dbUtils.getProfile(uid1);
+  const profile2 = await dbUtils.getProfile(uid2);
+  const player1: Player = {
+    avatarURL: profile1.media[0].url,
+    uid: profile1.id,
+    firstName: profile1.firstName,
+    matchMakerID: "",
+    matchMakerName: "",
+    matchMakerAvatarURL: "",
+  };
+
+  const player2: Player = {
+    avatarURL: profile2.media[0].url,
+    uid: profile2.id,
+    firstName: profile2.firstName,
+    matchMakerID: "",
+    matchMakerName: "",
+    matchMakerAvatarURL: "",
+  };
+
+  const matchMakers: Pair = {
+    matchID: match.id,
+    players: [player1, player2],
+    playerIds: [player1.uid, player2.uid],
+    matchMakerIds: [],
+    rejected: [],
+    approved: [],
+    creationDate: Date(),
+  };
+
+  const duettChat: DuettChat = {
+    matchID: match.id,
+    creationDate: FieldValue.serverTimestamp(),
+    matchMakers: [uid1, uid2],
+    pairs: [matchMakers],
+    members: [uid1, uid2],
+  };
+
+  await firestore.collection("duetts").doc(match.id).set(duettChat);
 
   return Promise.resolve();
 });
@@ -167,7 +208,27 @@ exports.createProfileText = functions.https.onRequest(async (req, res) => {
 
 exports.possibleMatchUpdated = functions.firestore.document("possibleMatches/{uid}").onUpdate(async (change, context) => {
   const newPM = Object.assign({id: change.after.id}, change.after.data() as PossibleMatch);
-  // const oldPM = Object.assign({id: change.before.id}, change.before.data() as PossibleMatch);
+  const oldPM = Object.assign({id: change.before.id}, change.before.data() as PossibleMatch);
+  if (newPM.completed && !oldPM.completed) {
+    const completedUID = newPM.uid;
+    const matchID = newPM.matchID;
+
+    // Fond the Chat Message with "players" as type and duettID is the matchID
+    const snapshot = await firestore.collection("messages").where("duettID", "==", matchID).get();
+    for (const document of snapshot.docs) {
+      const chatMessage = Object.assign({id: document.id}, document.data() as ChatMessage);
+      if (chatMessage.type == "players") {
+        const players = chatMessage.players!;
+        for (const player of players) {
+          if (player.uid == completedUID) {
+            player.completed = true;
+          }
+        }
+      }
+
+      await firestore.collection("messages").doc(document.id).update({players: chatMessage.players});
+    }
+  }
 
 
   const pms: PossibleMatch[] = [];
@@ -498,22 +559,22 @@ exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (
     // Create Possible Match
     await startMatching(match);
   } else {
-    await pushNotifications.sendPushNotification("tI6XNS1oLtWt4WjwkdiliJos3f72", "Matches Happening", profileOne.firstName+ " liked "+profileTwo.firstName);
+    await pushNotifications.sendPushNotification("tI6XNS1oLtWt4WjwkdiliJos3f72", "Matches Happening", profileOne.firstName + " liked " + profileTwo.firstName);
     /*
-    await pushNotifications.sendLikeNotification(profileTwo.id, "Duett", profileOne.firstName + " just liked you! Act fast to see if they're a match.", profileOne.id);
+        await pushNotifications.sendLikeNotification(profileTwo.id, "Duett", profileOne.firstName + " just liked you! Act fast to see if they're a match.", profileOne.id);
 
-    // Create notification
-    const notification: Notification = {
-      creationDate: FieldValue.serverTimestamp(),
-      likedByUID: profileOne.id,
-      text: profileOne.firstName + " just liked you! Act fast to see if they're a match.",
-      images: [profileOne.media[0].url],
-      uid: profileTwo.id,
-      read: false,
-    };
-    await firestore.collection("notifications").add(notification);
+        // Create notification
+        const notification: Notification = {
+          creationDate: FieldValue.serverTimestamp(),
+          likedByUID: profileOne.id,
+          text: profileOne.firstName + " just liked you! Act fast to see if they're a match.",
+          images: [profileOne.media[0].url],
+          uid: profileTwo.id,
+          read: false,
+        };
+        await firestore.collection("notifications").add(notification);
 
-     */
+         */
   }
 
 

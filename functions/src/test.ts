@@ -1,5 +1,5 @@
 import * as functions from "firebase-functions";
-import {Friend, Like, Profile} from "./types";
+import {ChatMessage, Friend, Like, Profile} from "./types";
 import dbUtils from "./utils/db_utils";
 import pushNotifications from "./push_notifications";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -32,7 +32,10 @@ exports.checkFriends = functions.https.onRequest(async (req, res) => {
   res.sendStatus(200);
 });
 
-exports.clearProfiles = functions.https.onRequest(async (req, res) => {
+exports.clearProfiles = functions.runWith({
+  memory: "4GB",
+  timeoutSeconds: 540,
+}).https.onRequest(async (req, res) => {
   const querySnapshot = await firestore.collection("profiles").get();
   for (const document of querySnapshot.docs) {
     await firestore.collection("profiles").doc(document.id).update({
@@ -88,8 +91,8 @@ exports.testPushNotifications = functions.https.onRequest(async (req, res) => {
 
 exports.createLike = functions.https.onRequest(async (req, res) => {
   const like: Like = {
-    likedProfileID: "bxLjcxVZzlexU040cKCnh5xROLq1",
-    profileID: "y3XQv3a1xcNZlAStearXWmxXhyK2",
+    likedProfileID: "tI6XNS1oLtWt4WjwkdiliJos3f72",
+    profileID: "H3armOl5GWMLGRcA2ReV",
     creationDate: Date.now(),
   };
 
@@ -98,8 +101,56 @@ exports.createLike = functions.https.onRequest(async (req, res) => {
   res.sendStatus(200);
 });
 
+exports.createMatch = functions.https.onRequest(async (req, res) => {
+  const like: Like = {
+    likedProfileID: "tI6XNS1oLtWt4WjwkdiliJos3f72",
+    profileID: "H3armOl5GWMLGRcA2ReV",
+    creationDate: Date.now(),
+  };
+
+  await firestore.collection("likes").add(like);
+
+  const like2: Like = {
+    likedProfileID: "H3armOl5GWMLGRcA2ReV",
+    profileID: "tI6XNS1oLtWt4WjwkdiliJos3f72",
+    creationDate: Date.now(),
+  };
+
+  await firestore.collection("likes").add(like2);
+
+
+  res.sendStatus(200);
+});
+
+exports.ttttttt = functions.https.onRequest(async (req, res) => {
+  const pm = await dbUtils.getPossibleMatch("tI7SdJWi6e8W9BHRCSZZ");
+
+  const completedUID = pm.uid;
+  const matchID = pm.matchID;
+
+  // Fond the Chat Message with "players" as type and duettID is the matchID
+  const snapshot = await firestore.collection("messages").where("duettID", "==", matchID).get();
+  for (const document of snapshot.docs) {
+    const chatMessage = Object.assign({id: document.id}, document.data() as ChatMessage);
+    if (chatMessage.type == "players") {
+      const players = chatMessage.players!;
+      for (const player of players) {
+        console.log("Completed UID:"+pm.uid +" and "+player.uid);
+        if (player.uid == completedUID) {
+          player.completed = true;
+          console.log("YES");
+        }
+      }
+    }
+
+    await firestore.collection("messages").doc(document.id).update({players: chatMessage.players});
+  }
+
+  res.sendStatus(200);
+});
+
 exports.everyoneLikesYou = functions.https.onRequest(async (req, res) => {
-  const profileID = "wRpwOZ7Ju9aB2KHiQsRX5rQQuFA2";
+  const profileID = "M0PRW3sb1tQljjyH878sFlDmSC63";
   const profile = await dbUtils.getProfile(profileID);
   const lookFor = profile.gender == "Man" ? "Woman" : "Man";
   const query = await firestore.collection("profiles").where("gender", "==", lookFor).get();
