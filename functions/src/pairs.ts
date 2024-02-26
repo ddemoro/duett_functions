@@ -1,5 +1,5 @@
 import * as functions from "firebase-functions";
-import {DuettChat, Pair, Player} from "./types";
+import {ChatMessage, Notification, Pair} from "./types";
 import pushNotifications from "./push_notifications";
 import dbUtils from "./utils/db_utils";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -14,8 +14,10 @@ exports.pairAdded = functions.firestore.document("pairs/{uid}").onCreate(async (
   const uid2 = pair.matchMakerIds[1];
 
   // Notify the couple
-  await pushNotifications.sendMatchCreatedNotification(uid1, "We have a Pair!", pair.players[0].firstName+" and "+pair.players[1].firstName+" seem to like each other. Let's review.", pair.matchID);
-  await pushNotifications.sendMatchCreatedNotification(uid2, "We have a Pair!", pair.players[0].firstName+" and "+pair.players[1].firstName+" seem to like each other. Let's review.", pair.matchID);
+  // eslint-disable-next-line max-len
+  await pushNotifications.sendMatchCreatedNotification(uid1, "We have a Pair!", pair.players[0].firstName + " and " + pair.players[1].firstName + " seem to like each other. Let's review.", pair.matchID);
+  // eslint-disable-next-line max-len
+  await pushNotifications.sendMatchCreatedNotification(uid2, "We have a Pair!", pair.players[0].firstName + " and " + pair.players[1].firstName + " seem to like each other. Let's review.", pair.matchID);
 
   return Promise.resolve();
 });
@@ -43,61 +45,92 @@ exports.pairUpdated = functions.firestore.document("pairs/{uid}").onUpdate(async
       duettChat = await dbUtils.getDuett(newPair.matchID);
     } catch (e) {
       console.log(e);
+      return Promise.resolve();
     }
 
-    if (!duettChat) {
-      // Create Pair for matchmakers
-      const profile1 = await dbUtils.getProfile(newPair.matchMakerIds[0]);
-      const profile2 = await dbUtils.getProfile(newPair.matchMakerIds[1]);
-      const player1: Player = {
-        avatarURL: profile1.media[0].url,
-        uid: profile1.id,
-        firstName: profile1.firstName,
-        matchMakerID: "",
-        matchMakerName: "",
-        matchMakerAvatarURL: "",
-      };
 
-      const player2: Player = {
-        avatarURL: profile2.media[0].url,
-        uid: profile2.id,
-        firstName: profile2.firstName,
-        matchMakerID: "",
-        matchMakerName: "",
-        matchMakerAvatarURL: "",
-      };
+    // Update
+    duettChat.members.push(newPair.players[0].uid, newPair.players[1].uid);
+    duettChat.pairs.push(newPair);
+    await firestore.collection("duetts").doc(newPair.matchID).update(duettChat);
 
-      const matchMakers: Pair = {
-        matchID: newPair.matchID,
-        players: [player1, player2],
-        playerIds: [player1.uid, player2.uid],
-        matchMakerIds: [],
-        rejected: [],
-        approved: [],
-        creationDate: Date(),
-      };
-
-
-      const duettChat: DuettChat = {
-        matchID: newPair.matchID,
-        creationDate: FieldValue.serverTimestamp(),
-        matchMakers: newPair.matchMakerIds,
-        pairs: [matchMakers, newPair],
-        members: [newPair.matchMakerIds[0], newPair.matchMakerIds[1], newPair.players[0].uid, newPair.players[1].uid],
-      };
-
-      await firestore.collection("duetts").doc(newPair.matchID).set(duettChat);
-    } else {
-      // Update
-      duettChat.members.push(newPair.players[0].uid, newPair.players[1].uid);
-      duettChat.pairs.push(newPair);
-      await firestore.collection("duetts").doc(newPair.matchID).update(duettChat);
+    // Clear all messages in the chat
+    const messagesQuery = await firestore.collection("messages").where("duettID", "==", duettChat.id).get();
+    for (const document of messagesQuery.docs) {
+      await firestore.collection("messages").doc(document.id).delete();
     }
+
+    // Notify the Match Makers
+    const profile1 = await dbUtils.getProfile(duettChat.matchMakers[0]);
+    const profile2 = await dbUtils.getProfile(duettChat.matchMakers[1]);
+    await pushNotifications.sendPushNotification(profile1.id, "It's a Duett!", profile2.firstName + " agreed with your friend match. You've all been placed in a group chat.");
+    await pushNotifications.sendPushNotification(profile2.id, "It's a Duett!", profile1.firstName + " agreed with your friend match. You've all been placed in a group chat.");
+
+    // Notify the New Members
+    const avatarURLs = [];
+
+    avatarURLs.push(newPair.players[0].avatarURL);
+    avatarURLs.push(newPair.players[1].avatarURL);
+
+
+    // Not notify the friends
+    for (const profileID of duettChat.members) {
+      // Only notify the pairs
+      if (!duettChat.matchMakers.includes(profileID)) {
+        await pushNotifications.sendPushNotification(profile1.id, "It's a Duett!", "Looks like " + profile1.firstName + " and " + profile2.firstName + " feel you would be perfect for a Duett");
+        // Create Notification
+        const notification: Notification = {
+          creationDate: FieldValue.serverTimestamp(),
+          duettID: duettChat.id,
+          text: profile1.firstName + " and " + profile2.firstName + " agreed you would be perfect for a Duett. You've all been placed in a group chat.",
+          images: avatarURLs,
+          uid: profileID,
+          read: false,
+        };
+        await firestore.collection("notifications").add(notification);
+      }
+    }
+
+    // Create Notification
+    const notificationOne: Notification = {
+      creationDate: FieldValue.serverTimestamp(),
+      duettID: duettChat.id,
+      text: profile1.firstName + " agreed with your friend match. You've all been placed in a group chat.",
+      images: [profile1.media[0].url],
+      uid: profile2.id,
+      read: false,
+    };
+
+    const notificationTwo: Notification = {
+      creationDate: FieldValue.serverTimestamp(),
+      duettID: duettChat.id,
+      text: profile2.firstName + " agreed with your friend match. You've all been placed in a group chat.",
+      images: [profile2.media[0].url],
+      uid: profile1.id,
+      read: false,
+    };
+    await firestore.collection("notifications").add(notificationOne);
+    await firestore.collection("notifications").add(notificationTwo);
+
 
     const match = await dbUtils.getMatch(newPair.matchID);
     const approvedPairs = match.approvedPairs ?? [];
     approvedPairs.push(newPair.id);
     await firestore.collection("matches").doc(newPair.matchID).update({approvedPairs: approvedPairs});
+
+
+    // Send welcome message
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const welcomeMessage: ChatMessage = {
+      creationDate: FieldValue.serverTimestamp(),
+      text: "Congrats on your Duett! 🎉 It's time for all of you to plan a date!",
+      duettID: duettChat.id,
+      read: false,
+      type: "info",
+    };
+    await firestore.collection("messages").add(welcomeMessage);
+    await firestore.collection("duetts").doc(duettChat.id).update({enabled: true});
   }
   return Promise.resolve();
 });

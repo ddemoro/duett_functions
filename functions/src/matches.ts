@@ -30,13 +30,13 @@ exports.matchAdded = functions.firestore.document("matches/{uid}").onCreate(asyn
   const uid1 = match.matched[0];
   const uid2 = match.matched[1];
 
-  await pushNotifications.sendMatchCreatedNotification(uid1, "You have a Match!", "You have matched up with " + match.profiles[1].firstName + ". Let's get a Duett going.", match.id);
-  await pushNotifications.sendMatchCreatedNotification(uid2, "You have a Match!", "You have matched up with " + match.profiles[0].firstName + ". Let's get a Duett going.", match.id);
+  await pushNotifications.sendDuettMessageNotification(uid1, "You have a Match!", "You have matched up with " + match.profiles[1].firstName + ". Let's get a Duett going.", match.id);
+  await pushNotifications.sendDuettMessageNotification(uid2, "You have a Match!", "You have matched up with " + match.profiles[0].firstName + ". Let's get a Duett going.", match.id);
 
 
   const notification: Notification = {
     creationDate: FieldValue.serverTimestamp(),
-    matchID: match.id,
+    duettID: match.id,
     text: match.profiles[1].firstName + " and you have been matched up.",
     images: [match.profiles[0].avatarURL, match.profiles[1].avatarURL],
     uid: uid1,
@@ -45,7 +45,7 @@ exports.matchAdded = functions.firestore.document("matches/{uid}").onCreate(asyn
 
   const notification2: Notification = {
     creationDate: FieldValue.serverTimestamp(),
-    matchID: match.id,
+    duettID: match.id,
     text: "Matched Alert! You and " + match.profiles[0].firstName + " have been matched up.",
     images: [match.profiles[1].avatarURL, match.profiles[0].avatarURL],
     uid: uid2,
@@ -91,6 +91,7 @@ exports.matchAdded = functions.firestore.document("matches/{uid}").onCreate(asyn
     matchMakers: [uid1, uid2],
     pairs: [matchMakers],
     members: [uid1, uid2],
+    enabled: false,
   };
 
   await firestore.collection("duetts").doc(match.id).set(duettChat);

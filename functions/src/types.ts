@@ -159,6 +159,7 @@ export interface DuettChat {
     pairs: Pair[];
     matchMakers: string[];
     creationDate?: any;
+    enabled:boolean;
 }
 
 export interface Nudge {
