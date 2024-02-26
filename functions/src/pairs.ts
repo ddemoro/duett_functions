@@ -54,9 +54,13 @@ exports.pairUpdated = functions.firestore.document("pairs/{uid}").onUpdate(async
     duettChat.pairs.push(newPair);
     await firestore.collection("duetts").doc(newPair.matchID).update(duettChat);
 
+    console.info("Added Pair to Duett");
+    console.info("Now get all messages using DuettID: "+duettChat.id);
+
     // Clear all messages in the chat
     const messagesQuery = await firestore.collection("messages").where("duettID", "==", duettChat.id).get();
     for (const document of messagesQuery.docs) {
+      console.info("Found message");
       await firestore.collection("messages").doc(document.id).delete();
     }
 

@@ -50,17 +50,13 @@ async function getPossibleMatch(possibleMatchID: string) {
 }
 
 // eslint-disable-next-line require-jsdoc
-async function getDuett(matchID: string) {
-  const querySnapshot = await firestore.collection("duetts").where("matchID", "==", matchID).limit(1).get();
-  if (!querySnapshot.empty) {
-    const document = querySnapshot.docs[0].data();
-    if (!document) {
-      throw new Error("Match not found: " + matchID);
-    } else {
-      return Object.assign({id: document.id}, document as DuettChat);
-    }
+async function getDuett(duettID: string) {
+  const snapshot = await firestore.collection("duetts").doc(duettID).get();
+  const document = snapshot.data();
+  if (!document) {
+    throw new Error("Duett not found: " + duettID);
   } else {
-    throw new Error("Duett not found from Match: " + matchID);
+    return Object.assign({id: duettID}, document as DuettChat);
   }
 }
 
