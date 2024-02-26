@@ -150,7 +150,7 @@ exports.ttttttt = functions.https.onRequest(async (req, res) => {
 });
 
 exports.everyoneLikesYou = functions.https.onRequest(async (req, res) => {
-  const profileID = "M0PRW3sb1tQljjyH878sFlDmSC63";
+  const profileID = "tI6XNS1oLtWt4WjwkdiliJos3f72";
   const profile = await dbUtils.getProfile(profileID);
   const lookFor = profile.gender == "Man" ? "Woman" : "Man";
   const query = await firestore.collection("profiles").where("gender", "==", lookFor).get();

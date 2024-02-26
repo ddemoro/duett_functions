@@ -30,10 +30,6 @@ exports.matchAdded = functions.firestore.document("matches/{uid}").onCreate(asyn
   const uid1 = match.matched[0];
   const uid2 = match.matched[1];
 
-  await pushNotifications.sendDuettMessageNotification(uid1, "You have a Match!", "You have matched up with " + match.profiles[1].firstName + ". Let's get a Duett going.", match.id);
-  await pushNotifications.sendDuettMessageNotification(uid2, "You have a Match!", "You have matched up with " + match.profiles[0].firstName + ". Let's get a Duett going.", match.id);
-
-
   const notification: Notification = {
     creationDate: FieldValue.serverTimestamp(),
     duettID: match.id,
@@ -95,6 +91,8 @@ exports.matchAdded = functions.firestore.document("matches/{uid}").onCreate(asyn
   };
 
   await firestore.collection("duetts").doc(match.id).set(duettChat);
+  await pushNotifications.sendDuettMessageNotification(uid1, "You have a Match!", "You have matched up with " + match.profiles[1].firstName + ". Let's get a Duett going.", match.id);
+  await pushNotifications.sendDuettMessageNotification(uid2, "You have a Match!", "You have matched up with " + match.profiles[0].firstName + ". Let's get a Duett going.", match.id);
 
   return Promise.resolve();
 });
