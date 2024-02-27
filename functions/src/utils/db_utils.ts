@@ -100,6 +100,18 @@ async function getPossibleMatches(matchID: string) {
 }
 
 // eslint-disable-next-line require-jsdoc
+async function getPossibleMatchFromUID(matchID: string, uid: string) {
+  const querySnapshot = await firestore.collection("possibleMatches").where("matchID", "==", matchID).where("uid", "==", uid).get();
+  const matches: PossibleMatch[] = [];
+  for (const document of querySnapshot.docs) {
+    const match = Object.assign({id: document.id}, document.data() as PossibleMatch);
+    matches.push(match);
+  }
+
+  return matches[0];
+}
+
+// eslint-disable-next-line require-jsdoc
 async function getPairs(matchID: string) {
   const querySnapshot = await firestore.collection("pairs").where("matchID", "==", matchID).get();
   const pairs: Pair[] = [];
@@ -132,7 +144,9 @@ const dbUtils = {
   getPossibleMatches,
   getPairs,
   getPair,
-  getFriend, getPossibleMatch,
+  getFriend,
+  getPossibleMatch,
+  getPossibleMatchFromUID,
 };
 
 export default dbUtils;

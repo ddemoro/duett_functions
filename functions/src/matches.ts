@@ -501,11 +501,11 @@ exports.possibleMatchAdded = functions.firestore.document("possibleMatches/{uid}
     theirFriendsName = people[1].firstName;
   }
 
-  const title = "Duett Possible Match Alert";
+  const title = "Possible Match";
   const message = yourFriendsName + " matched with " + theirFriendsName + "! Check out which one of their friends you may like.";
 
 
-  await pushNotifications.notifyTargets(uid, title, message, pm.id);
+  await pushNotifications.sendPossibleMatchNotification(uid, title, message, pm.id);
 
   return Promise.resolve();
 });

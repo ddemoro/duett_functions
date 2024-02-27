@@ -244,7 +244,7 @@ async function sendPushNotification(uid: string, title: string, body: string) {
 }
 
 // eslint-disable-next-line require-jsdoc
-async function notifyTargets(uid: string, title: string, body: string, possibleMatchID: string) {
+async function sendPossibleMatchNotification(uid: string, title: string, body: string, possibleMatchID: string) {
   const profileRef = await firestore.collection("profiles").doc(uid).get();
   const profile = profileRef.data();
   if (profile === null || profile === undefined) {
@@ -389,7 +389,7 @@ const pushNotifications = {
   sendPushNotification,
   sendPushNotificationWithImage,
   sendMatchCreatedNotification,
-  notifyTargets,
+  sendPossibleMatchNotification,
   notifyPartner,
   sendDuettMessageNotification,
   sendLikeNotification,

@@ -111,8 +111,12 @@ exports.nudgeCreated = functions.firestore.document("nudges/{uid}").onCreate(asy
     message = "Hi " + toProfile.firstName + ", see if you like any of my friends. -" + fromProfile.firstName;
   }
 
+  // Find the possibleMatch
+  const possibleMatch = await dbUtils.getPossibleMatchFromUID(duettID, toUID);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  await pushNotifications.sendPossibleMatchNotification(toUID, "Join our Duett", message, possibleMatch.id!);
 
-  await pushNotifications.sendDuettMessageNotification(toUID, "Join our Duett", message, duettID);
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/ban-ts-comment
   // @ts-ignore
   const infoMessage: ChatMessage = {
