@@ -95,21 +95,7 @@ exports.nudgeCreated = functions.firestore.document("nudges/{uid}").onCreate(asy
   const toProfile = await dbUtils.getProfile(toUID);
 
 
-  // Check if they are friends
-  let areFriends = false;
-  const friends = await dbUtils.getFriends(fromUID, true);
-  for (const friend of friends) {
-    if (friend.friendUID == toUID) {
-      areFriends = true;
-    }
-  }
-
-  let message;
-  if (areFriends) {
-    message = "Hey " + toProfile.firstName + ", it's " + fromProfile.firstName + "! See if my match has any friends you might like.";
-  } else {
-    message = "Hi " + toProfile.firstName + ", see if you like any of my friends. -" + fromProfile.firstName;
-  }
+  const message = "Hey " + toProfile.firstName + ", it's " + fromProfile.firstName + "! See if my match has any friends you might like.";
 
   // Find the possibleMatch
   const possibleMatch = await dbUtils.getPossibleMatchFromUID(duettID, toUID);
