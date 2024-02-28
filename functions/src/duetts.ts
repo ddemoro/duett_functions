@@ -19,7 +19,7 @@ exports.duettAdded = functions.firestore.document("duetts/{uid}").onCreate(async
   const welcomeMessage: ChatMessage = {
     creationDate: FieldValue.serverTimestamp(),
     // eslint-disable-next-line max-len
-    text: "Congrats on your match! 🎉 Now let's keep the fun going – your friends have been invited to join the matching and unlock the full Duett experience to start planning together.\n\nLet's take a look at the friends...",
+    text: "Congrats on your match! 🎉 Now let's keep the fun going – your friends have been invited to join the matching and unlock the full Duett experience to start planning together.",
     duettID: duett.id,
     read: false,
     type: "info",
