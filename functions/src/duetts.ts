@@ -12,12 +12,14 @@ const FieldValue = require("firebase-admin").firestore.FieldValue;
 exports.duettAdded = functions.firestore.document("duetts/{uid}").onCreate(async (snap, context) => {
   // Notify MatchMakers
   const duett = Object.assign({id: snap.id}, snap.data() as DuettChat);
+  const today = new Date();
+  const twoYearsAgo = new Date(today.getFullYear() - 2, today.getMonth(), today.getDate());
 
   // Send welcome message
   // eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/ban-ts-comment
   // @ts-ignore
   const welcomeMessage: ChatMessage = {
-    creationDate: FieldValue.serverTimestamp(),
+    creationDate: twoYearsAgo,
     // eslint-disable-next-line max-len
     text: "Congrats on your match! 🎉 Now let's keep the fun going – your friends have been invited to join the matching and unlock the full Duett experience to start planning together.",
     duettID: duett.id,
@@ -53,10 +55,12 @@ exports.duettAdded = functions.firestore.document("duetts/{uid}").onCreate(async
     players.push(player);
   }
 
+  const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/ban-ts-comment
   // @ts-ignore
   const playersMessage: ChatMessage = {
-    creationDate: FieldValue.serverTimestamp(),
+    creationDate: oneYearAgo,
     duettID: duett.id,
     read: false,
     players: players,
@@ -103,17 +107,11 @@ exports.nudgeCreated = functions.firestore.document("nudges/{uid}").onCreate(asy
   await pushNotifications.sendPossibleMatchNotification(toUID, "Join our Duett", message, possibleMatch.id!);
 
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const infoMessage: ChatMessage = {
-    creationDate: FieldValue.serverTimestamp(),
-    duettID: duettID,
-    read: false,
-    text: fromProfile.firstName+" sent a nudge to "+toProfile.firstName,
-    type: "info",
-  };
+  const match = await dbUtils.getMatch(duettID);
+  const uid1 = match.matched[0];
+  const uid2 = match.matched[1];
+  await pushNotifications.sendDuettMessageNotification(uid1 == fromUID ? uid2 : uid1, "Nudge Sent", fromProfile.firstName + " sent a nudge to their friend " + toProfile.firstName, duettID);
 
-  await firestore.collection("messages").add(infoMessage);
 
   await snap.ref.update({
     creationDate: FieldValue.serverTimestamp(),
