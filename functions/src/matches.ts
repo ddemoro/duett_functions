@@ -227,13 +227,21 @@ exports.possibleMatchUpdated = functions.firestore.document("possibleMatches/{ui
             const profile2 = match.profiles[1];
 
             if (profile1.profileID == player.matchMakerID) {
-              // Notify about their friend
+              // Notify about their friend. Profile is the MatchMaker and Player is their friend
               const message = "Your friend "+player.firstName+" has made their choice(s) of "+profile2.firstName+" friends";
               await pushNotifications.sendDuettMessageNotification(profile1.profileID, "Selections Made", message, matchID);
+
+              // Notify about their matches friends
+              const message2 = profile1.firstName+"'s friend "+player.firstName+" has made their choice(s) of your friends.";
+              await pushNotifications.sendDuettMessageNotification(profile2.profileID, "Selections Made", message2, matchID);
             } else {
-              // Notify about their friend
-              const message = profile1.firstName+"'s friend "+player.firstName+" has made their choice(s) of your friends.";
-              await pushNotifications.sendDuettMessageNotification(profile1.profileID, "Selections Made", message, matchID);
+              // Profile2 is the matchmaker and Player is their friend
+              const message = "Your friend "+player.firstName+" has made their choice(s) of "+profile1.firstName+" friends";
+              await pushNotifications.sendDuettMessageNotification(profile2.profileID, "Selections Made", message, matchID);
+
+              // Notify about their matches friends
+              const message2 = profile2.firstName+"'s friend "+player.firstName+" has made their choice(s) of your friends.";
+              await pushNotifications.sendDuettMessageNotification(profile1.profileID, "Selections Made", message2, matchID);
             }
           }
         }
