@@ -87,7 +87,7 @@ exports.matchAdded = functions.firestore.document("matches/{uid}").onCreate(asyn
     matchMakers: [uid1, uid2],
     pairs: [matchMakers],
     members: [uid1, uid2],
-    enabled: true,
+    enabled: false,
   };
 
   await firestore.collection("duetts").doc(match.id).set(duettChat);

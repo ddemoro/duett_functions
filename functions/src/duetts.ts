@@ -12,14 +12,18 @@ const FieldValue = require("firebase-admin").firestore.FieldValue;
 exports.duettAdded = functions.firestore.document("duetts/{uid}").onCreate(async (snap, context) => {
   // Notify MatchMakers
   const duett = Object.assign({id: snap.id}, snap.data() as DuettChat);
-  const today = new Date();
-  const twoYearsAgo = new Date(today.getFullYear() - 2, today.getMonth(), today.getDate());
+  // Get the current timestamp in milliseconds
+  const now = Date.now();
+
+  // Calculate the timestamp two years ago
+  const oneYearAgoMS = now - 2 * 365 * 24 * 60 * 60 * 1000;
+
 
   // Send welcome message
   // eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/ban-ts-comment
   // @ts-ignore
   const welcomeMessage: ChatMessage = {
-    creationDate: twoYearsAgo,
+    creationDate: oneYearAgoMS,
     // eslint-disable-next-line max-len
     text: "Congrats on your match! 🎉 Now let's keep the fun going – your friends have been invited to join the matching and unlock the full Duett experience to start planning together.",
     duettID: duett.id,
@@ -54,13 +58,10 @@ exports.duettAdded = functions.firestore.document("duetts/{uid}").onCreate(async
     };
     players.push(player);
   }
-
-  const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
-
   // eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/ban-ts-comment
   // @ts-ignore
   const playersMessage: ChatMessage = {
-    creationDate: oneYearAgo,
+    creationDate: now - 1 * 365 * 24 * 60 * 60 * 1000,
     duettID: duett.id,
     read: false,
     players: players,
