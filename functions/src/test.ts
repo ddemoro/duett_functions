@@ -78,6 +78,11 @@ exports.clearProfiles = functions.runWith({
     await document.ref.delete();
   }
 
+  const nudgesSnapshot = await firestore.collection("nudges").get();
+  for (const document of nudgesSnapshot.docs) {
+    await document.ref.delete();
+  }
+
 
   res.sendStatus(200);
 });

@@ -12,8 +12,8 @@ const FieldValue = require("firebase-admin").firestore.FieldValue;
 
 
 exports.profileAdded = functions.firestore.document("profiles/{uid}").onCreate(async (snap, context) => {
-  const profile = Object.assign({id: snap.id}, snap.data() as Profile);
-  console.log(profile);
+  const profiles = await firestore.collection("profiles").get();
+  const size = profiles.size + 250;
 
   // Save Profile
   await snap.ref.update({
@@ -21,6 +21,7 @@ exports.profileAdded = functions.firestore.document("profiles/{uid}").onCreate(a
     configured: false,
     friends: false,
     likedBy: [],
+    lineNumber: size,
   });
 
 
@@ -240,3 +241,15 @@ function cleanPhoneNumber(phoneNumber: string) {
 
   return phoneNumber;
 }
+
+exports.update = functions.https.onRequest(async (req, res) => {
+  const querySnapshot = await firestore.collection("profiles").orderBy("creationDate").get();
+  let counter = 250;
+  for (const document of querySnapshot.docs) {
+    const profile = Object.assign({id: document.id}, document.data() as Profile);
+    await firestore.collection("profiles").doc(profile.id).update({lineNumber: counter});
+    counter++;
+  }
+
+  res.sendStatus(200);
+});

@@ -71,7 +71,8 @@ export interface Profile {
     qualities: string;
     memorableMoments: string;
     inviteCode: string;
-    likedBy: string[]
+    likedBy: string[],
+    c:number;
 }
 
 export interface Media {
