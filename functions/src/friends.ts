@@ -79,7 +79,7 @@ exports.friendAdded = functions.firestore.document("friends/{uid}").onCreate(asy
     lineNumber = lineNumber - 5;
   }
 
-  await firestore.collection("profiles").doc(inviter.id).update({lineNumber: lineNumber});
+  await firestore.collection("profiles").doc(inviter.id).update({lineNumber: lineNumber, friends: true});
 
 
   // Update Friend with creation Date
