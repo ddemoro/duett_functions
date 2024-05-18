@@ -42,6 +42,7 @@ exports.friendAdded = functions.firestore.document("friends/{uid}").onCreate(asy
       if (friendPhoneNumber === phone) {
         friendUID = profile.id;
         avatarURL = profile.media[0].url;
+        console.log("Found Friend UID: " + friendUID);
 
         if (friendUID && !friend.type) {
           // Notify the Friend
@@ -53,18 +54,20 @@ exports.friendAdded = functions.firestore.document("friends/{uid}").onCreate(asy
 
   // Check to see if their friend invited them. If so, auto-accept
   let accepted = false;
-  const friendSnapshot = await firestore.collection("friends").where("uid", "==", friendUID).where("friendUID", "==", friend.uid).get();
-  for (const document of friendSnapshot.docs) {
-    const otherFriend = Object.assign({id: document.id}, document.data() as Friend);
-    if (otherFriend) {
-      accepted = true;
+  if (friendUID) {
+    const friendSnapshot = await firestore.collection("friends").where("uid", "==", friendUID).where("friendUID", "==", friend.uid).get();
+    for (const document of friendSnapshot.docs) {
+      const otherFriend = Object.assign({id: document.id}, document.data() as Friend);
+      if (otherFriend) {
+        accepted = true;
 
-      const profileOfFriend = await dbUtils.getProfile(friend.uid);
-      await firestore.collection("friends").doc(otherFriend.id).update({
-        accepted: true,
-        avatarURL: profileOfFriend.media[0].url,
-        friendUID: profileOfFriend.id,
-      });
+        const profileOfFriend = await dbUtils.getProfile(friend.uid);
+        await firestore.collection("friends").doc(otherFriend.id).update({
+          accepted: true,
+          avatarURL: profileOfFriend.media[0].url,
+          friendUID: profileOfFriend.id,
+        });
+      }
     }
   }
 
