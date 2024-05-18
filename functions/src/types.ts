@@ -73,6 +73,7 @@ export interface Profile {
     inviteCode: string;
     likedBy: string[],
     c:number;
+    lineNumber:number;
 }
 
 export interface Media {

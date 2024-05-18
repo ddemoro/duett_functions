@@ -68,6 +68,16 @@ exports.friendAdded = functions.firestore.document("friends/{uid}").onCreate(asy
     }
   }
 
+  // Update their line number in their profile
+  let lineNumber = inviter.lineNumber;
+  if (friend.isStarter) {
+    lineNumber = lineNumber - 10;
+  } else {
+    lineNumber = lineNumber - 5;
+  }
+
+  await firestore.collection("profiles").doc(inviter.id).update({lineNumber: lineNumber});
+
 
   // Update Friend with creation Date
   await snap.ref.update({
@@ -137,6 +147,12 @@ exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(a
       // Update Profile that they have at least one friend
       await firestore.collection("profiles").doc(f.uid).update({friends: true});
     }
+
+    // Update their line number in their profile
+
+    let lineNumber = ownerProfile.lineNumber;
+    lineNumber += 5;
+    await firestore.collection("profiles").doc(ownerProfile.id).update({lineNumber: lineNumber});
   }
 
   return Promise.resolve();
@@ -161,6 +177,17 @@ exports.friendDeleted = functions.firestore.document("friends/{uid}").onDelete(a
   // Update Profile
   await firestore.collection("profiles").doc(uid).update({friends: querySize > 0});
 
+
+  // Update their line number in their profile
+  const profile = await dbUtils.getProfile(uid);
+  let lineNumber = profile.lineNumber;
+  if (friend.isStarter) {
+    lineNumber = lineNumber + 10;
+  } else {
+    lineNumber = lineNumber + 5;
+  }
+
+  await firestore.collection("profiles").doc(profile.id).update({lineNumber: lineNumber});
 
   return Promise.resolve();
 });
