@@ -525,6 +525,8 @@ exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (
   const like = Object.assign({id: snap.id}, snap.data() as Like);
   const profileOne = await dbUtils.getProfile(like.profileID);
   const profileTwo = await dbUtils.getProfile(like.likedProfileID);
+  profileOne.likedBy = profileOne.likedBy ?? [];
+  profileTwo.likedBy = profileTwo.likedBy ?? [];
 
   // Update Like
   await snap.ref.update({

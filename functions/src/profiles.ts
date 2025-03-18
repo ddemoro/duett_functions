@@ -10,6 +10,15 @@ const firestore = admin.firestore();
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const FieldValue = require("firebase-admin").firestore.FieldValue;
 
+exports.reset = functions.https.onRequest(async (req, res) => {
+  const profiles = await firestore.collection("profiles").get();
+  for (const document of profiles.docs) {
+    const profile = Object.assign({id: document.id}, document.data() as Profile);
+    await firestore.collection("profiles").doc(profile.id).update({configured: false});
+  }
+  res.sendStatus(200);
+});
+
 
 exports.profileAdded = functions.firestore.document("profiles/{uid}").onCreate(async (snap, context) => {
   const profiles = await firestore.collection("profiles").get();
@@ -81,10 +90,10 @@ exports.sendPushMessage = functions.https.onRequest(async (req, res) => {
     const profile = Object.assign({id: document.id}, document.data() as Profile);
     if (profile.gender == "Woman") {
       // eslint-disable-next-line max-len
-      await pushNotifications.sendPushNotification(profile.id, "It's all about Friends!", "Don’t forget that the best Duett experience happens with your friends. So grab your girls and make sure that they are signed up! ");
+      await pushNotifications.sendPushNotification(profile.id, "It's all about Friends!", "Don't forget that the best Duett experience happens with your friends. So grab your girls and make sure that they are signed up! ");
     } else {
       // eslint-disable-next-line max-len
-      await pushNotifications.sendPushNotification(profile.id, "It's all about Friends!", "Don’t forget that the best Duett experience happens with your friends. So grab your buddies and make sure that they are signed up! ");
+      await pushNotifications.sendPushNotification(profile.id, "It's all about Friends!", "Don't forget that the best Duett experience happens with your friends. So grab your buddies and make sure that they are signed up! ");
     }
   }
   res.sendStatus(200);
@@ -100,19 +109,15 @@ exports.addSuggestions = functions.https.onRequest(async (req, res) => {
 });
 
 exports.test = functions.https.onRequest(async (req, res) => {
-  const profile = await firestore.collection("profiles").doc("0chklRlWnWhlSOR6Z1GrsPAIzDA2").get();
-  const p = Object.assign({id: profile.id}, profile.data() as Profile);
-  const birthdayDate = p.birthday.toDate();
+  const profileDoc = await firestore.collection("profiles").doc("tI6XNS1oLtWt4WjwkdiliJos3f72").get();
+  const profileData = Object.assign({id: profileDoc.id}, profileDoc.data() as Profile);
+  console.log("TEST");
+  const birthdayDate = profileData.birthday.toDate();
   const today = new Date();
-  let age = today.getFullYear() - birthdayDate.getFullYear();
-  const monthDiff = today.getMonth() - birthdayDate.getMonth();
+  const age = today.getFullYear() - birthdayDate.getFullYear() - ((today.getMonth() < birthdayDate.getMonth() || (today.getMonth() === birthdayDate.getMonth() && today.getDate() < birthdayDate.getDate())) ? 1 : 0);
+  console.log(`Age: ${age}`); 
 
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthdayDate.getDate())) {
-    age--;
-  }
-  console.log("Age: " + age);
-
-  await pushNotifications.sendPushNotification(profile.id, "Duett Possible Match Alert", "Pete matched with Janice! Check out which one of her friends you may like.");
+  await pushNotifications.sendPushNotification(profileDoc.id, "Duett Possible Match Alert", "Pete matched with Janice! Check out which one of her friends you may like.");
 
   res.sendStatus(200);
 });
@@ -251,5 +256,86 @@ exports.update = functions.https.onRequest(async (req, res) => {
     counter++;
   }
 
+  res.sendStatus(200); 
+});
+
+exports.makeConfigured = functions.https.onRequest(async (req, res) => {
+  const querySnapshot = await firestore.collection("profiles").orderBy("creationDate").get();
+ 
+  for (const document of querySnapshot.docs) {
+    const profile = Object.assign({id: document.id}, document.data() as Profile);
+    if(profile.friends) {
+      await firestore.collection("profiles").doc(profile.id).update({configured:true});
+    }
+  }
+
   res.sendStatus(200);
 });
+
+exports.exportProfilesToJson = functions.https.onRequest(async (req, res) => {
+  try {
+    // Get all profiles from Firestore
+    const querySnapshot = await firestore.collection("profiles").get();
+    const profiles = querySnapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
+      return Object.assign({id: doc.id}, doc.data() as Profile);
+    });
+
+    // Generate summary statistics
+    const totalProfiles = profiles.length;
+    
+    // Location summary
+    const locationSummary: Record<string, number> = {};
+    profiles.forEach((profile: Profile) => {
+      if (profile.living && profile.living.city) {
+        const location = `${profile.living.city}, ${profile.living.state || ''}`.trim();
+        locationSummary[location] = (locationSummary[location] || 0) + 1;
+      }
+    });
+
+    // Gender summary
+    const genderSummary: Record<string, number> = {};
+    profiles.forEach((profile: Profile) => {
+      if (profile.gender) {
+        genderSummary[profile.gender] = (genderSummary[profile.gender] || 0) + 1;
+      }
+    });
+
+    // Dating preference summary
+    const datingPreferenceSummary: Record<string, number> = {};
+    profiles.forEach((profile: Profile) => {
+      if (profile.datingType) {
+        datingPreferenceSummary[profile.datingType] = (datingPreferenceSummary[profile.datingType] || 0) + 1;
+      }
+    });
+
+    // Create the result object with profiles and summary
+    const result = {
+      profiles: profiles,
+      summary: {
+        totalProfiles,
+        locationSummary: Object.entries(locationSummary)
+          .sort((a, b) => b[1] - a[1])
+          .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {}),
+        genderSummary,
+        datingPreferenceSummary
+      }
+    };
+
+    // Create a JSON string from the result object
+    const jsonData = JSON.stringify(result, null, 2);
+
+    // Set up the response headers for file download
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', 'attachment; filename=profiles.json');
+    
+    // Send the JSON data as the response
+    res.send(jsonData);
+    
+    console.log(`Successfully exported ${profiles.length} profiles to JSON with summary statistics`);
+  } catch (error: unknown) {
+    console.error("Error exporting profiles to JSON:", error);
+    res.status(500).send(`Error exporting profiles: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+});
+
+

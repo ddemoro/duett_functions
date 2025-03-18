@@ -108,8 +108,8 @@ exports.createLike = functions.https.onRequest(async (req, res) => {
 
 exports.createMatch = functions.https.onRequest(async (req, res) => {
   const like: Like = {
-    likedProfileID: "tI6XNS1oLtWt4WjwkdiliJos3f72",
-    profileID: "H3armOl5GWMLGRcA2ReV",
+    likedProfileID: "bxLjcxVZzlexU040cKCnh5xROLq1",
+    profileID: "H3armOl5GWMLGRcA2ReV", 
     creationDate: Date.now(),
   };
 
@@ -117,7 +117,7 @@ exports.createMatch = functions.https.onRequest(async (req, res) => {
 
   const like2: Like = {
     likedProfileID: "H3armOl5GWMLGRcA2ReV",
-    profileID: "tI6XNS1oLtWt4WjwkdiliJos3f72",
+    profileID: "bxLjcxVZzlexU040cKCnh5xROLq1",
     creationDate: Date.now(),
   };
 
