@@ -659,6 +659,7 @@ async function startMatching(match: Match) {
       choices: await convertToChoices(friends2),
       uid: friend.friendUID,
       avatarURL: friend.avatarURL,
+      fullName: friend.fullName,
       matchmakers: [profile1.id, profile2.id],
       completed: false,
     };
@@ -691,6 +692,7 @@ async function startMatching(match: Match) {
       choices: await convertToChoices(friends1),
       uid: friend.friendUID,
       avatarURL: friend.avatarURL,
+      fullName: friend.fullName,
       matchmakers: [profile2.id, profile1.id],
       completed: false,
     };

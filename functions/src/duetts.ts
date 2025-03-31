@@ -1,75 +1,11 @@
 import * as functions from "firebase-functions";
-import {ChatMessage, DuettChat, DuettPlayer, Nudge} from "./types";
+import {ChatMessage, Nudge} from "./types";
 import pushNotifications from "./push_notifications";
 import dbUtils from "./utils/db_utils";
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const admin = require("firebase-admin");
-const firestore = admin.firestore();
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const FieldValue = require("firebase-admin").firestore.FieldValue;
 
 
 exports.duettAdded = functions.firestore.document("duetts/{uid}").onCreate(async (snap, context) => {
-  // Notify MatchMakers
-  const duett = Object.assign({id: snap.id}, snap.data() as DuettChat);
-  // Get the current timestamp in milliseconds
-  const now = Date.now();
-
-  // Calculate the timestamp two years ago
-  const oneYearAgoMS = now - 2 * 365 * 24 * 60 * 60 * 1000;
-
-
-  // Send welcome message
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const welcomeMessage: ChatMessage = {
-    creationDate: oneYearAgoMS,
-    // eslint-disable-next-line max-len
-    text: "Congrats on your match! 🎉 Now let's keep the fun going – your friends have been invited to join the matching and unlock the full Duett experience to start planning together.",
-    duettID: duett.id,
-    read: false,
-    type: "info",
-  };
-  await firestore.collection("messages").add(welcomeMessage);
-
-
-  // Build out friend list
-  const players = [];
-  const friend1 = await dbUtils.getFriends(duett.matchMakers[0], true);
-  for (const profile1Friend of friend1) {
-    const player: DuettPlayer = {
-      avatarURL: profile1Friend.avatarURL,
-      uid: profile1Friend.friendUID,
-      matchMakerID: duett.matchMakers[0],
-      completed: false,
-      firstName: profile1Friend.fullName,
-    };
-    players.push(player);
-  }
-
-  const friend2 = await dbUtils.getFriends(duett.matchMakers[1], true);
-  for (const profile2Friend of friend2) {
-    const player: DuettPlayer = {
-      avatarURL: profile2Friend.avatarURL,
-      uid: profile2Friend.friendUID,
-      matchMakerID: duett.matchMakers[1],
-      firstName: profile2Friend.fullName,
-      completed: false,
-    };
-    players.push(player);
-  }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const playersMessage: ChatMessage = {
-    creationDate: now - 1 * 365 * 24 * 60 * 60 * 1000,
-    duettID: duett.id,
-    read: false,
-    players: players,
-    type: "players",
-  };
-
-  await firestore.collection("messages").add(playersMessage);
-
   return Promise.resolve();
 });
 
