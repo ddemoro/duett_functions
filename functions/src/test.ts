@@ -6,6 +6,12 @@ import pushNotifications from "./push_notifications";
 const admin = require("firebase-admin");
 const firestore = admin.firestore();
 
+// Helper function to create a delay
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Checks each profile for friends and sends a nudge notification if they have none.
+ */
 exports.checkFriends = functions.https.onRequest(async (req, res) => {
   const querySnapshot = await firestore.collection("profiles").get();
   for (const document of querySnapshot.docs) {
@@ -25,13 +31,17 @@ exports.checkFriends = functions.https.onRequest(async (req, res) => {
 
     if (!hasFriends) {
       // eslint-disable-next-line max-len
-      await pushNotifications.sendPushNotification(profile.id, "Duett Update", "We are testing the final features of Duett. Now it’s time to test matching and creating a Duett. We noticed your friends have not accepted your invite. Send them a nudge.");
+      await pushNotifications.sendPushNotification(profile.id, "Duett Update", "We are testing the final features of Duett. Now it's time to test matching and creating a Duett. We noticed your friends have not accepted your invite. Send them a nudge.");
     }
   }
 
   res.sendStatus(200);
 });
 
+/**
+ * Clears various Firestore collections (profiles likedBy, matches, possibleMatches, etc.).
+ * WARNING: This is a destructive operation.
+ */
 exports.clearProfiles = functions.runWith({
   memory: "4GB",
   timeoutSeconds: 540,
@@ -87,47 +97,59 @@ exports.clearProfiles = functions.runWith({
   res.sendStatus(200);
 });
 
-exports.testPushNotifications = functions.https.onRequest(async (req, res) => {
+/**
+ * Tests sending a specific "like" push notification using hardcoded IDs.
+ */
+exports.testSpecificLikeNotification = functions.https.onRequest(async (req, res) => {
   // const profile = await dbUtils.getProfile("tI6XNS1oLtWt4WjwkdiliJos3f72");
   await pushNotifications.sendLikeNotification("tI6XNS1oLtWt4WjwkdiliJos3f72", "Duett", "We have a match!", "vBOiXFUkuIwHnPQJnABI");
 
   res.sendStatus(200);
 });
 
-exports.createLike = functions.https.onRequest(async (req, res) => {
-  const like: Like = {
-    likedProfileID: "tI6XNS1oLtWt4WjwkdiliJos3f72",
-    profileID: "H3armOl5GWMLGRcA2ReV",
-    creationDate: Date.now(),
-  };
-
-  await firestore.collection("likes").add(like);
-
-  res.sendStatus(200);
-});
-
+/**
+ * Creates two "like" documents between hardcoded profile IDs with a delay.
+ * Intended for testing match creation logic triggered by mutual likes.
+ */
 exports.createMatch = functions.https.onRequest(async (req, res) => {
   const like: Like = {
-    likedProfileID: "bxLjcxVZzlexU040cKCnh5xROLq1",
-    profileID: "H3armOl5GWMLGRcA2ReV", 
-    creationDate: Date.now(),
+    likedProfileID: "tI6XNS1oLtWt4WjwkdiliJos3f72",
+    profileID: "6xS0eag96xugl4FHEJ5p", 
+    creationDate: Date.now(),  
   };
 
   await firestore.collection("likes").add(like);
 
+  // Add 5 second delay
+  await sleep(5000);
+
   const like2: Like = {
-    likedProfileID: "H3armOl5GWMLGRcA2ReV",
-    profileID: "bxLjcxVZzlexU040cKCnh5xROLq1",
+    likedProfileID: "6xS0eag96xugl4FHEJ5p",
+    profileID: "tI6XNS1oLtWt4WjwkdiliJos3f72",
     creationDate: Date.now(),
   };
 
-  await firestore.collection("likes").add(like2);
+  await firestore.collection("likes").add(like2);  
 
 
   res.sendStatus(200);
 });
 
-exports.ttttttt = functions.https.onRequest(async (req, res) => {
+/**
+ * Fetches and returns the accepted friends for a hardcoded profile ID.
+ */
+exports.getFriends = functions.https.onRequest(async (req, res) => {
+  const friends1 = await dbUtils.getFriends("bxLjcxVZzlexU040cKCnh5xROLq1", true);
+  
+
+  res.send(friends1).status(200)
+});
+
+/**
+ * Tests updating the completion status for a player within a Duett chat message.
+ * Uses a hardcoded possibleMatch ID to find the relevant chat.
+ */
+exports.testUpdatePlayerCompletionStatus = functions.https.onRequest(async (req, res) => {
   const pm = await dbUtils.getPossibleMatch("tI7SdJWi6e8W9BHRCSZZ");
 
   const completedUID = pm.uid;
@@ -154,6 +176,9 @@ exports.ttttttt = functions.https.onRequest(async (req, res) => {
   res.sendStatus(200);
 });
 
+/**
+ * Makes all profiles of the opposite gender "like" a specific hardcoded profile.
+ */
 exports.everyoneLikesYou = functions.https.onRequest(async (req, res) => {
   const profileID = "tI6XNS1oLtWt4WjwkdiliJos3f72";
   const profile = await dbUtils.getProfile(profileID);
@@ -176,8 +201,11 @@ exports.everyoneLikesYou = functions.https.onRequest(async (req, res) => {
   res.sendStatus(200);
 });
 
-exports.matchingOne = functions.https.onRequest(async (req, res) => {
-  const match = await dbUtils.getMatch("XkoZvatQ0e5pQbrI749Y");
+/**
+ * Sets all choices to 'liked = true' for all possible matches associated with a hardcoded match ID.
+ */
+exports.testSetAllPossibleMatchChoicesToLiked = functions.https.onRequest(async (req, res) => {
+  const match = await dbUtils.getMatch("KvcikxPMJHWxsj3PaDJz");
 
 
   // Have all the possible matches like each other
@@ -192,8 +220,12 @@ exports.matchingOne = functions.https.onRequest(async (req, res) => {
   res.sendStatus(200);
 });
 
-exports.approveOnePair = functions.https.onRequest(async (req, res) => {
-  const match = await dbUtils.getMatch("XkoZvatQ0e5pQbrI749Y");
+/**
+ * Approves the first pair found for a hardcoded match ID by adding both matchmakers to the 'approved' array.
+ * This simulates the conditions for creating a Duett.
+ */
+exports.testApproveFirstPairForMatch = functions.https.onRequest(async (req, res) => {
+  const match = await dbUtils.getMatch("KvcikxPMJHWxsj3PaDJz");
 
   // Have all the possible matches like each other
   const pairs = await dbUtils.getPairs(match.id);
@@ -211,7 +243,10 @@ exports.approveOnePair = functions.https.onRequest(async (req, res) => {
   res.sendStatus(200);
 });
 
-exports.testPushNotifications = functions.https.onRequest(async (req, res) => {
+/**
+ * Tests sending a generic push notification to a hardcoded profile ID.
+ */
+exports.testGenericPushNotification = functions.https.onRequest(async (req, res) => {
   const profileID = "q8Dbzvfs1XWd8Hxz0dHs";
 
   await pushNotifications.sendPushNotification(profileID, "Test", "test");

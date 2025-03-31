@@ -16,7 +16,9 @@ export interface PossibleMatch {
     match: Person; // the person they matched with
     choices: Choice[];
     uid: string; // Who this should go to
+    avatarURL: string; // The avatar URL of the person this is going to
     completed: boolean; // When the user completes their matching
+    matchmakers: string[]; // The matchmakers who created this match
     creationDate: any;
 }
 
