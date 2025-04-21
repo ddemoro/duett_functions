@@ -141,8 +141,8 @@ exports.testSpecificLikeNotification = functions.https.onRequest(
  */
 exports.createMatch = functions.https.onRequest(async (req, res) => {
   const like: Like = {
-    likedProfileID: "tI6XNS1oLtWt4WjwkdiliJos3f72",
-    profileID: "6xS0eag96xugl4FHEJ5p",
+    likedProfileID: "JT1DZIGN6KZaZ4QQKfe8mmVstlq1",
+    profileID: "bxLjcxVZzlexU040cKCnh5xROLq1",  
     creationDate: Date.now(),
   };
 
@@ -152,8 +152,8 @@ exports.createMatch = functions.https.onRequest(async (req, res) => {
   await sleep(5000);
 
   const like2: Like = {
-    likedProfileID: "6xS0eag96xugl4FHEJ5p",
-    profileID: "tI6XNS1oLtWt4WjwkdiliJos3f72",
+    likedProfileID: "bxLjcxVZzlexU040cKCnh5xROLq1",
+    profileID: "JT1DZIGN6KZaZ4QQKfe8mmVstlq1",
     creationDate: Date.now(),
   };
 
