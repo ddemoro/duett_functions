@@ -72,8 +72,8 @@ async function getFriend(friendID: string) {
 }
 
 // eslint-disable-next-line require-jsdoc
-async function getFriends(uid: string, starter: boolean) {
-  const querySnapshot = await firestore.collection("friends").where("uid", "==", uid).where("isStarter", "==", starter).get();
+async function getFriends(uid: string, starter: boolean, accepted: boolean) {
+  const querySnapshot = await firestore.collection("friends").where("uid", "==", uid).where("isStarter", "==", starter).where("accepted", "==", accepted).get();
   const friends: Friend[] = [];
   for (const document of querySnapshot.docs) {
     const friend = Object.assign({id: document.id}, document.data() as Friend);

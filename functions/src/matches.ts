@@ -642,8 +642,8 @@ async function startMatching(match: Match) {
   const person2 = match.profiles[1];
   const profile2 = await dbUtils.getProfile(person2.profileID);
 
-  const friends1 = await dbUtils.getFriends(profile1.id, true);
-  const friends2 = await dbUtils.getFriends(profile2.id, true);
+  const friends1 = await dbUtils.getFriends(profile1.id, true, true);
+  const friends2 = await dbUtils.getFriends(profile2.id, true, true);
 
   if (friends1.length == 0 || friends2.length == 0) {
     console.log("No friends to match with");

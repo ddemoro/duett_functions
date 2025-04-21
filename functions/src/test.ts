@@ -167,7 +167,8 @@ exports.createMatch = functions.https.onRequest(async (req, res) => {
  */
 exports.getFriends = functions.https.onRequest(async (req, res) => {
   const friends1 = await dbUtils.getFriends(
-    "bxLjcxVZzlexU040cKCnh5xROLq1",
+    "JT1DZIGN6KZaZ4QQKfe8mmVstlq1",
+    true,
     true
   );
 

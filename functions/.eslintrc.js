@@ -12,8 +12,6 @@ module.exports = {
     "plugin:import/typescript",
     "google",
     "plugin:@typescript-eslint/recommended",
-    "prettier",
-    "plugin:prettier/recommended"
   ],
   parser: "@typescript-eslint/parser",
   parserOptions: {
@@ -27,8 +25,6 @@ module.exports = {
   plugins: [
     "@typescript-eslint",
     "import",
-    "prettier",
-    "simple-import-sort"
   ],
   rules: {
     "quotes": ["error", "double"],
@@ -45,8 +41,6 @@ module.exports = {
     "object-curly-spacing": ["error", "always"], // Enforce spacing in object literals
     "comma-dangle": ["error", "always-multiline"], // Trailing commas in multiline objects
     "arrow-parens": ["error", "always"], // Consistent arrow function params with parens
-    "simple-import-sort/imports": "error",
-    "simple-import-sort/exports": "error",
     "import/first": "error",
     "import/newline-after-import": "error",
     "import/no-duplicates": "error",
