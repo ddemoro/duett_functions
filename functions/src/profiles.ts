@@ -37,6 +37,45 @@ exports.profileAdded = functions.firestore.document("profiles/{uid}").onCreate(a
   return Promise.resolve();
 });
 
+exports.profileDeleted = functions.firestore.document("profiles/{uid}").onDelete(async (snap, context) => {
+  const profile = Object.assign({id: snap.id}, snap.data() as Profile);
+  const uid = profile.id;
+
+  // Get friends where uid matches the deleted profile
+  const friendsSnapshot = await firestore.collection("friends").where("uid", "==", uid).get();
+  
+  // Delete all friend objects where uid matches the deleted profile
+  const friendDeletePromises = friendsSnapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
+    return firestore.collection("friends").doc(doc.id).delete();
+  });
+  
+  // Get all likes where profileID matches the deleted profile
+  const likesSnapshot1 = await firestore.collection("likes").where("profileID", "==", uid).get();
+  
+  // Get all likes where likedProfileID matches the deleted profile
+  const likesSnapshot2 = await firestore.collection("likes").where("likedProfileID", "==", uid).get();
+  
+  // Delete all likes related to the deleted profile
+  const likeDeletePromises1 = likesSnapshot1.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
+    return firestore.collection("likes").doc(doc.id).delete();
+  });
+  
+  const likeDeletePromises2 = likesSnapshot2.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
+    return firestore.collection("likes").doc(doc.id).delete();
+  });
+  
+  // Get all messages sent by the deleted profile
+  const messagesSnapshot = await firestore.collection("messages").where("fromID", "==", uid).get();
+  
+  // Delete all messages sent by the deleted profile
+  const messageDeletePromises = messagesSnapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
+    return firestore.collection("messages").doc(doc.id).delete();
+  });
+  
+  // Wait for all deletions to complete
+  await Promise.all([...friendDeletePromises, ...likeDeletePromises1, ...likeDeletePromises2, ...messageDeletePromises]);
+});
+
 exports.profileUpdated = functions.firestore.document("profiles/{uid}").onUpdate(async (change, context) => {
   const newProfile = Object.assign({id: change.after.id}, change.after.data() as Profile);
   const oldProfile = Object.assign({id: change.before.id}, change.before.data() as Profile);

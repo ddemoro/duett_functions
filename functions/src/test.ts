@@ -414,3 +414,96 @@ exports.findProfilesByEmails = functions.https.onRequest(async (req, res) => {
     missingEmails: notFound,
   }).status(200);
 });
+
+exports.addFriendPairing = functions.https.onRequest(async (req, res) => {
+  const uid = "JT1DZIGN6KZaZ4QQKfe8mmVstlq1";
+  const friendUID = "s5C7M8CvapbCttHWtRDeWl403fS2";
+
+  // Retrieve the friend's profile from the uid
+  const friendProfile = await dbUtils.getProfile(friendUID);
+  
+  // Use data from the profile to populate the Friend object
+  const friend: Friend = {
+    uid: uid,
+    friendUID: friendUID,
+    fullName: friendProfile.firstName,
+    phone: friendProfile.phoneNumber,
+    accepted: false,
+    avatarURL: friendProfile.media && friendProfile.media.length > 0 
+      ? friendProfile.media[0].url 
+      : friendProfile.avatarURL,
+    creationDate: Date.now(),
+    isStarter: true,
+    inviteCode: "MANUAL_ADD",
+  };
+  
+  // Add the friend to Firestore
+  await firestore.collection("friends").add(friend);
+  
+  res.status(200).send({
+    message: "Friend pairing added successfully",
+    friend: friend
+  });
+});
+
+/**
+ * Validates all friends by checking if their associated profiles exist.
+ * Identifies orphaned friend records where the profile no longer exists.
+ */
+exports.validateFriends = functions.https.onRequest(async (req, res) => {
+  const results = {
+    total: 0,
+    valid: 0,
+    orphaned: [] as Array<{
+      friendId: string;
+      uid: string | null;
+      friendUID: string | null;
+      fullName: string;
+    }>,
+    invalidUIDs: [] as Array<{
+      friendId: string;
+      reason: string;
+    }>
+  };
+
+  // Get all friends from the database
+  const friendsSnapshot = await firestore.collection("friends").get();
+  results.total = friendsSnapshot.size;
+  
+  for (const document of friendsSnapshot.docs) {
+    const friend = Object.assign({id: document.id}, document.data() as Friend);
+    
+    // Validate that uid is not empty, null, or undefined
+    if (!friend.uid) {
+      results.invalidUIDs.push({
+        friendId: friend.id,
+        reason: "Missing or empty uid"
+      });
+      continue;
+    }
+    
+    // Check if profile exists for the friend's uid
+    const profileSnapshot = await firestore.collection("profiles").doc(friend.uid).get();
+    
+    if (!profileSnapshot.exists) {
+      // Profile doesn't exist - this is an orphaned friend record
+      results.orphaned.push({
+        friendId: friend.id,
+        uid: friend.uid,
+        friendUID: friend.friendUID || null,
+        fullName: friend.fullName || "Unknown",
+      });
+      
+      // Optionally delete the orphaned record
+      await document.ref.delete();
+    } else {
+      results.valid++;
+    }
+  }
+  
+  // Return the results showing orphaned records
+  res.json({
+    message: `Validated ${results.total} friend records. Found ${results.orphaned.length} orphaned records. Found ${results.invalidUIDs.length} records with invalid UIDs.`,
+    results: results
+  }).status(200);
+});
