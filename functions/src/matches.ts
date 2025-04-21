@@ -863,3 +863,37 @@ exports.grammarlyTest = functions.runWith({
 
   res.sendStatus(200);
 });
+
+/**
+ * HTTP endpoint to start the matching process for a match with a specified ID.
+ * Access by calling the function with a fixed matchId.
+ */
+exports.startMatchingById = functions.https.onRequest(async (req, res) => {
+  try {
+    // Use a hardcoded match ID for testing
+    const matchId = "4q0ca4bskZqlpuJS4ISa";
+    
+    // Load the match from Firestore
+    const match = await dbUtils.getMatch(matchId);
+    
+    if (!match) {
+      res.status(404).send({ error: `Match with ID ${matchId} not found` });
+      return;
+    }
+    
+    // Call the startMatching function directly
+    await startMatching(match);
+    
+    res.status(200).send({ 
+      success: true, 
+      message: `Started matching process for match ${matchId}`,
+      match: match
+    });
+  } catch (error) {
+    console.error("Error in startMatchingById:", error);
+    res.status(500).send({ 
+      error: "An error occurred while processing the request",
+      details: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+});
