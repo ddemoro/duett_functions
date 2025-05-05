@@ -25,6 +25,29 @@ exports.test = functions.https.onRequest(async (req, res) => {
   res.sendStatus(200);
 });
 
+/**
+ * Checks if a user has at least one accepted friend
+ * @param {string} uid User ID to check
+ * @return {Promise<boolean>} Promise resolving to a boolean indicating if the user has accepted friends
+ */
+async function hasAcceptedFriends(uid: string): Promise<boolean> {
+  const friendsSnapshot = await firestore.collection("friends")
+    .where("uid", "==", uid)
+    .where("accepted", "==", true)
+    .limit(1)
+    .get();
+  return !friendsSnapshot.empty;
+}
+
+/**
+ * Updates the 'friends' field in a user's profile based on whether they have accepted friends
+ * @param {string} uid User ID whose profile needs to be updated
+ * @return {Promise<void>} Promise that resolves when the update is complete
+ */
+async function updateFriendsStatus(uid: string): Promise<void> {
+  const hasFriends = await hasAcceptedFriends(uid);
+  await firestore.collection("profiles").doc(uid).update({ friends: hasFriends });
+}
 
 exports.friendAdded = functions.firestore.document("friends/{uid}").onCreate(async (snap, context) => {
   const friend = Object.assign({id: snap.id}, snap.data() as Friend);
@@ -79,7 +102,9 @@ exports.friendAdded = functions.firestore.document("friends/{uid}").onCreate(asy
     lineNumber = lineNumber - 5;
   }
 
-  await firestore.collection("profiles").doc(inviter.id).update({lineNumber: lineNumber, friends: true});
+  await firestore.collection("profiles").doc(inviter.id).update({lineNumber: lineNumber});
+  // Update friends status after adding a friend
+  await updateFriendsStatus(inviter.id);
 
 
   // Update Friend with creation Date
@@ -104,8 +129,8 @@ exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(a
     const ownerProfile = await dbUtils.getProfile(newFriend.uid);
     await pushNotifications.sendPushNotification(ownerProfile.id, "New Friend Added", newFriend.fullName + " has accepted your friend request!");
 
-    // Update Profile that they have at least one friend
-    await firestore.collection("profiles").doc(newFriend.uid).update({friends: true});
+    // Update Profile to reflect their friend status
+    await updateFriendsStatus(newFriend.uid);
 
     // Now let's make sure that the friend you invited as a friend object for you
     // but you will be on the bench!
@@ -126,7 +151,7 @@ exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(a
     const friendsSnapshot = await firestore.collection("friends").where("uid", "==", friendUID).where("isStarter", "==", true).get();
     const querySize = friendsSnapshot.size;
 
-    if (friends.length == 0) {
+    if (friends.length === 0) {
       // Create Friend object and add them to the bench
       const newFriend: Friend = {
         uid: friendUID,
@@ -141,14 +166,14 @@ exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(a
       };
 
       await firestore.collection("friends").add(newFriend);
-      // Update Profile that they have at least one friend
-      await firestore.collection("profiles").doc(friendUID).update({friends: true});
+      // Update the friend's profile status
+      await updateFriendsStatus(friendUID);
     } else {
       const f = friends[0];
       f.accepted = true;
       await firestore.collection("friends").doc(f.id).update(newFriend);
-      // Update Profile that they have at least one friend
-      await firestore.collection("profiles").doc(f.uid).update({friends: true});
+      // Update the friend's profile status
+      await updateFriendsStatus(f.uid);
     }
 
     // Update their line number in their profile
@@ -173,13 +198,11 @@ exports.friendDeleted = functions.firestore.document("friends/{uid}").onDelete(a
     await document.ref.delete();
   }
 
-
-  const friendsSnapshot = await firestore.collection("friends").where("uid", "==", uid).get();
-  const querySize = friendsSnapshot.size;
-
-  // Update Profile
-  await firestore.collection("profiles").doc(uid).update({friends: querySize > 0});
-
+  // Update Profile status for both users
+  await updateFriendsStatus(uid);
+  if (friendUID) {
+    await updateFriendsStatus(friendUID);
+  }
 
   // Update their line number in their profile
   const profile = await dbUtils.getProfile(uid);
