@@ -4,6 +4,7 @@ import dbUtils from "./utils/db_utils";
 import pushNotifications from "./push_notifications";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const admin = require("firebase-admin");
+
 const firestore = admin.firestore();
 
 // Helper function to create a delay
@@ -129,7 +130,7 @@ exports.testSpecificLikeNotification = functions.https.onRequest(
       "Duett",
       "We have a match!",
       "vBOiXFUkuIwHnPQJnABI"
-    ); 
+    );
 
     res.sendStatus(200);
   }
@@ -142,8 +143,8 @@ exports.testSpecificLikeNotification = functions.https.onRequest(
 exports.createMatch = functions.https.onRequest(async (req, res) => {
   const like: Like = {
     likedProfileID: "s5C7M8CvapbCttHWtRDeWl403fS2",
-    profileID: "tLUftb4gTCSeHUIQ2uRN3N9uLku1",  
-    creationDate: Date.now(), 
+    profileID: "bxLjcxVZzlexU040cKCnh5xROLq1",
+    creationDate: Date.now(),
   };
 
   await firestore.collection("likes").add(like);
@@ -152,7 +153,7 @@ exports.createMatch = functions.https.onRequest(async (req, res) => {
   await sleep(5000);
 
   const like2: Like = {
-    likedProfileID: "tLUftb4gTCSeHUIQ2uRN3N9uLku1",
+    likedProfileID: "bxLjcxVZzlexU040cKCnh5xROLq1",
     profileID: "s5C7M8CvapbCttHWtRDeWl403fS2",
     creationDate: Date.now(),
   };
@@ -380,14 +381,14 @@ exports.findProfilesByEmails = functions.https.onRequest(async (req, res) => {
     }
 
     for (const doc of querySnapshot.docs) {
-      const profile = Object.assign({id: doc.id}, doc.data() as Profile);
-      
+      const profile = Object.assign({ id: doc.id }, doc.data() as Profile);
+
       // Check if profile has friends
       const friendsSnapshot = await firestore
         .collection("friends")
         .where("uid", "==", profile.id)
         .get();
-      
+
       // Count accepted friends
       let acceptedFriendCount = 0;
       for (const friendDoc of friendsSnapshot.docs) {
@@ -396,11 +397,11 @@ exports.findProfilesByEmails = functions.https.onRequest(async (req, res) => {
           acceptedFriendCount++;
         }
       }
-      
+
       // Add hasFriends property to profile
       results.push({
         ...profile,
-        hasFriends: acceptedFriendCount > 0
+        hasFriends: acceptedFriendCount > 0,
       });
     }
   }
@@ -421,7 +422,7 @@ exports.addFriendPairing = functions.https.onRequest(async (req, res) => {
 
   // Retrieve the friend's profile from the uid
   const friendProfile = await dbUtils.getProfile(friendUID);
-  
+
   // Use data from the profile to populate the Friend object
   const friend: Friend = {
     uid: uid,
@@ -429,20 +430,20 @@ exports.addFriendPairing = functions.https.onRequest(async (req, res) => {
     fullName: friendProfile.firstName,
     phone: friendProfile.phoneNumber,
     accepted: false,
-    avatarURL: friendProfile.media && friendProfile.media.length > 0 
-      ? friendProfile.media[0].url 
+    avatarURL: friendProfile.media && friendProfile.media.length > 0
+      ? friendProfile.media[0].url
       : friendProfile.avatarURL,
     creationDate: Date.now(),
     isStarter: true,
     inviteCode: "MANUAL_ADD",
   };
-  
+
   // Add the friend to Firestore
   await firestore.collection("friends").add(friend);
-  
+
   res.status(200).send({
     message: "Friend pairing added successfully",
-    friend: friend
+    friend: friend,
   });
 });
 
@@ -463,28 +464,28 @@ exports.validateFriends = functions.https.onRequest(async (req, res) => {
     invalidUIDs: [] as Array<{
       friendId: string;
       reason: string;
-    }>
+    }>,
   };
 
   // Get all friends from the database
   const friendsSnapshot = await firestore.collection("friends").get();
   results.total = friendsSnapshot.size;
-  
+
   for (const document of friendsSnapshot.docs) {
-    const friend = Object.assign({id: document.id}, document.data() as Friend);
-    
+    const friend = Object.assign({ id: document.id }, document.data() as Friend);
+
     // Validate that uid is not empty, null, or undefined
     if (!friend.uid) {
       results.invalidUIDs.push({
         friendId: friend.id,
-        reason: "Missing or empty uid"
+        reason: "Missing or empty uid",
       });
       continue;
     }
-    
+
     // Check if profile exists for the friend's uid
     const profileSnapshot = await firestore.collection("profiles").doc(friend.uid).get();
-    
+
     if (!profileSnapshot.exists) {
       // Profile doesn't exist - this is an orphaned friend record
       results.orphaned.push({
@@ -493,18 +494,18 @@ exports.validateFriends = functions.https.onRequest(async (req, res) => {
         friendUID: friend.friendUID || null,
         fullName: friend.fullName || "Unknown",
       });
-      
+
       // Optionally delete the orphaned record
       await document.ref.delete();
     } else {
       results.valid++;
     }
   }
-  
+
   // Return the results showing orphaned records
   res.json({
     message: `Validated ${results.total} friend records. Found ${results.orphaned.length} orphaned records. Found ${results.invalidUIDs.length} records with invalid UIDs.`,
-    results: results
+    results: results,
   }).status(200);
 });
 
@@ -523,22 +524,22 @@ exports.checkProfilesWithAcceptedFriends = functions.https.onRequest(async (req,
     profilesWithoutFriends: [] as Array<{
       profileId: string,
       firstName: string
-    }>
+    }>,
   };
 
   // Get all profiles from the database
   const profilesSnapshot = await firestore.collection("profiles").get();
   results.totalProfiles = profilesSnapshot.size;
-  
+
   for (const document of profilesSnapshot.docs) {
     const profile = Object.assign({ id: document.id }, document.data() as Profile);
-    
+
     // Query friends for this profile
     const friendsSnapshot = await firestore
       .collection("friends")
       .where("uid", "==", profile.id)
       .get();
-    
+
     // Count accepted friends
     let acceptedFriendCount = 0;
     for (const friendDoc of friendsSnapshot.docs) {
@@ -550,33 +551,33 @@ exports.checkProfilesWithAcceptedFriends = functions.https.onRequest(async (req,
     const hasFriends = acceptedFriendCount > 0;
     // Update the profile with the hasFriends property
     await firestore.collection("profiles").doc(profile.id).update({
-      friends: hasFriends
+      friends: hasFriends,
     });
 
     if (acceptedFriendCount > 0) {
       results.profilesWithFriends.push({
         profileId: profile.id,
         firstName: profile.firstName || "Unknown",
-        friendCount: acceptedFriendCount
+        friendCount: acceptedFriendCount,
       });
     } else {
       results.profilesWithoutFriends.push({
         profileId: profile.id,
-        firstName: profile.firstName || "Unknown"
+        firstName: profile.firstName || "Unknown",
       });
     }
   }
-  
+
   // Return the results
   res.json({
     totalProfiles: results.totalProfiles,
     profilesWithFriends: {
       count: results.profilesWithFriends.length,
-      profiles: results.profilesWithFriends
+      profiles: results.profilesWithFriends,
     },
     profilesWithoutFriends: {
       count: results.profilesWithoutFriends.length,
-      profiles: results.profilesWithoutFriends
-    }
+      profiles: results.profilesWithoutFriends,
+    },
   }).status(200);
 });

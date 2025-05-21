@@ -1,5 +1,5 @@
 /* eslint-disable require-jsdoc,@typescript-eslint/no-var-requires,no-useless-escape */
-const {v4: uuidv4} = require("uuid");
+const { v4: uuidv4 } = require("uuid");
 
 
 function slugify(text: string) {

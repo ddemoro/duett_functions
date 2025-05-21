@@ -3,6 +3,7 @@ import * as functions from "firebase-functions";
 const admin = require("firebase-admin");
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const sharp = require("sharp");
+
 const firestore = admin.firestore();
 
 exports.compressImage = functions.storage.object().onFinalize(async (object) => {
@@ -32,14 +33,14 @@ exports.compressImage = functions.storage.object().onFinalize(async (object) => 
 
   try {
     // Download the original image
-    await bucket.file(filePath).download({destination: tmpFilePath});
+    await bucket.file(filePath).download({ destination: tmpFilePath });
 
     // Compress the image (adjust quality as needed)
     await sharp(tmpFilePath)
-      .webp({quality: 80}) // Example: Convert to WebP with 80% quality
+      .webp({ quality: 80 }) // Example: Convert to WebP with 80% quality
       .toFile(compressedFilePath);
 
-    await firestore.collection("compressed").add({path: filePath});
+    await firestore.collection("compressed").add({ path: filePath });
     await bucket.upload(compressedFilePath, {
       destination: filePath, contentType: contentType,
     });
@@ -67,7 +68,7 @@ exports.resizeImages = functions.runWith({
   const bucket = admin.storage().bucket("duett-a2b3f.appspot.com");
 
   // Get list of files within the folder
-  const [files] = await bucket.getFiles({prefix: folderPath});
+  const [files] = await bucket.getFiles({ prefix: folderPath });
 
   // Iterate and rename each file
   await Promise.all(files.map(async (file: File) => {
@@ -86,7 +87,7 @@ exports.resizeImages = functions.runWith({
 
       try {
         // Download the original image
-        await bucket.file(filePath).download({destination: tmpFilePath});
+        await bucket.file(filePath).download({ destination: tmpFilePath });
 
         /*
         // Compress the image (adjust quality as needed)
@@ -103,7 +104,7 @@ exports.resizeImages = functions.runWith({
           })
           .toFile(compressedFilePath);
 
-        await firestore.collection("compressed").add({path: filePath});
+        await firestore.collection("compressed").add({ path: filePath });
         await bucket.upload(compressedFilePath, {
           destination: filePath, contentType: "image/webp",
         });
@@ -133,7 +134,7 @@ exports.compressImages = functions.runWith({
   const bucket = admin.storage().bucket("duett-a2b3f.appspot.com");
 
   // Get list of files within the folder
-  const [files] = await bucket.getFiles({prefix: folderPath});
+  const [files] = await bucket.getFiles({ prefix: folderPath });
 
   // Iterate and rename each file
   await Promise.all(files.map(async (file: File) => {
@@ -150,14 +151,14 @@ exports.compressImages = functions.runWith({
 
       try {
         // Download the original image
-        await bucket.file(filePath).download({destination: tmpFilePath});
+        await bucket.file(filePath).download({ destination: tmpFilePath });
 
         // Compress the image (adjust quality as needed)
         await sharp(tmpFilePath)
-          .webp({quality: 80}) // Example: Convert to WebP with 80% quality
+          .webp({ quality: 80 }) // Example: Convert to WebP with 80% quality
           .toFile(compressedFilePath);
 
-        await firestore.collection("compressed").add({path: filePath});
+        await firestore.collection("compressed").add({ path: filePath });
         await bucket.upload(compressedFilePath, {
           destination: filePath, contentType: "image/webp",
         });

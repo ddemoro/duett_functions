@@ -1,8 +1,9 @@
-import {Profile} from "./types";
+import { Profile } from "./types";
 import dbUtils from "./utils/db_utils";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const admin = require("firebase-admin");
+
 const firestore = admin.firestore();
 
 
@@ -14,7 +15,7 @@ async function sendPushNotificationWithImage(uid: string, title: string, body: s
     return;
   }
 
-  const profileO = Object.assign({id: uid}, profile as Profile);
+  const profileO = Object.assign({ id: uid }, profile as Profile);
   const pushToken = profileO.fcmToken;
   if (!pushToken) {
     console.log("There are no fcm tokens for " + uid);
@@ -66,7 +67,7 @@ async function sendMatchCreatedNotification(uid: string, title: string, body: st
     return;
   }
 
-  const profileO = Object.assign({id: uid}, profile as Profile);
+  const profileO = Object.assign({ id: uid }, profile as Profile);
   const pushToken = profileO.fcmToken;
   if (!pushToken) {
     console.log("There are no fcm tokens for " + uid);
@@ -113,7 +114,7 @@ async function sendLikeNotification(uid: string, title: string, body: string, li
     return;
   }
 
-  const profileO = Object.assign({id: uid}, profile as Profile);
+  const profileO = Object.assign({ id: uid }, profile as Profile);
   const pushToken = profileO.fcmToken;
   if (!pushToken) {
     console.log("There are no fcm tokens for " + uid);
@@ -205,7 +206,7 @@ async function sendPushNotification(uid: string, title: string, body: string) {
     return;
   }
 
-  const profileO = Object.assign({id: uid}, profile as Profile);
+  const profileO = Object.assign({ id: uid }, profile as Profile);
   const pushToken = profileO.fcmToken;
   if (!pushToken) {
     console.log("There are no fcm tokens for " + uid);
@@ -251,7 +252,7 @@ async function sendPossibleMatchNotification(uid: string, title: string, body: s
     return;
   }
 
-  const profileO = Object.assign({id: uid}, profile as Profile);
+  const profileO = Object.assign({ id: uid }, profile as Profile);
   const pushToken = profileO.fcmToken;
   if (!pushToken) {
     console.log("There are no fcm tokens for " + uid);
@@ -298,7 +299,7 @@ async function sendDuettMessageNotification(uid: string, title: string, body: st
     return;
   }
 
-  const profileO = Object.assign({id: uid}, profile as Profile);
+  const profileO = Object.assign({ id: uid }, profile as Profile);
   const pushToken = profileO.fcmToken;
   if (!pushToken) {
     console.log("There are no fcm tokens for " + uid);
@@ -345,7 +346,7 @@ async function notifyPartner(uid: string, title: string, body: string, pairID: s
     return;
   }
 
-  const profileO = Object.assign({id: uid}, profile as Profile);
+  const profileO = Object.assign({ id: uid }, profile as Profile);
   const pushToken = profileO.fcmToken;
   if (!pushToken) {
     console.log("There are no fcm tokens for " + uid);

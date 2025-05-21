@@ -1,7 +1,8 @@
-import {DuettChat, Friend, Match, Pair, PossibleMatch, Profile} from "../types";
+import { DuettChat, Friend, Match, Pair, PossibleMatch, Profile } from "../types";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const admin = require("firebase-admin");
+
 const firestore = admin.firestore();
 
 
@@ -12,7 +13,7 @@ async function getProfile(uid: string) {
   if (!document) {
     throw new Error("Profile not found: " + uid);
   } else {
-    return Object.assign({id: uid}, document as Profile);
+    return Object.assign({ id: uid }, document as Profile);
   }
 }
 
@@ -23,7 +24,7 @@ async function getMatch(id: string) {
   if (!document) {
     throw new Error("Match not found: " + id);
   } else {
-    return Object.assign({id: id}, document as Match);
+    return Object.assign({ id: id }, document as Match);
   }
 }
 
@@ -34,7 +35,7 @@ async function getPair(pairID: string) {
   if (!document) {
     throw new Error("Pair not found: " + pairID);
   } else {
-    return Object.assign({id: pairID}, document as Pair);
+    return Object.assign({ id: pairID }, document as Pair);
   }
 }
 
@@ -45,7 +46,7 @@ async function getPossibleMatch(possibleMatchID: string) {
   if (!document) {
     throw new Error("Pair not found: " + possibleMatchID);
   } else {
-    return Object.assign({id: possibleMatchID}, document as PossibleMatch);
+    return Object.assign({ id: possibleMatchID }, document as PossibleMatch);
   }
 }
 
@@ -56,7 +57,7 @@ async function getDuett(duettID: string) {
   if (!document) {
     throw new Error("Duett not found: " + duettID);
   } else {
-    return Object.assign({id: duettID}, document as DuettChat);
+    return Object.assign({ id: duettID }, document as DuettChat);
   }
 }
 
@@ -67,7 +68,7 @@ async function getFriend(friendID: string) {
   if (!document) {
     throw new Error("Pair not found: " + friendID);
   } else {
-    return Object.assign({id: friendID}, document as Friend);
+    return Object.assign({ id: friendID }, document as Friend);
   }
 }
 
@@ -76,7 +77,7 @@ async function getFriends(uid: string, starter: boolean, accepted: boolean) {
   const querySnapshot = await firestore.collection("friends").where("uid", "==", uid).where("isStarter", "==", starter).where("accepted", "==", accepted).get();
   const friends: Friend[] = [];
   for (const document of querySnapshot.docs) {
-    const friend = Object.assign({id: document.id}, document.data() as Friend);
+    const friend = Object.assign({ id: document.id }, document.data() as Friend);
 
     // Make sure they are
     if (friend.friendUID) {
@@ -92,7 +93,7 @@ async function getPossibleMatches(matchID: string) {
   const querySnapshot = await firestore.collection("possibleMatches").where("matchID", "==", matchID).get();
   const matches: PossibleMatch[] = [];
   for (const document of querySnapshot.docs) {
-    const match = Object.assign({id: document.id}, document.data() as PossibleMatch);
+    const match = Object.assign({ id: document.id }, document.data() as PossibleMatch);
     matches.push(match);
   }
 
@@ -104,7 +105,7 @@ async function getPossibleMatchFromUID(matchID: string, uid: string) {
   const querySnapshot = await firestore.collection("possibleMatches").where("matchID", "==", matchID).where("uid", "==", uid).get();
   const matches: PossibleMatch[] = [];
   for (const document of querySnapshot.docs) {
-    const match = Object.assign({id: document.id}, document.data() as PossibleMatch);
+    const match = Object.assign({ id: document.id }, document.data() as PossibleMatch);
     matches.push(match);
   }
 
@@ -116,7 +117,7 @@ async function getPairs(matchID: string) {
   const querySnapshot = await firestore.collection("pairs").where("matchID", "==", matchID).get();
   const pairs: Pair[] = [];
   for (const document of querySnapshot.docs) {
-    const pair = Object.assign({id: document.id}, document.data() as Pair);
+    const pair = Object.assign({ id: document.id }, document.data() as Pair);
     pairs.push(pair);
   }
 
@@ -128,7 +129,7 @@ async function getProfilesFromGender(gender: string) {
   const querySnapshot = await firestore.collection("profiles").where("gender", "==", gender).get();
   const profiles: Profile[] = [];
   for (const document of querySnapshot.docs) {
-    const profile = Object.assign({id: document.id}, document.data() as Profile);
+    const profile = Object.assign({ id: document.id }, document.data() as Profile);
     profiles.push(profile);
   }
 

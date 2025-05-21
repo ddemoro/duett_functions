@@ -1,12 +1,14 @@
-Object.defineProperty(exports, "__esModule", {value: true});
 import * as functions from "firebase-functions";
+import * as path from "path";
+import * as os from "os";
+
+Object.defineProperty(exports, "__esModule", { value: true });
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const admin = require("firebase-admin");
+
 const firestore = admin.firestore();
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const spawn = require("child-process-promise").spawn;
-import * as path from "path";
-import * as os from "os";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const fs = require("fs");
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -52,7 +54,7 @@ function getThumbFromVideo(videoURL: string) {
         return spawn("ffmpeg", ["-i", videoURL, "-vframes", "1", "-an", "-s", "400x222", "-ss", "1", finalPath]).then(() => {
           const bucket = storage.bucket();
           const destination = "/thumbnails/" + randomName + ".gif";
-          return bucket.upload(finalPath, {destination}).then(() => {
+          return bucket.upload(finalPath, { destination }).then(() => {
             console.log("Building Public Facing URL for Content ");
             const myFile = admin.storage().bucket().file(destination);
             return myFile.getSignedUrl({
@@ -111,7 +113,7 @@ function addThumbnailToProduct(productID: string, imageURL: string) {
         return spawn("convert", [tempFilePath, "-thumbnail", "200x200>", tempFilePath]).then(() => {
           const bucket = storage.bucket();
           const destination = "/thumbnails/" + randomName + ".png";
-          return bucket.upload(tempFilePath, {destination}).then(() => {
+          return bucket.upload(tempFilePath, { destination }).then(() => {
             console.log("Building Public Facing URL for Content ");
             const myFile = admin.storage().bucket().file(destination);
 

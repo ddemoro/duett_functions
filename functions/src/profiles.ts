@@ -1,11 +1,12 @@
 import * as functions from "firebase-functions";
-import {Friend, Profile} from "./types";
+import { Friend, Profile } from "./types";
 import pushNotifications from "./push_notifications";
 import dbUtils from "./utils/db_utils";
 import textUtils from "./utils/text_utils";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const admin = require("firebase-admin");
+
 const firestore = admin.firestore();
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const FieldValue = require("firebase-admin").firestore.FieldValue;
@@ -13,8 +14,8 @@ const FieldValue = require("firebase-admin").firestore.FieldValue;
 exports.reset = functions.https.onRequest(async (req, res) => {
   const profiles = await firestore.collection("profiles").get();
   for (const document of profiles.docs) {
-    const profile = Object.assign({id: document.id}, document.data() as Profile);
-    await firestore.collection("profiles").doc(profile.id).update({configured: false});
+    const profile = Object.assign({ id: document.id }, document.data() as Profile);
+    await firestore.collection("profiles").doc(profile.id).update({ configured: false });
   }
   res.sendStatus(200);
 });
@@ -38,47 +39,47 @@ exports.profileAdded = functions.firestore.document("profiles/{uid}").onCreate(a
 });
 
 exports.profileDeleted = functions.firestore.document("profiles/{uid}").onDelete(async (snap, context) => {
-  const profile = Object.assign({id: snap.id}, snap.data() as Profile);
+  const profile = Object.assign({ id: snap.id }, snap.data() as Profile);
   const uid = profile.id;
 
   // Get friends where uid matches the deleted profile
   const friendsSnapshot = await firestore.collection("friends").where("uid", "==", uid).get();
-  
+
   // Delete all friend objects where uid matches the deleted profile
   const friendDeletePromises = friendsSnapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
     return firestore.collection("friends").doc(doc.id).delete();
   });
-  
+
   // Get all likes where profileID matches the deleted profile
   const likesSnapshot1 = await firestore.collection("likes").where("profileID", "==", uid).get();
-  
+
   // Get all likes where likedProfileID matches the deleted profile
   const likesSnapshot2 = await firestore.collection("likes").where("likedProfileID", "==", uid).get();
-  
+
   // Delete all likes related to the deleted profile
   const likeDeletePromises1 = likesSnapshot1.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
     return firestore.collection("likes").doc(doc.id).delete();
   });
-  
+
   const likeDeletePromises2 = likesSnapshot2.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
     return firestore.collection("likes").doc(doc.id).delete();
   });
-  
+
   // Get all messages sent by the deleted profile
   const messagesSnapshot = await firestore.collection("messages").where("fromID", "==", uid).get();
-  
+
   // Delete all messages sent by the deleted profile
   const messageDeletePromises = messagesSnapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
     return firestore.collection("messages").doc(doc.id).delete();
   });
-  
+
   // Wait for all deletions to complete
   await Promise.all([...friendDeletePromises, ...likeDeletePromises1, ...likeDeletePromises2, ...messageDeletePromises]);
 });
 
 exports.profileUpdated = functions.firestore.document("profiles/{uid}").onUpdate(async (change, context) => {
-  const newProfile = Object.assign({id: change.after.id}, change.after.data() as Profile);
-  const oldProfile = Object.assign({id: change.before.id}, change.before.data() as Profile);
+  const newProfile = Object.assign({ id: change.after.id }, change.after.data() as Profile);
+  const oldProfile = Object.assign({ id: change.before.id }, change.before.data() as Profile);
 
   if (newProfile.configured && !oldProfile.configured) {
     const gender = newProfile.gender;
@@ -102,7 +103,7 @@ exports.profileUpdated = functions.firestore.document("profiles/{uid}").onUpdate
     const phoneNumber = cleanPhoneNumber(newProfile.phoneNumber);
     const querySnapshot = await firestore.collection("friends").where("accepted", "==", false).get();
     for (const document of querySnapshot.docs) {
-      const friend = Object.assign({id: document.id}, document.data() as Friend);
+      const friend = Object.assign({ id: document.id }, document.data() as Friend);
       const friendPhoneNumber = cleanPhoneNumber(friend.phone);
       if (phoneNumber == friendPhoneNumber) {
         // Add the friendUID
@@ -126,7 +127,7 @@ exports.profileUpdated = functions.firestore.document("profiles/{uid}").onUpdate
 exports.sendPushMessage = functions.https.onRequest(async (req, res) => {
   const snapshot = await firestore.collection("profiles").get();
   for (const document of snapshot.docs) {
-    const profile = Object.assign({id: document.id}, document.data() as Profile);
+    const profile = Object.assign({ id: document.id }, document.data() as Profile);
     if (profile.gender == "Woman") {
       // eslint-disable-next-line max-len
       await pushNotifications.sendPushNotification(profile.id, "It's all about Friends!", "Don't forget that the best Duett experience happens with your friends. So grab your girls and make sure that they are signed up! ");
@@ -143,18 +144,18 @@ exports.addSuggestions = functions.https.onRequest(async (req, res) => {
   // eslint-disable-next-line max-len
   const suggestions = ["0chklRlWnWhlSOR6Z1GrsPAIzDA2", "CHYFDBgzNyDVRS2UCdsy", "JjxxN53UP7dm9N8PmhxHy9Fa2IX2", "tkxSZsDmbawx33mbKA6O", "eMkeuPFEJipt4z8FtlBE", "2B7ej5ApDkdSFKaEeZl8", "Xl6fFCSwNrNZRqPwL2y9", "5OFGObt5cXiWhLlgKsXB", "y62XZAw2rkKefwmIqjRU"];
 
-  await firestore.collection("suggestions").doc("4AaGDGFKg7c9KHpzu5pG402nfQz1").set({profiles: suggestions});
+  await firestore.collection("suggestions").doc("4AaGDGFKg7c9KHpzu5pG402nfQz1").set({ profiles: suggestions });
   res.sendStatus(200);
 });
 
 exports.test = functions.https.onRequest(async (req, res) => {
   const profileDoc = await firestore.collection("profiles").doc("tI6XNS1oLtWt4WjwkdiliJos3f72").get();
-  const profileData = Object.assign({id: profileDoc.id}, profileDoc.data() as Profile);
+  const profileData = Object.assign({ id: profileDoc.id }, profileDoc.data() as Profile);
   console.log("TEST");
   const birthdayDate = profileData.birthday.toDate();
   const today = new Date();
   const age = today.getFullYear() - birthdayDate.getFullYear() - ((today.getMonth() < birthdayDate.getMonth() || (today.getMonth() === birthdayDate.getMonth() && today.getDate() < birthdayDate.getDate())) ? 1 : 0);
-  console.log(`Age: ${age}`); 
+  console.log(`Age: ${age}`);
 
   await pushNotifications.sendPushNotification(profileDoc.id, "Duett Possible Match Alert", "Pete matched with Janice! Check out which one of her friends you may like.");
 
@@ -164,9 +165,9 @@ exports.test = functions.https.onRequest(async (req, res) => {
 exports.checkProfiles = functions.https.onRequest(async (req, res) => {
   const snapshot = await firestore.collection("profiles").get();
   for (const document of snapshot.docs) {
-    const profile = Object.assign({id: document.id}, document.data() as Profile);
+    const profile = Object.assign({ id: document.id }, document.data() as Profile);
     const inviteCode = textUtils.generateUniqueCode(profile.firstName);
-    await firestore.collection("profiles").doc(profile.id).update({inviteCode: inviteCode});
+    await firestore.collection("profiles").doc(profile.id).update({ inviteCode: inviteCode });
   }
 
   res.sendStatus(200);
@@ -290,21 +291,21 @@ exports.update = functions.https.onRequest(async (req, res) => {
   const querySnapshot = await firestore.collection("profiles").orderBy("creationDate").get();
   let counter = 250;
   for (const document of querySnapshot.docs) {
-    const profile = Object.assign({id: document.id}, document.data() as Profile);
-    await firestore.collection("profiles").doc(profile.id).update({lineNumber: counter});
+    const profile = Object.assign({ id: document.id }, document.data() as Profile);
+    await firestore.collection("profiles").doc(profile.id).update({ lineNumber: counter });
     counter++;
   }
 
-  res.sendStatus(200); 
+  res.sendStatus(200);
 });
 
 exports.makeConfigured = functions.https.onRequest(async (req, res) => {
   const querySnapshot = await firestore.collection("profiles").orderBy("creationDate").get();
- 
+
   for (const document of querySnapshot.docs) {
-    const profile = Object.assign({id: document.id}, document.data() as Profile);
-    if(profile.friends) {
-      await firestore.collection("profiles").doc(profile.id).update({configured:true});
+    const profile = Object.assign({ id: document.id }, document.data() as Profile);
+    if (profile.friends) {
+      await firestore.collection("profiles").doc(profile.id).update({ configured: true });
     }
   }
 
@@ -316,17 +317,17 @@ exports.exportProfilesToJson = functions.https.onRequest(async (req, res) => {
     // Get all profiles from Firestore
     const querySnapshot = await firestore.collection("profiles").get();
     const profiles = querySnapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
-      return Object.assign({id: doc.id}, doc.data() as Profile);
+      return Object.assign({ id: doc.id }, doc.data() as Profile);
     });
 
     // Generate summary statistics
     const totalProfiles = profiles.length;
-    
+
     // Location summary
     const locationSummary: Record<string, number> = {};
     profiles.forEach((profile: Profile) => {
       if (profile.living && profile.living.city) {
-        const location = `${profile.living.city}, ${profile.living.state || ''}`.trim();
+        const location = `${profile.living.city}, ${profile.living.state || ""}`.trim();
         locationSummary[location] = (locationSummary[location] || 0) + 1;
       }
     });
@@ -356,24 +357,24 @@ exports.exportProfilesToJson = functions.https.onRequest(async (req, res) => {
           .sort((a, b) => b[1] - a[1])
           .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {}),
         genderSummary,
-        datingPreferenceSummary
-      }
+        datingPreferenceSummary,
+      },
     };
 
     // Create a JSON string from the result object
     const jsonData = JSON.stringify(result, null, 2);
 
     // Set up the response headers for file download
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Content-Disposition', 'attachment; filename=profiles.json');
-    
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader("Content-Disposition", "attachment; filename=profiles.json");
+
     // Send the JSON data as the response
     res.send(jsonData);
-    
+
     console.log(`Successfully exported ${profiles.length} profiles to JSON with summary statistics`);
   } catch (error: unknown) {
     console.error("Error exporting profiles to JSON:", error);
-    res.status(500).send(`Error exporting profiles: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    res.status(500).send(`Error exporting profiles: ${error instanceof Error ? error.message : "Unknown error"}`);
   }
 });
 

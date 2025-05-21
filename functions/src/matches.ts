@@ -18,6 +18,7 @@ import pushNotifications from "./push_notifications";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const admin = require("firebase-admin");
+
 const firestore = admin.firestore();
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const FieldValue = require("firebase-admin").firestore.FieldValue;
@@ -26,7 +27,7 @@ const fs = require("fs");
 
 
 exports.matchAdded = functions.firestore.document("matches/{uid}").onCreate(async (snap, context) => {
-  const match = Object.assign({id: snap.id}, snap.data() as Match);
+  const match = Object.assign({ id: snap.id }, snap.data() as Match);
   const uid1 = match.matched[0];
   const uid2 = match.matched[1];
 
@@ -91,14 +92,14 @@ exports.matchAdded = functions.firestore.document("matches/{uid}").onCreate(asyn
   };
 
   await firestore.collection("duetts").doc(match.id).set(duettChat);
-  await pushNotifications.sendDuettMessageNotification(uid1, "You have a Match!", "You have matched up with " + match.profiles[1].firstName + ". Let's get a Duett going.", match.id);
-  await pushNotifications.sendDuettMessageNotification(uid2, "You have a Match!", "You have matched up with " + match.profiles[0].firstName + ". Let's get a Duett going.", match.id);
+  await pushNotifications.sendDuettMessageNotification(uid1, "You have a Match!", "You have matched up with " + match.profiles[1].firstName + ". Let's get a Flocc going.", match.id);
+  await pushNotifications.sendDuettMessageNotification(uid2, "You have a Match!", "You have matched up with " + match.profiles[0].firstName + ". Let's get a Flocc going.", match.id);
 
   return Promise.resolve();
 });
 
 exports.matchUpdated = functions.firestore.document("matches/{uid}").onUpdate(async (change, context) => {
-  const newMatch = Object.assign({id: change.after.id}, change.after.data() as Match);
+  const newMatch = Object.assign({ id: change.after.id }, change.after.data() as Match);
   console.log("Match updated: " + newMatch.id);
   return Promise.resolve();
 });
@@ -137,7 +138,7 @@ exports.createProfileText = functions.https.onRequest(async (req, res) => {
   const querySnapshot = await firestore.collection("profiles").where("configured", "==", true).get();
   const profiles: Profile[] = [];
   for (const document of querySnapshot.docs) {
-    const profile = Object.assign({id: document.id}, document.data() as Profile);
+    const profile = Object.assign({ id: document.id }, document.data() as Profile);
     profiles.push(profile);
   }
 
@@ -206,8 +207,8 @@ exports.createProfileText = functions.https.onRequest(async (req, res) => {
 });
 
 exports.possibleMatchUpdated = functions.firestore.document("possibleMatches/{uid}").onUpdate(async (change, context) => {
-  const newPM = Object.assign({id: change.after.id}, change.after.data() as PossibleMatch);
-  const oldPM = Object.assign({id: change.before.id}, change.before.data() as PossibleMatch);
+  const newPM = Object.assign({ id: change.after.id }, change.after.data() as PossibleMatch);
+  const oldPM = Object.assign({ id: change.before.id }, change.before.data() as PossibleMatch);
   if (newPM.completed && !oldPM.completed) {
     const completedUID = newPM.uid;
     const matchID = newPM.matchID;
@@ -215,7 +216,7 @@ exports.possibleMatchUpdated = functions.firestore.document("possibleMatches/{ui
     // Fond the Chat Message with "players" as type and duettID is the matchID
     const snapshot = await firestore.collection("messages").where("duettID", "==", matchID).get();
     for (const document of snapshot.docs) {
-      const chatMessage = Object.assign({id: document.id}, document.data() as ChatMessage);
+      const chatMessage = Object.assign({ id: document.id }, document.data() as ChatMessage);
       if (chatMessage.type == "players") {
         const players = chatMessage.players!;
         for (const player of players) {
@@ -247,7 +248,7 @@ exports.possibleMatchUpdated = functions.firestore.document("possibleMatches/{ui
         }
       }
 
-      await firestore.collection("messages").doc(document.id).update({players: chatMessage.players});
+      await firestore.collection("messages").doc(document.id).update({ players: chatMessage.players });
     }
   }
 
@@ -259,7 +260,7 @@ exports.possibleMatchUpdated = functions.firestore.document("possibleMatches/{ui
   let allMatchesCompleted = true;
   const querySnapshot = await firestore.collection("possibleMatches").where("matchID", "==", newPM.matchID).get();
   for (const document of querySnapshot.docs) {
-    const possibleMatch = Object.assign({id: document.id}, document.data() as PossibleMatch);
+    const possibleMatch = Object.assign({ id: document.id }, document.data() as PossibleMatch);
     if (!possibleMatch.completed) {
       allMatchesCompleted = false;
     }
@@ -267,7 +268,7 @@ exports.possibleMatchUpdated = functions.firestore.document("possibleMatches/{ui
   }
 
   if (allMatchesCompleted) {
-    await firestore.collection("matches").doc(newPM.matchID).update({completed: true});
+    await firestore.collection("matches").doc(newPM.matchID).update({ completed: true });
   }
 
   // Make pairs when possible
@@ -343,7 +344,7 @@ async function checkForPair(possibleMatch: PossibleMatch, possibleMatches: Possi
           const pairIds = match.pairIds ?? [];
           if (!pairIds.includes(pairID)) {
             pairIds.push(pairID);
-            await firestore.collection("matches").doc(matchID).update({pairIds: pairIds});
+            await firestore.collection("matches").doc(matchID).update({ pairIds: pairIds });
           }
         }
       }
@@ -381,7 +382,7 @@ exports.testLike = functions.https.onRequest(async (req, res) => {
 exports.testPairing = functions.https.onRequest(async (req, res) => {
   const querySnapshot = await firestore.collection("possibleMatches").get();
   for (const document of querySnapshot.docs) {
-    const possibleMatch = Object.assign({id: document.id}, document.data() as PossibleMatch);
+    const possibleMatch = Object.assign({ id: document.id }, document.data() as PossibleMatch);
     for (const choice of possibleMatch.choices) {
       choice.liked = true;
       choice.rejected = false;
@@ -399,12 +400,12 @@ exports.testPairing = functions.https.onRequest(async (req, res) => {
 exports.upgradeProfile = functions.https.onRequest(async (req, res) => {
   const querySnapshot = await firestore.collection("profiles").get();
   for (const document of querySnapshot.docs) {
-    const profile = Object.assign({id: document.id}, document.data() as Profile);
+    const profile = Object.assign({ id: document.id }, document.data() as Profile);
     const fullName = "";
     const firstName = "";
     const indexOfSpace = fullName.indexOf(" ");
     const lastName = fullName.substring(indexOfSpace + 1);
-    await firestore.collection("profiles").doc(profile.id).update({firstName: firstName, lastName: lastName});
+    await firestore.collection("profiles").doc(profile.id).update({ firstName: firstName, lastName: lastName });
   }
 
 
@@ -461,7 +462,7 @@ exports.everyoneLikesEveryone = functions.runWith({
 }).https.onRequest(async (req, res) => {
   const querySnapshot = await firestore.collection("possibleMatches").get();
   for (const document of querySnapshot.docs) {
-    const possibleMatch = Object.assign({id: document.id}, document.data() as PossibleMatch);
+    const possibleMatch = Object.assign({ id: document.id }, document.data() as PossibleMatch);
     const choices = possibleMatch.choices;
     for (const choice of choices) {
       choice.liked = true;
@@ -480,7 +481,7 @@ exports.testPairCreation = functions.https.onRequest(async (req, res) => {
   let allMatchesCompleted = true;
   const querySnapshot = await firestore.collection("possibleMatches").where("matchID", "==", matchID).get();
   for (const document of querySnapshot.docs) {
-    const possibleMatch = Object.assign({id: document.id}, document.data() as PossibleMatch);
+    const possibleMatch = Object.assign({ id: document.id }, document.data() as PossibleMatch);
     if (!possibleMatch.completed) {
       allMatchesCompleted = false;
     }
@@ -492,14 +493,14 @@ exports.testPairCreation = functions.https.onRequest(async (req, res) => {
     for (const pm of pms) {
       await checkForPair(pm, pms);
     }
-    await firestore.collection("matches").doc(matchID).update({completed: true});
+    await firestore.collection("matches").doc(matchID).update({ completed: true });
   }
 
   res.sendStatus(200);
 });
 
 exports.possibleMatchAdded = functions.firestore.document("possibleMatches/{uid}").onCreate(async (snap, context) => {
-  const pm = Object.assign({id: snap.id}, snap.data() as PossibleMatch);
+  const pm = Object.assign({ id: snap.id }, snap.data() as PossibleMatch);
   const match = await dbUtils.getMatch(pm.matchID);
   const uid = pm.uid;
 
@@ -522,7 +523,7 @@ exports.possibleMatchAdded = functions.firestore.document("possibleMatches/{uid}
 });
 
 exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (snap, context) => {
-  const like = Object.assign({id: snap.id}, snap.data() as Like);
+  const like = Object.assign({ id: snap.id }, snap.data() as Like);
   const profileOne = await dbUtils.getProfile(like.profileID);
   const profileTwo = await dbUtils.getProfile(like.likedProfileID);
   profileOne.likedBy = profileOne.likedBy ?? [];
@@ -546,7 +547,7 @@ exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (
   // Add that they were liked by p1
   const likedBy = profileTwo.likedBy ?? [];
   likedBy.push(profileOne.id);
-  await firestore.collection("profiles").doc(profileTwo.id).update({likedBy: likedBy});
+  await firestore.collection("profiles").doc(profileTwo.id).update({ likedBy: likedBy });
 
   // Check if they now both like each other
   if (profileOne.likedBy.includes(profileTwo.id) && profileTwo.likedBy.includes(profileOne.id)) {
@@ -611,7 +612,7 @@ async function convertToChoices(friends: Friend[]) {
   const choices: any[] = [];
   for (const friend of friends) {
     const snapshot = await firestore.collection("profiles").doc(friend.friendUID).get();
-    const profile = Object.assign({id: snapshot.id}, snapshot.data() as Profile);
+    const profile = Object.assign({ id: snapshot.id }, snapshot.data() as Profile);
 
     const choice: Choice = {
       uid: friend.friendUID,
@@ -747,7 +748,7 @@ exports.matchMeUp = functions.runWith({
   // Run thread with assistant
   const run = await openai.beta.threads.runs.create(
     thread.id,
-    {assistant_id: "asst_WZg4DoXe1CQ0nmhcPlrykmPJ"}
+    { assistant_id: "asst_WZg4DoXe1CQ0nmhcPlrykmPJ" }
   );
 
   // Retrieve
@@ -784,10 +785,10 @@ exports.matchMeUp = functions.runWith({
           role: "system",
           content: "You are a helpful assistant designed to output JSON.",
         },
-        {role: "user", content: "Take the following text and only give me back json: " + text},
+        { role: "user", content: "Take the following text and only give me back json: " + text },
       ],
       model: "gpt-3.5-turbo-1106",
-      response_format: {type: "json_object"},
+      response_format: { type: "json_object" },
     });
     console.log(completion.choices[0].message.content);
   }
@@ -826,7 +827,7 @@ exports.grammarlyTest = functions.runWith({
   // Run thread with assistant
   const run = await openai.beta.threads.runs.create(
     thread.id,
-    {assistant_id: "asst_JiWlO0C9iHRM7zzEHrYNNa0G"}
+    { assistant_id: "asst_JiWlO0C9iHRM7zzEHrYNNa0G" }
   );
 
   // Retrieve
@@ -872,28 +873,28 @@ exports.startMatchingById = functions.https.onRequest(async (req, res) => {
   try {
     // Use a hardcoded match ID for testing
     const matchId = "4q0ca4bskZqlpuJS4ISa";
-    
+
     // Load the match from Firestore
     const match = await dbUtils.getMatch(matchId);
-    
+
     if (!match) {
       res.status(404).send({ error: `Match with ID ${matchId} not found` });
       return;
     }
-    
+
     // Call the startMatching function directly
     await startMatching(match);
-    
-    res.status(200).send({ 
-      success: true, 
+
+    res.status(200).send({
+      success: true,
       message: `Started matching process for match ${matchId}`,
-      match: match
+      match: match,
     });
   } catch (error) {
     console.error("Error in startMatchingById:", error);
-    res.status(500).send({ 
+    res.status(500).send({
       error: "An error occurred while processing the request",
-      details: error instanceof Error ? error.message : "Unknown error"
+      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
 });

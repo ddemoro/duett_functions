@@ -1,10 +1,11 @@
 import * as functions from "firebase-functions";
-import {Friend, Profile} from "./types";
+import { Friend, Profile } from "./types";
 import dbUtils from "./utils/db_utils";
 import pushNotifications from "./push_notifications";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const admin = require("firebase-admin");
+
 const firestore = admin.firestore();
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const FieldValue = require("firebase-admin").firestore.FieldValue;
@@ -13,10 +14,10 @@ const FieldValue = require("firebase-admin").firestore.FieldValue;
 exports.test = functions.https.onRequest(async (req, res) => {
   const friendSnapshot = await firestore.collection("friends").where("accepted", "==", false).get();
   for (const document of friendSnapshot.docs) {
-    const friend = Object.assign({id: document.id}, document.data() as Friend);
+    const friend = Object.assign({ id: document.id }, document.data() as Friend);
     const friendSnapshot = await firestore.collection("friends").where("uid", "==", friend.friendUID).where("friendUID", "==", friend.uid).get();
     for (const document of friendSnapshot.docs) {
-      const otherFriend = Object.assign({id: document.id}, document.data() as Friend);
+      const otherFriend = Object.assign({ id: document.id }, document.data() as Friend);
       if (otherFriend) {
         console.log(friend.id + " and " + otherFriend.id);
       }
@@ -50,7 +51,7 @@ async function updateFriendsStatus(uid: string): Promise<void> {
 }
 
 exports.friendAdded = functions.firestore.document("friends/{uid}").onCreate(async (snap, context) => {
-  const friend = Object.assign({id: snap.id}, snap.data() as Friend);
+  const friend = Object.assign({ id: snap.id }, snap.data() as Friend);
   const friendPhoneNumber = cleanPhoneNumber(friend.phone);
   const inviter = await dbUtils.getProfile(friend.uid);
 
@@ -59,7 +60,7 @@ exports.friendAdded = functions.firestore.document("friends/{uid}").onCreate(asy
   let friendUID;
   let avatarURL = friend.avatarURL;
   for (const document of querySnapshot.docs) {
-    const profile = Object.assign({id: document.id}, document.data() as Profile);
+    const profile = Object.assign({ id: document.id }, document.data() as Profile);
     if (profile.phoneNumber) {
       const phone = cleanPhoneNumber(profile.phoneNumber);
       if (friendPhoneNumber === phone) {
@@ -80,7 +81,7 @@ exports.friendAdded = functions.firestore.document("friends/{uid}").onCreate(asy
   if (friendUID) {
     const friendSnapshot = await firestore.collection("friends").where("uid", "==", friendUID).where("friendUID", "==", friend.uid).get();
     for (const document of friendSnapshot.docs) {
-      const otherFriend = Object.assign({id: document.id}, document.data() as Friend);
+      const otherFriend = Object.assign({ id: document.id }, document.data() as Friend);
       if (otherFriend) {
         accepted = true;
 
@@ -102,7 +103,7 @@ exports.friendAdded = functions.firestore.document("friends/{uid}").onCreate(asy
     lineNumber = lineNumber - 5;
   }
 
-  await firestore.collection("profiles").doc(inviter.id).update({lineNumber: lineNumber});
+  await firestore.collection("profiles").doc(inviter.id).update({ lineNumber: lineNumber });
   // Update friends status after adding a friend
   await updateFriendsStatus(inviter.id);
 
@@ -121,8 +122,8 @@ exports.friendAdded = functions.firestore.document("friends/{uid}").onCreate(asy
 
 
 exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(async (change, context) => {
-  const newFriend = Object.assign({id: change.after.id}, change.after.data() as Friend);
-  const oldFriend = Object.assign({id: change.before.id}, change.before.data() as Friend);
+  const newFriend = Object.assign({ id: change.after.id }, change.after.data() as Friend);
+  const oldFriend = Object.assign({ id: change.before.id }, change.before.data() as Friend);
 
   if (newFriend.accepted && !oldFriend.accepted) {
     // They just entered the code and accepted.
@@ -143,7 +144,7 @@ exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(a
 
     const friends: Friend[] = [];
     for (const document of querySnapshot.docs) {
-      const friend = Object.assign({id: document.id}, document.data() as Friend);
+      const friend = Object.assign({ id: document.id }, document.data() as Friend);
       friends.push(friend);
     }
 
@@ -180,14 +181,14 @@ exports.friendUpdated = functions.firestore.document("friends/{uid}").onUpdate(a
 
     let lineNumber = ownerProfile.lineNumber;
     lineNumber += 5;
-    await firestore.collection("profiles").doc(ownerProfile.id).update({lineNumber: lineNumber});
+    await firestore.collection("profiles").doc(ownerProfile.id).update({ lineNumber: lineNumber });
   }
 
   return Promise.resolve();
 });
 
 exports.friendDeleted = functions.firestore.document("friends/{uid}").onDelete(async (snap, context) => {
-  const friend = Object.assign({id: snap.id}, snap.data() as Friend);
+  const friend = Object.assign({ id: snap.id }, snap.data() as Friend);
   const uid = friend.uid;
   const friendUID = friend.friendUID;
 
@@ -213,7 +214,7 @@ exports.friendDeleted = functions.firestore.document("friends/{uid}").onDelete(a
     lineNumber = lineNumber + 5;
   }
 
-  await firestore.collection("profiles").doc(profile.id).update({lineNumber: lineNumber});
+  await firestore.collection("profiles").doc(profile.id).update({ lineNumber: lineNumber });
 
   return Promise.resolve();
 });

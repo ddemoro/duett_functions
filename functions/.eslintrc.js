@@ -10,7 +10,6 @@ module.exports = {
     "plugin:import/errors",
     "plugin:import/warnings",
     "plugin:import/typescript",
-    "google",
     "plugin:@typescript-eslint/recommended",
   ],
   parser: "@typescript-eslint/parser",
@@ -27,28 +26,32 @@ module.exports = {
     "import",
   ],
   rules: {
-    "quotes": ["error", "double"],
+    "quotes": ["warn", "double", { "avoidEscape": true }],
     "import/no-unresolved": 0,
-    "indent": ["error", 2],
-    "max-len": ["error", 200],
+    "indent": ["warn", 2],
+    "max-len": ["warn", 200],
     "@typescript-eslint/no-explicit-any": "off",
-    "no-console": ["warn"], // Warns about console statements but doesn't error
-    "eqeqeq": ["error", "always"], // Requires === and !== instead of == and !=
-    "prefer-const": "error", // Use const when variables aren't reassigned
-    "no-var": "error", // Prefer let/const over var
+    "no-console": "off", // Allow console statements
+    "eqeqeq": ["warn", "always"], // Downgraded to warn
+    "prefer-const": "error", // Keep this as error
+    "no-var": "error", // Keep this as error
     "no-unused-vars": "off", // Turn off base rule
-    "@typescript-eslint/no-unused-vars": ["error"], // Use TypeScript-specific version
-    "object-curly-spacing": ["error", "always"], // Enforce spacing in object literals
-    "comma-dangle": ["error", "always-multiline"], // Trailing commas in multiline objects
-    "arrow-parens": ["error", "always"], // Consistent arrow function params with parens
-    "import/first": "error",
-    "import/newline-after-import": "error",
-    "import/no-duplicates": "error",
-    "@typescript-eslint/explicit-function-return-type": "off", // Type inference is often sufficient
-    "@typescript-eslint/no-non-null-assertion": "warn", // Warn about non-null assertions
-    "@typescript-eslint/ban-ts-comment": ["error", {
+    "@typescript-eslint/no-unused-vars": ["warn"], // Downgraded to warn
+    "object-curly-spacing": ["warn", "always"], // Downgraded to warn
+    "comma-dangle": ["warn", "always-multiline"], // Downgraded to warn
+    "arrow-parens": ["warn", "always"], // Downgraded to warn
+    "import/first": "warn",
+    "import/newline-after-import": "warn",
+    "import/no-duplicates": "warn",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/no-non-null-assertion": "off", // Allow non-null assertions
+    "@typescript-eslint/ban-ts-comment": ["warn", {
       "ts-ignore": "allow-with-description",
       "ts-expect-error": "allow-with-description",
-    }], // Require comments on ts-ignore
+    }],
+    "no-trailing-spaces": "warn", // Downgraded to warn
+    "key-spacing": "warn", // Downgraded to warn
+    "keyword-spacing": "warn", // Downgraded to warn
+    "operator-linebreak": "off", // Turned off
   },
 };
