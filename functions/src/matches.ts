@@ -898,3 +898,133 @@ exports.startMatchingById = functions.https.onRequest(async (req, res) => {
     });
   }
 });
+
+// Cleanup function for stale possibleMatches
+async function cleanupStalePossibleMatches() {
+  console.log("Starting cleanup of stale possibleMatches...");
+  
+  try {
+    // Calculate the cutoff date (48 hours ago)
+    const cutoffDate = new Date();
+    cutoffDate.setHours(cutoffDate.getHours() - 48);
+    
+    // Query for stale possibleMatches
+    const querySnapshot = await firestore.collection("possibleMatches")
+      .where("completed", "==", false)
+      .where("creationDate", "<", cutoffDate)
+      .get();
+    
+    console.log(`Found ${querySnapshot.size} stale possibleMatches to clean up`);
+    
+    let deletedCount = 0;
+    let notificationsSent = 0;
+    
+    // Process each stale record
+    for (const doc of querySnapshot.docs) {
+      const possibleMatch = Object.assign({ id: doc.id }, doc.data() as PossibleMatch);
+      
+      try {
+        // Send notifications to matchmakers
+        for (const matchmakerId of possibleMatch.matchmakers) {
+          try {
+            const message = `Your friend ${possibleMatch.fullName} never responded to the Flocc request with ${possibleMatch.friend.firstName} and ${possibleMatch.match.firstName}. The opportunity has expired.`;
+            
+            await pushNotifications.sendPushNotification(
+              matchmakerId,
+              "Flocc Request Expired",
+              message
+            );
+            
+            // Create notification record
+            const notification: Notification = {
+              creationDate: FieldValue.serverTimestamp(),
+              text: message,
+              images: [possibleMatch.avatarURL],
+              uid: matchmakerId,
+              read: false,
+            };
+            await firestore.collection("notifications").add(notification);
+            
+            notificationsSent++;
+          } catch (notifError) {
+            console.error(`Failed to notify matchmaker ${matchmakerId}:`, notifError);
+          }
+        }
+        
+        // Send notification to the person who missed the opportunity
+        try {
+          const message = `You missed out on a Possible Match opportunity! ${possibleMatch.friend.firstName} had matched with ${possibleMatch.match.firstName} and wanted to introduce you to their friends.`;
+          
+          await pushNotifications.sendPushNotification(
+            possibleMatch.uid,
+            "Missed Possible Match",
+            message
+          );
+          
+          // Create notification record
+          const notification: Notification = {
+            creationDate: FieldValue.serverTimestamp(),
+            text: message,
+            images: possibleMatch.choices.map(choice => choice.avatarURL).slice(0, 4), // Show up to 4 friend avatars
+            uid: possibleMatch.uid,
+            read: false,
+          };
+          await firestore.collection("notifications").add(notification);
+          
+          notificationsSent++;
+        } catch (notifError) {
+          console.error(`Failed to notify user ${possibleMatch.uid}:`, notifError);
+        }
+        
+        // Delete the possibleMatch record
+        await doc.ref.delete();
+        deletedCount++;
+        
+      } catch (error) {
+        console.error(`Error processing possibleMatch ${doc.id}:`, error);
+      }
+    }
+    
+    console.log(`Cleanup completed. Deleted ${deletedCount} records and sent ${notificationsSent} notifications.`);
+    
+  } catch (error) {
+    console.error("Error in cleanupStalePossibleMatches:", error);
+    throw error;
+  }
+}
+
+// Export the cleanup function so it can be called by the cron job
+exports.cleanupStalePossibleMatches = cleanupStalePossibleMatches;
+
+// Cron job that runs every hour (0 * * * *)
+exports.cleanupStalePossibleMatchesCron = functions.pubsub
+  .schedule("0 * * * *")
+  .timeZone("America/Los_Angeles")
+  .onRun(async (context) => {
+    console.log("Running scheduled cleanup of stale possibleMatches");
+    
+    try {
+      await cleanupStalePossibleMatches();
+      console.log("Scheduled cleanup completed successfully");
+    } catch (error) {
+      console.error("Scheduled cleanup failed:", error);
+      // The error is logged but not re-thrown to prevent retries
+    }
+  });
+
+// HTTP endpoint for manually triggering the cleanup (useful for testing)
+exports.cleanupStalePossibleMatchesManual = functions.https.onRequest(async (req, res) => {
+  try {
+    await cleanupStalePossibleMatches();
+    res.status(200).send({
+      success: true,
+      message: "Cleanup completed successfully",
+    });
+  } catch (error) {
+    console.error("Manual cleanup failed:", error);
+    res.status(500).send({
+      error: "Cleanup failed",
+      details: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
