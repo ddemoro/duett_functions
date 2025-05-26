@@ -584,7 +584,7 @@ exports.checkProfilesWithAcceptedFriends = functions.https.onRequest(async (req,
 
 /**
  * Unmatches two users by removing all traces of their match from the database.
- * This includes removing likes, pairs, messages, and updating relevant collections.
+ * This includes removing likes, pairs, messages, possibleMatches, and updating relevant collections.
  */
 exports.unmatch = functions.https.onRequest(async (req, res) => {
   const uid1 = "bxLjcxVZzlexU040cKCnh5xROLq1";
@@ -603,6 +603,7 @@ exports.unmatch = functions.https.onRequest(async (req, res) => {
     updatedDuetts: 0,
     updatedMatches: 0,
     deletedMessages: 0,
+    deletedPossibleMatches: 0,
   };
 
   try {
@@ -722,6 +723,20 @@ exports.unmatch = functions.https.onRequest(async (req, res) => {
             results.deletedMessages++;
           }
         }
+      }
+    }
+
+    // 7. Delete possibleMatches where matchmakers contains both users
+    const possibleMatchesQuery = await firestore
+      .collection("possibleMatches")
+      .where("matchmakers", "array-contains", uid1)
+      .get();
+
+    for (const doc of possibleMatchesQuery.docs) {
+      const matchmakers = doc.data().matchmakers || [];
+      if (matchmakers.includes(uid2)) {
+        await doc.ref.delete();
+        results.deletedPossibleMatches++;
       }
     }
 
