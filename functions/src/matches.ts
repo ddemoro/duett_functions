@@ -924,31 +924,30 @@ async function cleanupStalePossibleMatches() {
       const possibleMatch = Object.assign({ id: doc.id }, doc.data() as PossibleMatch);
       
       try {
-        // Send notifications to matchmakers
-        for (const matchmakerId of possibleMatch.matchmakers) {
-          try {
-            const message = `Your friend ${possibleMatch.fullName} never responded to the Flocc request with ${possibleMatch.friend.firstName} and ${possibleMatch.match.firstName}. The opportunity has expired.`;
-            
-            await pushNotifications.sendPushNotification(
-              matchmakerId,
-              "Flocc Request Expired",
-              message
-            );
-            
-            // Create notification record
-            const notification: Notification = {
-              creationDate: FieldValue.serverTimestamp(),
-              text: message,
-              images: [possibleMatch.avatarURL],
-              uid: matchmakerId,
-              read: false,
-            };
-            await firestore.collection("notifications").add(notification);
-            
-            notificationsSent++;
-          } catch (notifError) {
-            console.error(`Failed to notify matchmaker ${matchmakerId}:`, notifError);
-          }
+        // Send notification to the friend (matchmaker) who owns this possibleMatch
+        const friendProfileId = possibleMatch.friend.profileID;
+        try {
+          const message = `Your friend ${possibleMatch.fullName} never responded to the Flocc request with ${possibleMatch.match.firstName}. The opportunity has expired.`;
+          
+          await pushNotifications.sendPushNotification(
+            friendProfileId,
+            "Flocc Request Expired",
+            message
+          );
+          
+          // Create notification record
+          const notification: Notification = {
+            creationDate: FieldValue.serverTimestamp(),
+            text: message,
+            images: [possibleMatch.avatarURL],
+            uid: friendProfileId,
+            read: false,
+          };
+          await firestore.collection("notifications").add(notification);
+          
+          notificationsSent++;
+        } catch (notifError) {
+          console.error(`Failed to notify friend ${friendProfileId}:`, notifError);
         }
         
         // Send notification to the person who missed the opportunity
