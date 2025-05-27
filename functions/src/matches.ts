@@ -229,19 +229,19 @@ exports.possibleMatchUpdated = functions.firestore.document("possibleMatches/{ui
 
             if (profile1.profileID == player.matchMakerID) {
               // Notify about their friend. Profile is the MatchMaker and Player is their friend
-              const message = "Your friend "+player.firstName+" has made their choice(s) of "+profile2.firstName+" friends";
+              const message = "Your friend " + player.firstName + " has made their choice(s) of " + profile2.firstName + " friends";
               await pushNotifications.sendDuettMessageNotification(profile1.profileID, "Selections Made", message, matchID);
 
               // Notify about their matches friends
-              const message2 = profile1.firstName+"'s friend "+player.firstName+" has made their choice(s) of your friends.";
+              const message2 = profile1.firstName + "'s friend " + player.firstName + " has made their choice(s) of your friends.";
               await pushNotifications.sendDuettMessageNotification(profile2.profileID, "Selections Made", message2, matchID);
             } else {
               // Profile2 is the matchmaker and Player is their friend
-              const message = "Your friend "+player.firstName+" has made their choice(s) of "+profile1.firstName+" friends";
+              const message = "Your friend " + player.firstName + " has made their choice(s) of " + profile1.firstName + " friends";
               await pushNotifications.sendDuettMessageNotification(profile2.profileID, "Selections Made", message, matchID);
 
               // Notify about their matches friends
-              const message2 = profile2.firstName+"'s friend "+player.firstName+" has made their choice(s) of your friends.";
+              const message2 = profile2.firstName + "'s friend " + player.firstName + " has made their choice(s) of your friends.";
               await pushNotifications.sendDuettMessageNotification(profile1.profileID, "Selections Made", message2, matchID);
             }
           }
@@ -586,20 +586,20 @@ exports.likeAdded = functions.firestore.document("likes/{uid}").onCreate(async (
   } else {
     await pushNotifications.sendPushNotification("tI6XNS1oLtWt4WjwkdiliJos3f72", "Matches Happening", profileOne.firstName + " liked " + profileTwo.firstName);
     /*
-            await pushNotifications.sendLikeNotification(profileTwo.id, "Duett", profileOne.firstName + " just liked you! Act fast to see if they're a match.", profileOne.id);
+                await pushNotifications.sendLikeNotification(profileTwo.id, "Duett", profileOne.firstName + " just liked you! Act fast to see if they're a match.", profileOne.id);
 
-            // Create notification
-            const notification: Notification = {
-              creationDate: FieldValue.serverTimestamp(),
-              likedByUID: profileOne.id,
-              text: profileOne.firstName + " just liked you! Act fast to see if they're a match.",
-              images: [profileOne.media[0].url],
-              uid: profileTwo.id,
-              read: false,
-            };
-            await firestore.collection("notifications").add(notification);
+                // Create notification
+                const notification: Notification = {
+                  creationDate: FieldValue.serverTimestamp(),
+                  likedByUID: profileOne.id,
+                  text: profileOne.firstName + " just liked you! Act fast to see if they're a match.",
+                  images: [profileOne.media[0].url],
+                  uid: profileTwo.id,
+                  read: false,
+                };
+                await firestore.collection("notifications").add(notification);
 
-             */
+                 */
   }
 
 
@@ -902,39 +902,39 @@ exports.startMatchingById = functions.https.onRequest(async (req, res) => {
 // Cleanup function for stale possibleMatches
 async function cleanupStalePossibleMatches() {
   console.log("Starting cleanup of stale possibleMatches...");
-  
+
   try {
     // Calculate the cutoff date (48 hours ago)
     const cutoffDate = new Date();
     cutoffDate.setHours(cutoffDate.getHours() - 48);
-    
+
     // Query for stale possibleMatches
     const querySnapshot = await firestore.collection("possibleMatches")
       .where("completed", "==", false)
       .where("creationDate", "<", cutoffDate)
       .get();
-    
+
     console.log(`Found ${querySnapshot.size} stale possibleMatches to clean up`);
-    
+
     let deletedCount = 0;
     let notificationsSent = 0;
-    
+
     // Process each stale record
     for (const doc of querySnapshot.docs) {
       const possibleMatch = Object.assign({ id: doc.id }, doc.data() as PossibleMatch);
-      
+
       try {
         // Send notification to the friend (matchmaker) who owns this possibleMatch
         const friendProfileId = possibleMatch.friend.profileID;
         try {
           const message = `Your friend ${possibleMatch.fullName} never responded to the Flocc request with ${possibleMatch.match.firstName}. The opportunity has expired.`;
-          
+
           await pushNotifications.sendPushNotification(
             friendProfileId,
             "Flocc Request Expired",
             message
           );
-          
+
           // Create notification record
           const notification: Notification = {
             creationDate: FieldValue.serverTimestamp(),
@@ -944,48 +944,48 @@ async function cleanupStalePossibleMatches() {
             read: false,
           };
           await firestore.collection("notifications").add(notification);
-          
+
           notificationsSent++;
         } catch (notifError) {
           console.error(`Failed to notify friend ${friendProfileId}:`, notifError);
         }
-        
+
         // Send notification to the person who missed the opportunity
         try {
           const message = `You missed out on a Possible Match opportunity! ${possibleMatch.friend.firstName} had matched with ${possibleMatch.match.firstName} and wanted to introduce you to their friends.`;
-          
+
           await pushNotifications.sendPushNotification(
             possibleMatch.uid,
             "Missed Possible Match",
             message
           );
-          
+
           // Create notification record
           const notification: Notification = {
             creationDate: FieldValue.serverTimestamp(),
             text: message,
-            images: possibleMatch.choices.map(choice => choice.avatarURL).slice(0, 4), // Show up to 4 friend avatars
+            images: possibleMatch.choices.map((choice) => choice.avatarURL).slice(0, 4), // Show up to 4 friend avatars
             uid: possibleMatch.uid,
             read: false,
           };
           await firestore.collection("notifications").add(notification);
-          
+
           notificationsSent++;
         } catch (notifError) {
           console.error(`Failed to notify user ${possibleMatch.uid}:`, notifError);
         }
-        
+
         // Delete the possibleMatch record
         await doc.ref.delete();
         deletedCount++;
-        
+
       } catch (error) {
         console.error(`Error processing possibleMatch ${doc.id}:`, error);
       }
     }
-    
+
     console.log(`Cleanup completed. Deleted ${deletedCount} records and sent ${notificationsSent} notifications.`);
-    
+
   } catch (error) {
     console.error("Error in cleanupStalePossibleMatches:", error);
     throw error;
@@ -1001,7 +1001,7 @@ exports.cleanupStalePossibleMatchesCron = functions.pubsub
   .timeZone("America/Los_Angeles")
   .onRun(async (context) => {
     console.log("Running scheduled cleanup of stale possibleMatches");
-    
+
     try {
       await cleanupStalePossibleMatches();
       console.log("Scheduled cleanup completed successfully");
