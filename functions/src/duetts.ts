@@ -1,10 +1,11 @@
 import * as functions from "firebase-functions";
-import { ChatMessage, Nudge } from "./types";
+import { ChatMessage, Nudge, DuettChat } from "./types";
 import pushNotifications from "./push_notifications";
 import dbUtils from "./utils/db_utils";
 import { firestore } from "firebase-admin";
 
 const FieldValue = firestore.FieldValue;
+const db = firestore();
 
 
 /**
@@ -99,3 +100,76 @@ exports.nudgeCreated = functions.firestore.document("nudges/{nudgeId}").onCreate
   
   return Promise.resolve();
 });
+
+/**
+ * Cron job that runs daily at 2 AM to enable duetts older than 14 days
+ * For duetts that were created but never enabled (matchmakers didn't cooperate)
+ */
+exports.enableOldDuetts = functions.pubsub.schedule("0 2 * * *")
+  .timeZone("America/New_York")
+  .onRun(async (context) => {
+    console.log("Starting daily job to enable old duetts");
+    
+    try {
+      // Calculate the date 14 days ago
+      const fourteenDaysAgo = new Date();
+      fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+      
+      // Query for duetts that are:
+      // 1. Older than 14 days
+      // 2. Not enabled
+      const duettsSnapshot = await db.collection("duetts")
+        .where("enabled", "==", false)
+        .where("created", "<", fourteenDaysAgo)
+        .get();
+        
+      console.log(`Found ${duettsSnapshot.size} duetts to enable`);
+      
+      // Process each duett
+      const updatePromises = [];
+      const notificationPromises = [];
+      
+      for (const doc of duettsSnapshot.docs) {
+        const duett = doc.data() as DuettChat;
+        const duettId = doc.id;
+        
+        console.log(`Processing duett ${duettId}`);
+        
+        // Update the duett to enabled
+        updatePromises.push(
+          doc.ref.update({ enabled: true })
+        );
+        
+        // Send notifications to all matchmakers
+        if (duett.matchMakers && duett.matchMakers.length > 0) {
+          for (const matchMakerId of duett.matchMakers) {
+            console.log(`Sending notification to matchmaker ${matchMakerId}`);
+            
+            notificationPromises.push(
+              pushNotifications.sendDuettMessageNotification(
+                matchMakerId,
+                "Flocc Unlocked",
+                "Your friends never cooperated but you two are free to choose your own destiny.",
+                duettId
+              ).catch(error => {
+                console.error(`Failed to send notification to ${matchMakerId}:`, error);
+              })
+            );
+          }
+        } else {
+          console.warn(`Duett ${duettId} has no matchMakers array`);
+        }
+      }
+      
+      // Execute all updates and notifications
+      await Promise.all([...updatePromises, ...notificationPromises]);
+      
+      console.log(`Successfully enabled ${duettsSnapshot.size} old duetts`);
+      
+    } catch (error) {
+      console.error("Error in enableOldDuetts cron job:", error);
+      throw error; // Re-throw to ensure Cloud Functions logs the error
+    }
+    
+    return null;
+  });
