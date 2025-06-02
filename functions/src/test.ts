@@ -587,8 +587,8 @@ exports.checkProfilesWithAcceptedFriends = functions.https.onRequest(async (req,
  * This includes removing likes, pairs, messages, possibleMatches, and updating relevant collections.
  */
 exports.unmatch = functions.https.onRequest(async (req, res) => {
-  const uid1 = "bxLjcxVZzlexU040cKCnh5xROLq1";
-  const uid2 = "s5C7M8CvapbCttHWtRDeWl403fS2";
+  const uid1 = "2qwsnxwu3nd7vJHM94F1QHrZs2T2";
+  const uid2 = "bxLjcxVZzlexU040cKCnh5xROLq1";
 
 
   if (!uid1 || !uid2) {
@@ -601,7 +601,7 @@ exports.unmatch = functions.https.onRequest(async (req, res) => {
     updatedProfiles: 0,
     deletedPairs: 0,
     updatedDuetts: 0,
-    updatedMatches: 0,
+    deletedMatches: 0,
     deletedMessages: 0,
     deletedPossibleMatches: 0,
   };
@@ -707,7 +707,6 @@ exports.unmatch = functions.https.onRequest(async (req, res) => {
             approvedPairs: updatedApprovedPairs,
             rejectedPairs: updatedRejectedPairs,
           });
-          results.updatedMatches++;
         }
 
         // 6. Optionally delete messages between the two users in this duett
@@ -737,6 +736,28 @@ exports.unmatch = functions.https.onRequest(async (req, res) => {
       if (matchmakers.includes(uid2)) {
         await doc.ref.delete();
         results.deletedPossibleMatches++;
+      }
+    }
+
+    // 8. Find and delete the match document containing both users
+    const matchesQuery = await firestore.collection("matches").get();
+
+    for (const doc of matchesQuery.docs) {
+      const matchData = doc.data();
+      const matched = matchData.matched || [];
+
+      // Check if both users are in the matched array
+      if (matched.includes(uid1) && matched.includes(uid2)) {
+        // Delete the match document
+        await doc.ref.delete();
+        results.deletedMatches++;
+
+        // Also delete the associated duett if it exists
+        const duettDoc = await firestore.collection("duetts").doc(doc.id).get();
+        if (duettDoc.exists) {
+          await duettDoc.ref.delete();
+          results.updatedDuetts++;
+        }
       }
     }
 
