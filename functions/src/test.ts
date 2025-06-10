@@ -65,56 +65,69 @@ exports.clearProfiles = functions
     timeoutSeconds: 540,
   })
   .https.onRequest(async (req, res) => {
-    const querySnapshot = await firestore.collection("profiles").get();
-    for (const document of querySnapshot.docs) {
-      await firestore.collection("profiles").doc(document.id).update({
-        likedBy: [],
-      });
-    }
+    const batch = firestore.batch();
+    const BATCH_SIZE = 500;
+    let batchCount = 0;
 
-    const matchesQuerySnapshot = await firestore.collection("matches").get();
-    for (const document of matchesQuerySnapshot.docs) {
-      await document.ref.delete();
-    }
+    // Helper function to commit batch when needed
+    const commitBatch = async () => {
+      if (batchCount > 0) {
+        await batch.commit();
+        batchCount = 0;
+      }
+    };
 
-    const possibleMatchesSnapshot = await firestore
-      .collection("possibleMatches")
-      .get();
-    for (const document of possibleMatchesSnapshot.docs) {
-      await document.ref.delete();
+    // Update profiles in batches
+    const profilesSnapshot = await firestore.collection("profiles").get();
+    for (const document of profilesSnapshot.docs) {
+      batch.update(document.ref, { likedBy: [] });
+      batchCount++;
+      if (batchCount >= BATCH_SIZE) {
+        await commitBatch();
+      }
     }
+    await commitBatch();
 
-    const likesSnapshot = await firestore.collection("likes").get();
-    for (const document of likesSnapshot.docs) {
-      await document.ref.delete();
-    }
+    // Delete collections in parallel batches
+    const collections = [
+      "matches",
+      "possibleMatches",
+      "likes",
+      "pairs",
+      "notifications",
+      "messages",
+      "duetts",
+      "nudges"
+    ];
 
-    const pairsSnapshot = await firestore.collection("pairs").get();
-    for (const document of pairsSnapshot.docs) {
-      await document.ref.delete();
-    }
-
-    const notificationsSnapshot = await firestore
-      .collection("notifications")
-      .get();
-    for (const document of notificationsSnapshot.docs) {
-      await document.ref.delete();
-    }
-
-    const messagesSnapshot = await firestore.collection("messages").get();
-    for (const document of messagesSnapshot.docs) {
-      await document.ref.delete();
-    }
-
-    const duettsSnapshot = await firestore.collection("duetts").get();
-    for (const document of duettsSnapshot.docs) {
-      await document.ref.delete();
-    }
-
-    const nudgesSnapshot = await firestore.collection("nudges").get();
-    for (const document of nudgesSnapshot.docs) {
-      await document.ref.delete();
-    }
+    await Promise.all(
+      collections.map(async (collectionName) => {
+        const collectionRef = firestore.collection(collectionName);
+        const snapshot = await collectionRef.get();
+        
+        // Process deletions in batches
+        const batches = [];
+        let currentBatch = firestore.batch();
+        let currentBatchCount = 0;
+        
+        for (const doc of snapshot.docs) {
+          currentBatch.delete(doc.ref);
+          currentBatchCount++;
+          
+          if (currentBatchCount >= BATCH_SIZE) {
+            batches.push(currentBatch.commit());
+            currentBatch = firestore.batch();
+            currentBatchCount = 0;
+          }
+        }
+        
+        if (currentBatchCount > 0) {
+          batches.push(currentBatch.commit());
+        }
+        
+        await Promise.all(batches);
+      })
+    );
 
     res.sendStatus(200);
   });
@@ -366,53 +379,83 @@ exports.findProfilesByEmails = functions.https.onRequest(async (req, res) => {
   ].map((email) => email.toLowerCase().trim());
 
   const results = [];
-  const notFound = [];
+  const notFound = new Set(emails);
+  const profileMap = new Map();
 
-  // Query Firestore for each email
-  for (const email of emails) {
-    const querySnapshot = await firestore
+  // Batch query all profiles at once using 'in' operator (limited to 10 at a time)
+  const emailChunks = [];
+  const CHUNK_SIZE = 10;
+  for (let i = 0; i < emails.length; i += CHUNK_SIZE) {
+    emailChunks.push(emails.slice(i, i + CHUNK_SIZE));
+  }
+
+  // Query profiles in parallel chunks
+  const profileQueries = emailChunks.map(chunk =>
+    firestore
       .collection("profiles")
-      .where("emailAddress", "==", email)
-      .get();
+      .where("emailAddress", "in", chunk)
+      .get()
+  );
 
-    if (querySnapshot.empty) {
-      notFound.push(email);
-      continue;
+  const profileSnapshots = await Promise.all(profileQueries);
+  
+  // Collect all profiles
+  for (const snapshot of profileSnapshots) {
+    for (const doc of snapshot.docs) {
+      const profile = Object.assign({ id: doc.id }, doc.data() as Profile);
+      profileMap.set(profile.id, profile);
+      notFound.delete(profile.emailAddress.toLowerCase().trim());
+    }
+  }
+
+  // Batch query friends for all profiles at once
+  const profileIds = Array.from(profileMap.keys());
+  const friendsMap = new Map();
+
+  if (profileIds.length > 0) {
+    // Query friends in chunks
+    const friendChunks = [];
+    for (let i = 0; i < profileIds.length; i += CHUNK_SIZE) {
+      friendChunks.push(profileIds.slice(i, i + CHUNK_SIZE));
     }
 
-    for (const doc of querySnapshot.docs) {
-      const profile = Object.assign({ id: doc.id }, doc.data() as Profile);
-
-      // Check if profile has friends
-      const friendsSnapshot = await firestore
+    const friendQueries = friendChunks.map(chunk =>
+      firestore
         .collection("friends")
-        .where("uid", "==", profile.id)
-        .get();
+        .where("uid", "in", chunk)
+        .get()
+    );
 
-      // Count accepted friends
-      let acceptedFriendCount = 0;
-      for (const friendDoc of friendsSnapshot.docs) {
-        const friend = Object.assign({ id: friendDoc.id }, friendDoc.data() as Friend);
+    const friendSnapshots = await Promise.all(friendQueries);
+
+    // Process friend counts
+    for (const snapshot of friendSnapshots) {
+      for (const doc of snapshot.docs) {
+        const friend = Object.assign({ id: doc.id }, doc.data() as Friend);
         if (friend.accepted) {
-          acceptedFriendCount++;
+          const count = friendsMap.get(friend.uid) || 0;
+          friendsMap.set(friend.uid, count + 1);
         }
       }
-
-      // Add hasFriends property to profile
-      results.push({
-        ...profile,
-        hasFriends: acceptedFriendCount > 0,
-      });
     }
+  }
+
+  // Combine results
+  for (const [profileId, profile] of profileMap) {
+    const acceptedFriendCount = friendsMap.get(profileId) || 0;
+    results.push({
+      ...profile,
+      hasFriends: acceptedFriendCount > 0,
+    });
   }
 
   // Return the results
   res.json({
     totalEmails: emails.length,
     found: results.length,
-    notFound: notFound.length,
+    notFound: Array.from(notFound).length,
     profiles: results,
-    missingEmails: notFound,
+    missingEmails: Array.from(notFound),
   }).status(200);
 });
 
@@ -471,6 +514,10 @@ exports.validateFriends = functions.https.onRequest(async (req, res) => {
   const friendsSnapshot = await firestore.collection("friends").get();
   results.total = friendsSnapshot.size;
 
+  // Collect all unique UIDs from friends
+  const uidsToCheck = new Set<string>();
+  const friendsByUid = new Map<string, Array<any>>();
+
   for (const document of friendsSnapshot.docs) {
     const friend = Object.assign({ id: document.id }, document.data() as Friend);
 
@@ -483,23 +530,61 @@ exports.validateFriends = functions.https.onRequest(async (req, res) => {
       continue;
     }
 
-    // Check if profile exists for the friend's uid
-    const profileSnapshot = await firestore.collection("profiles").doc(friend.uid).get();
-
-    if (!profileSnapshot.exists) {
-      // Profile doesn't exist - this is an orphaned friend record
-      results.orphaned.push({
-        friendId: friend.id,
-        uid: friend.uid,
-        friendUID: friend.friendUID || null,
-        fullName: friend.fullName || "Unknown",
-      });
-
-      // Optionally delete the orphaned record
-      await document.ref.delete();
-    } else {
-      results.valid++;
+    uidsToCheck.add(friend.uid);
+    if (!friendsByUid.has(friend.uid)) {
+      friendsByUid.set(friend.uid, []);
     }
+    friendsByUid.get(friend.uid)!.push({ doc: document, friend });
+  }
+
+  // Batch check profile existence
+  const uidArray = Array.from(uidsToCheck);
+  const existingProfiles = new Set<string>();
+  
+  // Check profiles in chunks of 10 (Firestore 'in' query limit)
+  const CHUNK_SIZE = 10;
+  for (let i = 0; i < uidArray.length; i += CHUNK_SIZE) {
+    const chunk = uidArray.slice(i, i + CHUNK_SIZE);
+    const profilesSnapshot = await firestore
+      .collection("profiles")
+      .where(admin.firestore.FieldPath.documentId(), "in", chunk)
+      .get();
+    
+    profilesSnapshot.docs.forEach(doc => existingProfiles.add(doc.id));
+  }
+
+  // Process results and batch delete orphaned records
+  const batch = firestore.batch();
+  let batchCount = 0;
+  const BATCH_SIZE = 500;
+
+  for (const [uid, friendDocs] of friendsByUid) {
+    if (!existingProfiles.has(uid)) {
+      // Profile doesn't exist - these are orphaned friend records
+      for (const { doc, friend } of friendDocs) {
+        results.orphaned.push({
+          friendId: friend.id,
+          uid: friend.uid,
+          friendUID: friend.friendUID || null,
+          fullName: friend.fullName || "Unknown",
+        });
+
+        batch.delete(doc.ref);
+        batchCount++;
+
+        if (batchCount >= BATCH_SIZE) {
+          await batch.commit();
+          batchCount = 0;
+        }
+      }
+    } else {
+      results.valid += friendDocs.length;
+    }
+  }
+
+  // Commit any remaining deletions
+  if (batchCount > 0) {
+    await batch.commit();
   }
 
   // Return the results showing orphaned records
@@ -531,29 +616,59 @@ exports.checkProfilesWithAcceptedFriends = functions.https.onRequest(async (req,
   const profilesSnapshot = await firestore.collection("profiles").get();
   results.totalProfiles = profilesSnapshot.size;
 
+  // Create a map to store profiles
+  const profilesMap = new Map();
+  const profileIds = [];
+
   for (const document of profilesSnapshot.docs) {
     const profile = Object.assign({ id: document.id }, document.data() as Profile);
+    profilesMap.set(profile.id, profile);
+    profileIds.push(profile.id);
+  }
 
-    // Query friends for this profile
+  // Batch query all friends for all profiles
+  const friendCountMap = new Map();
+  
+  // Query friends in chunks
+  const CHUNK_SIZE = 10;
+  for (let i = 0; i < profileIds.length; i += CHUNK_SIZE) {
+    const chunk = profileIds.slice(i, i + CHUNK_SIZE);
     const friendsSnapshot = await firestore
       .collection("friends")
-      .where("uid", "==", profile.id)
+      .where("uid", "in", chunk)
       .get();
 
-    // Count accepted friends
-    let acceptedFriendCount = 0;
-    for (const friendDoc of friendsSnapshot.docs) {
-      const friend = Object.assign({ id: friendDoc.id }, friendDoc.data() as Friend);
+    // Count accepted friends per profile
+    for (const doc of friendsSnapshot.docs) {
+      const friend = Object.assign({ id: doc.id }, doc.data() as Friend);
       if (friend.accepted) {
-        acceptedFriendCount++;
+        const count = friendCountMap.get(friend.uid) || 0;
+        friendCountMap.set(friend.uid, count + 1);
       }
     }
+  }
+
+  // Batch update profiles and collect results
+  const batch = firestore.batch();
+  let batchCount = 0;
+  const BATCH_SIZE = 500;
+
+  for (const [profileId, profile] of profilesMap) {
+    const acceptedFriendCount = friendCountMap.get(profileId) || 0;
     const hasFriends = acceptedFriendCount > 0;
-    // Update the profile with the hasFriends property
-    await firestore.collection("profiles").doc(profile.id).update({
+
+    // Update profile
+    batch.update(firestore.collection("profiles").doc(profileId), {
       friends: hasFriends,
     });
+    batchCount++;
 
+    if (batchCount >= BATCH_SIZE) {
+      await batch.commit();
+      batchCount = 0;
+    }
+
+    // Collect results
     if (acceptedFriendCount > 0) {
       results.profilesWithFriends.push({
         profileId: profile.id,
@@ -566,6 +681,11 @@ exports.checkProfilesWithAcceptedFriends = functions.https.onRequest(async (req,
         firstName: profile.firstName || "Unknown",
       });
     }
+  }
+
+  // Commit any remaining updates
+  if (batchCount > 0) {
+    await batch.commit();
   }
 
   // Return the results
