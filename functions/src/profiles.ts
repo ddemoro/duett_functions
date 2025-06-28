@@ -42,39 +42,157 @@ exports.profileDeleted = functions.firestore.document("profiles/{uid}").onDelete
   const profile = Object.assign({ id: snap.id }, snap.data() as Profile);
   const uid = profile.id;
 
-  // Get friends where uid matches the deleted profile
-  const friendsSnapshot = await firestore.collection("friends").where("uid", "==", uid).get();
+  console.log(`Starting comprehensive cleanup for deleted profile: ${uid}`);
 
-  // Delete all friend objects where uid matches the deleted profile
+  // Track deletion counts for logging
+  const deletionCounts = {
+    friends: 0,
+    likes: 0,
+    messages: 0,
+    matches: 0,
+    pairs: 0,
+    duetts: 0,
+    possibleMatches: 0,
+    notifications: 0,
+    nudges: 0,
+  };
+
+  // 1. FRIENDS - Delete all friend relationships
+  const friendsSnapshot = await firestore.collection("friends").where("uid", "==", uid).get();
   const friendDeletePromises = friendsSnapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
+    deletionCounts.friends++;
     return firestore.collection("friends").doc(doc.id).delete();
   });
 
-  // Get all likes where profileID matches the deleted profile
+  // 2. LIKES - Delete likes made by and to the user
   const likesSnapshot1 = await firestore.collection("likes").where("profileID", "==", uid).get();
-
-  // Get all likes where likedProfileID matches the deleted profile
   const likesSnapshot2 = await firestore.collection("likes").where("likedProfileID", "==", uid).get();
 
-  // Delete all likes related to the deleted profile
   const likeDeletePromises1 = likesSnapshot1.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
+    deletionCounts.likes++;
     return firestore.collection("likes").doc(doc.id).delete();
   });
 
   const likeDeletePromises2 = likesSnapshot2.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
+    deletionCounts.likes++;
     return firestore.collection("likes").doc(doc.id).delete();
   });
 
-  // Get all messages sent by the deleted profile
+  // 3. MESSAGES - Delete messages sent by the user
   const messagesSnapshot = await firestore.collection("messages").where("fromID", "==", uid).get();
-
-  // Delete all messages sent by the deleted profile
   const messageDeletePromises = messagesSnapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
+    deletionCounts.messages++;
     return firestore.collection("messages").doc(doc.id).delete();
   });
 
+  // 4. MATCHES - Delete matches where user is in the matched array
+  const matchesSnapshot = await firestore.collection("matches").where("matched", "array-contains", uid).get();
+  const matchDeletePromises = matchesSnapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
+    deletionCounts.matches++;
+    return firestore.collection("matches").doc(doc.id).delete();
+  });
+
+  // 5. PAIRS - Delete pairs where user is a player or matchmaker
+  const pairsSnapshot1 = await firestore.collection("pairs").where("playerIds", "array-contains", uid).get();
+  const pairsSnapshot2 = await firestore.collection("pairs").where("matchMakerIds", "array-contains", uid).get();
+
+  const pairDeletePromises1 = pairsSnapshot1.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
+    deletionCounts.pairs++;
+    return firestore.collection("pairs").doc(doc.id).delete();
+  });
+
+  const pairDeletePromises2 = pairsSnapshot2.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
+    // Avoid double counting if already deleted
+    if (!pairsSnapshot1.docs.find((d: FirebaseFirestore.QueryDocumentSnapshot) => d.id === doc.id)) {
+      deletionCounts.pairs++;
+      return firestore.collection("pairs").doc(doc.id).delete();
+    }
+    return Promise.resolve();
+  });
+
+  // 6. DUETTS - Delete duetts where user is a member or matchmaker
+  const duettsSnapshot1 = await firestore.collection("duetts").where("members", "array-contains", uid).get();
+  const duettsSnapshot2 = await firestore.collection("duetts").where("matchMakers", "array-contains", uid).get();
+
+  const duettDeletePromises1 = duettsSnapshot1.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
+    deletionCounts.duetts++;
+    return firestore.collection("duetts").doc(doc.id).delete();
+  });
+
+  const duettDeletePromises2 = duettsSnapshot2.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
+    // Avoid double counting if already deleted
+    if (!duettsSnapshot1.docs.find((d: FirebaseFirestore.QueryDocumentSnapshot) => d.id === doc.id)) {
+      deletionCounts.duetts++;
+      return firestore.collection("duetts").doc(doc.id).delete();
+    }
+    return Promise.resolve();
+  });
+
+  // 7. POSSIBLEMATCHES - Delete where user is the target or in choices
+  const possibleMatchesSnapshot = await firestore.collection("possibleMatches").where("uid", "==", uid).get();
+  const possibleMatchDeletePromises = possibleMatchesSnapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
+    deletionCounts.possibleMatches++;
+    return firestore.collection("possibleMatches").doc(doc.id).delete();
+  });
+
+  // Also need to handle possibleMatches where user is in the choices array
+  // This requires a different approach since Firestore doesn't support array-contains on nested objects
+  const allPossibleMatchesSnapshot = await firestore.collection("possibleMatches").get();
+  const additionalPossibleMatchPromises = allPossibleMatchesSnapshot.docs
+    .filter((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
+      const data = doc.data();
+      const choices = data.choices || [];
+      return choices.some((choice: any) => choice.profileID === uid);
+    })
+    .map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
+      deletionCounts.possibleMatches++;
+      return firestore.collection("possibleMatches").doc(doc.id).delete();
+    });
+
+  // 8. NOTIFICATIONS - Delete user's notifications
+  const notificationsSnapshot = await firestore.collection("notifications").where("uid", "==", uid).get();
+  const notificationDeletePromises = notificationsSnapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
+    deletionCounts.notifications++;
+    return firestore.collection("notifications").doc(doc.id).delete();
+  });
+
+  // 9. NUDGES - Delete nudges sent by or to the user
+  const nudgesSnapshot1 = await firestore.collection("nudges").where("fromUID", "==", uid).get();
+  const nudgesSnapshot2 = await firestore.collection("nudges").where("uid", "==", uid).get();
+
+  const nudgeDeletePromises1 = nudgesSnapshot1.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
+    deletionCounts.nudges++;
+    return firestore.collection("nudges").doc(doc.id).delete();
+  });
+
+  const nudgeDeletePromises2 = nudgesSnapshot2.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
+    // Avoid double counting if already deleted
+    if (!nudgesSnapshot1.docs.find((d: FirebaseFirestore.QueryDocumentSnapshot) => d.id === doc.id)) {
+      deletionCounts.nudges++;
+      return firestore.collection("nudges").doc(doc.id).delete();
+    }
+    return Promise.resolve();
+  });
+
   // Wait for all deletions to complete
-  await Promise.all([...friendDeletePromises, ...likeDeletePromises1, ...likeDeletePromises2, ...messageDeletePromises]);
+  await Promise.all([
+    ...friendDeletePromises,
+    ...likeDeletePromises1,
+    ...likeDeletePromises2,
+    ...messageDeletePromises,
+    ...matchDeletePromises,
+    ...pairDeletePromises1,
+    ...pairDeletePromises2,
+    ...duettDeletePromises1,
+    ...duettDeletePromises2,
+    ...possibleMatchDeletePromises,
+    ...additionalPossibleMatchPromises,
+    ...notificationDeletePromises,
+    ...nudgeDeletePromises1,
+    ...nudgeDeletePromises2,
+  ]);
+
+  console.log(`Profile deletion cleanup completed for ${uid}. Deletion counts:`, deletionCounts);
 });
 
 exports.profileUpdated = functions.firestore.document("profiles/{uid}").onUpdate(async (change, context) => {
