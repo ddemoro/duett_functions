@@ -701,3 +701,197 @@ exports.checkProfilesWithAcceptedFriends = functions.https.onRequest(async (req,
     },
   }).status(200);
 });
+
+/**
+ * Unmatches two users by removing all traces of their match from the database.
+ * This includes removing likes, pairs, messages, possibleMatches, and updating relevant collections.
+ */
+exports.unmatch = functions.https.onRequest(async (req, res) => {
+  const uid1 = "2qwsnxwu3nd7vJHM94F1QHrZs2T2";
+  const uid2 = "bxLjcxVZzlexU040cKCnh5xROLq1";
+
+
+  if (!uid1 || !uid2) {
+    res.status(400).json({ error: "Both uid1 and uid2 are required" });
+    return;
+  }
+
+  const results = {
+    deletedLikes: 0,
+    updatedProfiles: 0,
+    deletedPairs: 0,
+    updatedDuetts: 0,
+    deletedMatches: 0,
+    deletedMessages: 0,
+    deletedPossibleMatches: 0,
+  };
+
+  try {
+    // 1. Delete likes between the two users
+    const likesQuery1 = await firestore
+      .collection("likes")
+      .where("profileID", "==", uid1)
+      .where("likedProfileID", "==", uid2)
+      .get();
+
+    const likesQuery2 = await firestore
+      .collection("likes")
+      .where("profileID", "==", uid2)
+      .where("likedProfileID", "==", uid1)
+      .get();
+
+    for (const doc of likesQuery1.docs) {
+      await doc.ref.delete();
+      results.deletedLikes++;
+    }
+
+    for (const doc of likesQuery2.docs) {
+      await doc.ref.delete();
+      results.deletedLikes++;
+    }
+
+    // 2. Update profiles to remove from likedBy arrays
+    const profile1Doc = firestore.collection("profiles").doc(uid1);
+    const profile2Doc = firestore.collection("profiles").doc(uid2);
+
+    const profile1 = await profile1Doc.get();
+    const profile2 = await profile2Doc.get();
+
+    if (profile1.exists) {
+      const likedBy1 = profile1.data()!.likedBy || [];
+      const updatedLikedBy1 = likedBy1.filter((id: string) => id !== uid2);
+      await profile1Doc.update({ likedBy: updatedLikedBy1 });
+      results.updatedProfiles++;
+    }
+
+    if (profile2.exists) {
+      const likedBy2 = profile2.data()!.likedBy || [];
+      const updatedLikedBy2 = likedBy2.filter((id: string) => id !== uid1);
+      await profile2Doc.update({ likedBy: updatedLikedBy2 });
+      results.updatedProfiles++;
+    }
+
+    // 3. Find and delete pairs containing both users
+    const pairsQuery = await firestore.collection("pairs").get();
+
+    for (const doc of pairsQuery.docs) {
+      const pair = doc.data();
+      const playerIds = pair.playerIds || [];
+
+      if (playerIds.includes(uid1) && playerIds.includes(uid2)) {
+        const matchId = pair.matchID;
+        const pairId = doc.id;
+
+        // Delete the pair document
+        await doc.ref.delete();
+        results.deletedPairs++;
+
+        // 4. Update the associated duett
+        const duettDoc = firestore.collection("duetts").doc(matchId);
+        const duett = await duettDoc.get();
+
+        if (duett.exists) {
+          const duettData = duett.data()!;
+          const updatedMembers = (duettData.members || []).filter(
+            (id: string) => id !== uid1 && id !== uid2
+          );
+          const updatedPairs = (duettData.pairs || []).filter(
+            (p: any) => !(p.playerIds && p.playerIds.includes(uid1) && p.playerIds.includes(uid2))
+          );
+
+          await duettDoc.update({
+            members: updatedMembers,
+            pairs: updatedPairs,
+          });
+          results.updatedDuetts++;
+        }
+
+        // 5. Update the associated match
+        const matchDoc = firestore.collection("matches").doc(matchId);
+        const match = await matchDoc.get();
+
+        if (match.exists) {
+          const matchData = match.data()!;
+          const updatedPairIds = (matchData.pairIds || []).filter(
+            (id: string) => id !== pairId
+          );
+          const updatedApprovedPairs = (matchData.approvedPairs || []).filter(
+            (id: string) => id !== pairId
+          );
+          const updatedRejectedPairs = (matchData.rejectedPairs || []).filter(
+            (id: string) => id !== pairId
+          );
+
+          await matchDoc.update({
+            pairIds: updatedPairIds,
+            approvedPairs: updatedApprovedPairs,
+            rejectedPairs: updatedRejectedPairs,
+          });
+        }
+
+        // 6. Optionally delete messages between the two users in this duett
+        const messagesQuery = await firestore
+          .collection("messages")
+          .where("duettID", "==", matchId)
+          .get();
+
+        for (const msgDoc of messagesQuery.docs) {
+          const message = msgDoc.data();
+          if (message.fromID === uid1 || message.fromID === uid2) {
+            await msgDoc.ref.delete();
+            results.deletedMessages++;
+          }
+        }
+      }
+    }
+
+    // 7. Delete possibleMatches where matchmakers contains both users
+    const possibleMatchesQuery = await firestore
+      .collection("possibleMatches")
+      .where("matchmakers", "array-contains", uid1)
+      .get();
+
+    for (const doc of possibleMatchesQuery.docs) {
+      const matchmakers = doc.data().matchmakers || [];
+      if (matchmakers.includes(uid2)) {
+        await doc.ref.delete();
+        results.deletedPossibleMatches++;
+      }
+    }
+
+    // 8. Find and delete the match document containing both users
+    const matchesQuery = await firestore.collection("matches").get();
+
+    for (const doc of matchesQuery.docs) {
+      const matchData = doc.data();
+      const matched = matchData.matched || [];
+
+      // Check if both users are in the matched array
+      if (matched.includes(uid1) && matched.includes(uid2)) {
+        // Delete the match document
+        await doc.ref.delete();
+        results.deletedMatches++;
+
+        // Also delete the associated duett if it exists
+        const duettDoc = await firestore.collection("duetts").doc(doc.id).get();
+        if (duettDoc.exists) {
+          await duettDoc.ref.delete();
+          results.updatedDuetts++;
+        }
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Successfully unmatched ${uid1} and ${uid2}`,
+      results: results,
+    }).status(200);
+
+  } catch (error) {
+    console.error("Error unmatching users:", error);
+    res.status(500).json({
+      error: "Failed to unmatch users",
+      details: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
